@@ -9,6 +9,8 @@ import '../../models/transcode_quality_preset.dart';
 import '../../models/player_setting_scope.dart';
 import '../../utils/quality_preset_labels.dart';
 import '../../services/settings_service.dart';
+import '../../services/video_decode_capabilities.dart';
+import '../../utils/codec_utils.dart';
 import '../../utils/platform_detector.dart';
 import '../../widgets/setting_tile.dart';
 import '../../widgets/settings_builder.dart';
@@ -74,6 +76,8 @@ class PlaybackSettingsScreen extends StatelessWidget {
                 if (Platform.isWindows) _matchDynamicRangeTile(),
                 if (showDisplaySwitchDelay) _displaySwitchDelayTile(),
                 if (Platform.isAndroid) _dvConversionModeTile(),
+                // mpv-only: ExoPlayer always leaves the conversion to the device.
+                if (Platform.isAndroid && !exoActive) _hdrSdrConversionTile(),
                 // mpv-only (#2149): ExoPlayer has no filter chain, so the
                 // tile disappears while the ExoPlayer backend is active.
                 if (!exoActive) _deinterlaceTile(),
@@ -105,6 +109,9 @@ class PlaybackSettingsScreen extends StatelessWidget {
                 // pattern; needs local/remote connection detection in the
                 // failover client.
                 _directPlayCoveredQualityTile(),
+                // Desktop has no hardware-decode probe, so this is where a
+                // machine too weak for a codec says so (#2443).
+                if (PlatformDetector.isDesktopOS()) _videoCodecsTile(),
                 _musicQualityTile(),
               ],
             ),
@@ -564,6 +571,36 @@ class PlaybackSettingsScreen extends StatelessWidget {
     DvConversionModePreference.hevcStrip => t.settings.dvConversionHevcStrip,
   };
 
+  Widget _hdrSdrConversionTile() => SettingSelectionTile<HdrSdrConversion>(
+    pref: SettingsService.hdrSdrConversion,
+    icon: Symbols.tonality_rounded,
+    title: t.settings.hdrSdrConversion,
+    subtitleBuilder: (mode) => '${_hdrSdrConversionLabel(mode)} · ${t.settings.hdrSdrConversionDescription}',
+    options: [
+      DialogOption(
+        value: HdrSdrConversion.auto,
+        title: t.settings.hdrSdrConversionAuto,
+        subtitle: t.settings.hdrSdrConversionAutoDescription,
+      ),
+      DialogOption(
+        value: HdrSdrConversion.device,
+        title: t.settings.hdrSdrConversionDevice,
+        subtitle: t.settings.hdrSdrConversionDeviceDescription,
+      ),
+      DialogOption(
+        value: HdrSdrConversion.player,
+        title: t.settings.hdrSdrConversionPlayer,
+        subtitle: t.settings.hdrSdrConversionPlayerDescription,
+      ),
+    ],
+  );
+
+  String _hdrSdrConversionLabel(HdrSdrConversion mode) => switch (mode) {
+    HdrSdrConversion.auto => t.settings.hdrSdrConversionAuto,
+    HdrSdrConversion.device => t.settings.hdrSdrConversionDevice,
+    HdrSdrConversion.player => t.settings.hdrSdrConversionPlayer,
+  };
+
   Widget _playbackBufferTile() => SettingSelectionTile<PlaybackBufferTier>(
     pref: SettingsService.playbackBufferTier,
     icon: Symbols.hourglass_top_rounded,
@@ -610,6 +647,25 @@ class PlaybackSettingsScreen extends StatelessWidget {
     icon: Symbols.bolt_rounded,
     title: t.settings.directPlayCoveredQuality,
     subtitle: t.settings.directPlayCoveredQualityDescription,
+  );
+
+  Widget _videoCodecsTile() => SettingChecklistTile(
+    uncheckedPref: SettingsService.refusedVideoCodecs,
+    icon: Symbols.video_settings_rounded,
+    title: t.settings.videoCodecs,
+    description: t.settings.videoCodecsDescription,
+    options: [
+      for (final codec in RankedVideoCodec.values)
+        DialogOption(
+          value: codec.id,
+          title: CodecUtils.formatVideoCodec(codec.id),
+          subtitle: codec.isRefusable ? null : t.settings.videoCodecsAlwaysAccepted,
+        ),
+    ],
+    locked: {
+      for (final codec in RankedVideoCodec.values)
+        if (!codec.isRefusable) codec.id,
+    },
   );
 
   Widget _musicQualityTile() => SettingSelectionTile<AudioQualityPreset>(

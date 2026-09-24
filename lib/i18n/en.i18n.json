@@ -202,6 +202,9 @@
     "cellularQualitySameAsDefault": "Same as Default Quality",
     "directPlayCoveredQuality": "Play Smaller Videos at Original Quality",
     "directPlayCoveredQualityDescription": "Direct play videos already within the quality limit instead of transcoding them",
+    "videoCodecs": "Video Codecs",
+    "videoCodecsDescription": "Unchecked codecs are transcoded by the server",
+    "videoCodecsAlwaysAccepted": "Always accepted",
     "musicQualityTitle": "Music Quality",
     "subtitleStyling": "Subtitle Styling",
     "subtitleStylingDescription": "Customize subtitle appearance",
@@ -325,6 +328,8 @@
     "manageLibrariesDescription": "Reorder and hide libraries",
     "companionRemoteServer": "Companion Remote Server",
     "companionRemoteServerDescription": "Allow mobile devices on your network to control this app",
+    "companionRemoteServerStartFailed": "Couldn't start the companion server",
+    "companionRemoteServerStopFailed": "Couldn't stop the companion server",
     "autoPip": "Auto Picture-in-Picture",
     "autoPipDescription": "Automatically enter picture-in-picture when you leave the app during playback",
     "matchContentFrameRate": "Match Content Frame Rate",
@@ -360,6 +365,14 @@
     "dvConversionNativeDescription": "Force native DV7 and suppress DV conversion retry",
     "dvConversionDv81Description": "Force inline RPU conversion to Dolby Vision profile 8.1",
     "dvConversionHevcStripDescription": "Strip Dolby Vision RPU/EL layers and present plain HEVC",
+    "hdrSdrConversion": "HDR to SDR Conversion",
+    "hdrSdrConversionDescription": "Choose what converts HDR video when the display can't show HDR.",
+    "hdrSdrConversionAuto": "Auto",
+    "hdrSdrConversionAutoDescription": "Device on Android 9 and later, player on older versions",
+    "hdrSdrConversionDevice": "Device",
+    "hdrSdrConversionDeviceDescription": "Your device's video hardware converts it. Fastest, but colors depend on the device",
+    "hdrSdrConversionPlayer": "Player",
+    "hdrSdrConversionPlayerDescription": "The player converts it. Consistent colors, but 4K may stutter on low-end TV boxes",
     "deinterlace": "Deinterlacing",
     "deinterlaceDescription": "Remove combing artifacts from interlaced video (mpv player only)",
     "requireProfileSelectionOnOpen": "Ask for profile on app open",
@@ -729,6 +742,7 @@
     "pipFailed": "Picture-in-picture failed to start",
     "screenshotSaved": "Screenshot saved",
     "zoomPercent": "Zoom ${percent}%",
+    "volumePercent": "Volume ${percent}%",
     "pipErrors": {
       "androidVersion": "Requires Android 8.0 or newer",
       "iosVersion": "Requires iOS 15.0 or newer",
@@ -1071,7 +1085,14 @@
     "failedToVerifyToken": "Failed to verify token: ${error}",
     "failedToSwitchProfile": "Failed to switch to ${displayName}",
     "failedToDeleteProfile": "Failed to delete ${displayName}",
-    "failedToRate": "Couldn't update rating"
+    "failedToRate": "Couldn't update rating",
+    "reasonTimedOut": "the connection timed out",
+    "reasonUnreachable": "the server could not be reached",
+    "reasonRefused": "the server refused the request",
+    "reasonNotFound": "the item is no longer on the server",
+    "reasonServerError": "the server reported an error",
+    "reasonCancelled": "the request was cancelled",
+    "reasonUnexpected": "an unexpected error occurred"
   },
   "libraries": {
     "title": "Libraries",
@@ -1140,7 +1161,8 @@
       "tag": "Tag",
       "unwatched": "Unwatched",
       "unplayed": "Unplayed",
-      "favorites": "Favorites"
+      "favorites": "Favorites",
+      "filePath": "File Path"
     },
     "sortLabels": {
       "title": "Title",
@@ -1162,7 +1184,38 @@
       "random": "Random",
       "dateShared": "Date Shared",
       "latestEpisodeAirDate": "Latest Episode Air Date",
-      "lastEpisodeDateAdded": "Last Episode Date Added"
+      "lastEpisodeDateAdded": "Last Episode Date Added",
+      "dateDownloaded": "Date Downloaded",
+      "size": "Size",
+      "library": "Library"
+    },
+    "advancedFilters": {
+      "include": "Include",
+      "exclude": "Exclude",
+      "any": "Any",
+      "yes": "Yes",
+      "no": "No",
+      "not": "Not ${value}",
+      "valueCount": "${count} selected",
+      "valueCountExcluded": "${count} excluded",
+      "searchValues": "Search values",
+      "noValues": "No values",
+      "matchContains": "Contains",
+      "matchNotContains": "Does not contain",
+      "matchIs": "Is",
+      "matchIsNot": "Is not",
+      "matchBeginsWith": "Begins with",
+      "matchEndsWith": "Ends with",
+      "textHint": "Type to match",
+      "from": "From",
+      "to": "To",
+      "range": "${from} to ${to}",
+      "atLeast": "${value} and up",
+      "atMost": "Up to ${value}",
+      "dateLastDays": "Last ${count} days",
+      "dateLastYear": "Past year",
+      "dateOlderThanDays": "Older than ${count} days",
+      "dateOlderThanYear": "Older than a year"
     }
   },
   "about": {
@@ -1487,7 +1540,9 @@
     "editRuleAction": "Edit",
     "recordingRuleUpdated": "Recording rule updated",
     "guideReloadRequested": "Guide refresh requested",
+    "guideReloadFailed": "Couldn't refresh the guide",
     "rulesProcessRequested": "Rule re-evaluation requested",
+    "rulesProcessFailed": "Couldn't re-evaluate recording rules",
     "recordShow": "Record show",
     "recordSettings": {
       "startEarly": "Start early (seconds)",
@@ -1503,7 +1558,9 @@
     "dayAtTime": "${day} at ${time}",
     "invalidPlaybackData": "${product} returned invalid Live TV playback data",
     "failedToStartChannel": "Could not start the live channel",
-    "failedToBuildStreamUrl": "Could not build the stream URL"
+    "failedToBuildStreamUrl": "Could not build the stream URL",
+    "playbackStartFailed": "Couldn't start the channel: ${reason}",
+    "channelSwitchFailed": "Couldn't switch channel: ${reason}"
   },
   "collections": {
     "title": "Collections",
@@ -1778,10 +1835,32 @@
       "settingsUnavailable": "Couldn't open system settings on this device",
       "linkUnavailable": "Couldn't open dontkillmyapp.com on this device"
     },
+    "options": "Downloads options",
+    "groupings": {
+      "library": "Library"
+    },
+    "unknownLibrary": "Unknown library",
     "unknownShow": "Unknown Show",
     "unknownSeason": "Unknown Season",
     "unknownAlbum": "Unknown Album",
     "completedOfTotal": "${completed}/${total} completed",
+    "storageUsed": "Storage used: ${size}",
+    "downloadCount": {
+      "one": "${n} download",
+      "other": "${n} downloads"
+    },
+    "showCount": {
+      "one": "${n} show",
+      "other": "${n} shows"
+    },
+    "movieCount": {
+      "one": "${n} movie",
+      "other": "${n} movies"
+    },
+    "albumCount": {
+      "one": "${n} album",
+      "other": "${n} albums"
+    },
     "errorFileNotFound": "File not found (404)",
     "errorDownloadFailed": "Download failed",
     "errorPostProcessing": "Post-processing failed: ${error}",
@@ -2050,7 +2129,8 @@
     "producer": "Producer",
     "country": "Country",
     "collection": "Collection",
-    "label": "Label"
+    "label": "Label",
+    "quickTag": "Quick Tag..."
   },
   "matchScreen": {
     "match": "Match...",

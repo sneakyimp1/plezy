@@ -9,9 +9,7 @@ extension _PlexVideoControlsNavigationMethods on _PlexVideoControlsState {
     );
     final useDpad = playerDirectionalNavigationEnabled();
 
-    return Listener(
-      behavior: HitTestBehavior.translucent,
-      onPointerDown: (_) => _restartHideTimerForCurrentPlaybackState(),
+    return _holdChromeWhilePressed(
       child: DesktopVideoControls(
         key: _desktopControlsKey,
         player: widget.player,
@@ -161,7 +159,7 @@ extension _PlexVideoControlsNavigationMethods on _PlexVideoControlsState {
       );
     } catch (e) {
       if (mounted) {
-        showErrorSnackBar(context, t.messages.errorLoading(error: e.toString()));
+        showErrorSnackBar(context, t.messages.errorLoading(error: localizedErrorReason(e)));
       }
     }
   }

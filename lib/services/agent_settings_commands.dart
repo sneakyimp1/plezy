@@ -121,12 +121,17 @@ class AgentSettingsCommands {
           if (key == 'enable_companion_remote_server' && value == true && !context.hasProfile) return;
           if (!context.context.mounted) return;
           try {
-            await const SettingsMutationService().applyEffects(
+            final failure = await const SettingsMutationService().applyEffects(
               context.context,
               pref,
               checkCurrent: context.checkCurrent,
               rebuildRoot: false,
             );
+            // A declining effect is returned rather than thrown now; agent
+            // clients still contract on `effectFailed` for it.
+            if (failure != null) {
+              throw AgentControlException('effectFailed', failure.display, details: const {'persisted': true});
+            }
           } on AgentControlException {
             rethrow;
           } catch (_) {
@@ -228,6 +233,8 @@ class AgentSettingsCommands {
         if (exo || Platform.isIOS) return 'Ambient lighting requires mpv on a non-Apple-mobile platform.';
       case 'hdr_tone_mapping':
         if (!Platform.isLinux) return 'HDR tone mapping selection requires the Linux native video plane.';
+      case 'hdr_sdr_conversion':
+        if (!Platform.isAndroid || exo) return 'HDR-to-SDR conversion selection requires the Android mpv backend.';
       case 'tunneled_playback' || 'playback_buffer_tier' || 'subtitle_anchor_to_screen':
         if (!exo) return 'This setting requires the existing Android ExoPlayer backend.';
       case 'custom_shaders' || 'global_shader_preset':
@@ -277,7 +284,7 @@ class AgentSettingsCommands {
   }
 
   static String _application(String key) {
-    if (key == 'app_locale' || key == 'force_tv_mode' || key == 'visual_effects') return 'rootRebuild';
+    if (SettingsMutationService.needsRootRebuild(key)) return 'rootRebuild';
     if (key == 'start_in_fullscreen' ||
         key == 'startup_section' ||
         key == 'require_profile_selection_on_open' ||
@@ -314,6 +321,7 @@ class AgentSettingsCommands {
     'match_content_resolution',
     'tunneled_playback',
     'dv_conversion_mode',
+    'hdr_sdr_conversion',
     'default_quality_preset',
     'cellular_quality_preset',
     'music_quality_preset',

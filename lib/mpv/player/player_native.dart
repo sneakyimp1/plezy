@@ -132,9 +132,6 @@ class PlayerNative extends PlayerBase {
   @override
   bool get nativeDisposeIsStaleGuarded => Platform.isAndroid;
 
-  @override
-  bool get attachesExternalSubtitlesAtOpen => true;
-
   /// Node properties are returned as structured maps on desktop and Apple
   /// platforms, but as JSON strings on Android.
   static final String _nodeFormat = Platform.isAndroid ? 'string' : 'node';
@@ -777,15 +774,6 @@ class PlayerNative extends PlayerBase {
   Future<void> selectSecondarySubtitleTrack(SubtitleTrack track) async {
     if (_nativeCoreUnavailable) return;
     await setProperty('secondary-sid', track.id);
-  }
-
-  @override
-  Future<void> addSubtitleTrack({required String uri, String? title, String? language, bool select = false}) async {
-    if (_nativeCoreUnavailable) return;
-    final args = ['sub-add', uri, select ? 'select' : 'auto'];
-    if (title != null) args.add('title=$title');
-    if (language != null) args.add('lang=$language');
-    await command(args);
   }
 
   @override

@@ -159,6 +159,24 @@ extension DvConversionModePreferenceNativeValue on DvConversionModePreference {
   };
 }
 
+/// Who converts HDR for a display without HDR output, on the Android mpv
+/// backend.
+///
+/// [device] leaves the video on the platform's video plane, as ExoPlayer,
+/// Kodi and VLC do: free on weak GPUs, colours up to the device. [player]
+/// tone-maps in mpv's GL renderer, which 4K outruns on low-end TV GPUs.
+/// [auto] picks [device] from Android 9, whose compositor converts an HDR
+/// layer itself, and [player] below it.
+enum HdrSdrConversion { auto, device, player }
+
+extension HdrSdrConversionNativeValue on HdrSdrConversion {
+  String get nativeValue => switch (this) {
+    HdrSdrConversion.auto => 'auto',
+    HdrSdrConversion.device => 'device',
+    HdrSdrConversion.player => 'player',
+  };
+}
+
 enum PlaybackBufferTier { auto, large, extraLarge }
 
 extension PlaybackBufferTierNativeValue on PlaybackBufferTier {
@@ -618,6 +636,11 @@ class SettingsService extends BaseSharedPreferencesService {
     values: DvConversionModePreference.values,
     defaultValue: DvConversionModePreference.auto,
   );
+  static const hdrSdrConversion = EnumPref<HdrSdrConversion>(
+    'hdr_sdr_conversion',
+    values: HdrSdrConversion.values,
+    defaultValue: HdrSdrConversion.auto,
+  );
   static const defaultQualityPreset = EnumPref<TranscodeQualityPreset>(
     'default_quality_preset',
     values: TranscodeQualityPreset.values,
@@ -639,6 +662,14 @@ class SettingsService extends BaseSharedPreferencesService {
   /// limitation (#2193). Plex-only by design: MediaBrowser servers make the
   /// equivalent direct-play-vs-transcode call server-side.
   static const directPlayCoveredQuality = BoolPref('direct_play_covered_quality', defaultValue: true);
+
+  /// Ids of the [RankedVideoCodec]s the user refused: the server transcodes
+  /// them instead of sending them, and never picks them as a transcode output
+  /// (#2443). Desktop-only because desktop has no hardware-decode probe; kept
+  /// device-local (not exported) because the point is one weak machine
+  /// refusing a codec the user's other devices decode fine. Stores the
+  /// unchecked codecs so a codec added to the list later starts accepted.
+  static const refusedVideoCodecs = StringListPref('refused_video_codecs');
   static const musicQualityPreset = EnumPref<AudioQualityPreset>(
     'music_quality_preset',
     values: AudioQualityPreset.values,
@@ -759,6 +790,13 @@ class SettingsService extends BaseSharedPreferencesService {
       throw ArgumentError.value(profileId, 'profileId', 'Must not be empty');
     }
     return NullableStringPref(profileScopedPrefsKey(profileId, 'watch_together_recent_rooms'));
+  }
+
+  static NullableStringPref recentMetadataTagsForProfile(String profileId) {
+    if (profileId.trim().isEmpty) {
+      throw ArgumentError.value(profileId, 'profileId', 'Must not be empty');
+    }
+    return NullableStringPref(profileScopedPrefsKey(profileId, 'metadata_recent_tags'));
   }
 
   static final companionRemoteLastHostAddress = NullableStringPref(
@@ -1316,6 +1354,7 @@ class SettingsService extends BaseSharedPreferencesService {
     matchContentResolution,
     tunneledPlayback,
     dvConversionMode,
+    hdrSdrConversion,
     musicVolume,
     resumeMusicOnLaunch,
     autoPlayNextEpisode,
@@ -1431,6 +1470,7 @@ class SettingsService extends BaseSharedPreferencesService {
     customRelayUrl,
     companionRemoteLastHostAddress,
     rememberedBrightnessLevel,
+    refusedVideoCodecs,
   ];
 
   /// Settings that "Reset All Settings" actually resets.
