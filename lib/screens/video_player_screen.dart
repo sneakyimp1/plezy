@@ -37,6 +37,7 @@ import '../database/app_database.dart';
 import '../media/media_version.dart';
 import '../models/transcode_quality_preset.dart';
 import '../media/media_source_info.dart';
+import '../media/media_part_timeline.dart';
 import '../media/stepped_seek.dart';
 import '../mixins/mounted_set_state_mixin.dart';
 import '../mixins/listenable_bindings_mixin.dart';
@@ -68,6 +69,7 @@ import '../services/multi_server_manager.dart';
 import '../services/offline_watch_sync_service.dart';
 import '../services/display_mode_service.dart';
 import '../services/media_control_router.dart';
+import '../services/player_sync_offsets.dart';
 import '../services/scoped_player_prefs.dart';
 import '../services/settings_service.dart';
 import '../services/sleep_timer_service.dart';
@@ -129,6 +131,7 @@ import '../focus/transport_keys.dart';
 import '../i18n/strings.g.dart';
 import '../watch_together/providers/watch_together_provider.dart';
 import '../watch_together/services/watch_together_controller.dart';
+import '../utils/error_message_utils.dart';
 
 part 'video_player/parts/companion_remote.dart';
 part 'video_player/parts/display_matching.dart';
@@ -395,15 +398,35 @@ class _PlaybackOpenRequest {
 class _PlaybackOpenTiming {
   final Duration? mediaStart;
   final Duration? timelineDuration;
+  final Duration timelineOffset;
 
-  const _PlaybackOpenTiming({this.mediaStart, this.timelineDuration});
+  const _PlaybackOpenTiming({this.mediaStart, this.timelineDuration, this.timelineOffset = Duration.zero});
 }
 
 _PlaybackOpenTiming _playbackOpenTiming({
   required bool isTranscoding,
   required Duration? resumePosition,
   required int? durationMs,
+  MediaPartTimeline? partTimeline,
 }) {
+  if (partTimeline != null) {
+    // One file of a stacked item: the player lays it onto the item timeline.
+    // A resume it does not hold — the file holding it is gone, or a download
+    // won with progress of its own — starts this file from its beginning.
+    final part = partTimeline.current;
+    final resumeHeld = resumePosition != null && partTimeline.covers(resumePosition);
+    if (resumePosition != null && !resumeHeld) {
+      appLogger.d(
+        'Stacked part ${partTimeline.currentIndex + 1}/${partTimeline.parts.length} does not hold '
+        'resume ${resumePosition.inMilliseconds}ms; starting at ${part.start.inMilliseconds}ms',
+      );
+    }
+    return _PlaybackOpenTiming(
+      mediaStart: resumeHeld ? resumePosition : part.start,
+      timelineDuration: partTimeline.duration,
+      timelineOffset: part.start,
+    );
+  }
   return _PlaybackOpenTiming(
     mediaStart: resumePosition,
     timelineDuration: isTranscoding && durationMs != null ? Duration(milliseconds: durationMs) : null,
@@ -722,6 +745,11 @@ class VideoPlayerScreenState extends State<VideoPlayerScreen>
 
   // Transcode / quality state
   late TranscodeQualityPreset _selectedQualityPreset;
+
+  /// Whether the user picked the quality — at launch ("Play Version…") or in
+  /// the player — rather than playback starting at the saved default. Sticky
+  /// for this screen, so later episodes and retries honor the pick too.
+  bool _qualityPresetExplicit = false;
   int? _selectedAudioStreamId;
   AudioTrack? _preferredAudioTrack;
   SubtitlePreference? _preferredSubtitleTrack;
@@ -831,9 +859,13 @@ class VideoPlayerScreenState extends State<VideoPlayerScreen>
   late final SpuriousEofRecovery _eofRecovery = SpuriousEofRecovery(
     isLive: widget.isLive,
     isOffline: () => _isOfflinePlayback,
+    isTranscoding: () => _isTranscoding,
     transitionGate: _transitionGate,
     player: () => player,
     metadata: () => _currentMetadata,
+    partTimeline: () => _currentMediaInfo?.partTimeline,
+    transportFaultSeen: () => _transportFaultSeen,
+    serverStoppedSession: () => _progressTracker?.stoppedByServer ?? false,
     reload: ({required Duration resumePosition, required String reason}) => _reloadMediaInPlace(
       metadata: _currentMetadata,
       resumePosition: resumePosition,
@@ -905,6 +937,10 @@ class VideoPlayerScreenState extends State<VideoPlayerScreen>
   /// codecs.
   final TvBackgroundSuspendState _tvSuspend = TvBackgroundSuspendState();
 
+  /// The item a TV background suspend released; its restore reloads only that
+  /// item, never one the viewer moved to while the suspend was settling.
+  MediaItem? _tvSuspendedMetadata;
+
   /// Whether to skip lifecycle actions because PiP is active or about to start.
   /// Apple auto-PiP is system-initiated during the background transition, and
   /// Android auto-PiP on API 26-30 has a brief native transition window before
@@ -915,11 +951,18 @@ class VideoPlayerScreenState extends State<VideoPlayerScreen>
       (Platform.isAndroid && _androidAutoPipTransitionInFlight);
 
   MediaControlsManager? _mediaControlsManager;
+
+  /// [_initializeServices] ran while the open had already failed and left the
+  /// service layer down; the reload that recovers brings it up.
+  bool _playbackServicesDeferred = false;
   late final MediaControlsScreenController _mediaControls = MediaControlsScreenController(
     manager: () => _mediaControlsManager,
     player: () => player,
     isMounted: () => mounted && !_shuttingDown,
     isLive: widget.isLive,
+    hasLiveSeekWindow: () => _live.captureBuffer != null,
+    hasNextLiveChannel: () => _hasNextChannel,
+    hasPreviousLiveChannel: () => _hasPreviousChannel,
     shouldSkipForPip: () => _shouldSkipForPip,
     isPlayerInitialized: () => _isPlayerInitialized,
     metadata: () => _currentMetadata,
@@ -959,6 +1002,11 @@ class VideoPlayerScreenState extends State<VideoPlayerScreen>
   WatchTogetherProvider? _watchTogetherProvider;
   Object? _watchTogetherBinding;
   WatchPlaybackLease? _watchTogetherLease;
+
+  /// The one instance registered as the provider's player media-switch
+  /// owner. Every tear-off of an extension method is a new closure that never
+  /// compares equal, so detach identifies its own registration by this field.
+  late final MediaSwitchCallback _watchTogetherMediaSwitchHandler = _handlePlayerMediaSwitch;
   int _userRateOperation = 0;
   Future<void> _userRateMutation = Future<void>.value();
   Completer<void>? _nativeSeekDrain;
@@ -968,10 +1016,10 @@ class VideoPlayerScreenState extends State<VideoPlayerScreen>
     isMounted: () => mounted,
     canControlPlayback: () => _canControlPlayback(),
     volumeController: () => _volumeController,
-    hasNextEpisode: () => _episode.next != null,
+    hasNextItem: () => _hasNextItem,
     onStop: () => _handleBackButton(),
-    onPlayNext: () => _playNext(),
-    onPlayPrevious: () => _restartOrPlayPrevious(),
+    onNavigateToNextItem: _navigateToNextItem,
+    onNavigateToPreviousItem: _navigateToPreviousItem,
     skipByConfiguredStep: ({required bool forward}) => _skipByConfiguredStep(forward: forward),
     onCycleSubtitles: () => _cycleSubtitleTrack(),
     onCycleAudio: () => _cycleAudioTrack(),
@@ -1008,6 +1056,12 @@ class VideoPlayerScreenState extends State<VideoPlayerScreen>
   bool get _usesLocalPlaybackSource => _effectiveIsOffline;
 
   bool get _isOfflinePlayback => _offlineLibraryMode || _effectiveIsOffline;
+
+  /// Whether a downloaded copy may stand in for a capped
+  /// [_selectedQualityPreset] (issue #2466). Only the saved startup default
+  /// yields; a picked quality is honored. Watch Together keeps the preset's
+  /// source because a local session does not sync with the room.
+  bool get _downloadOutranksQuality => !_qualityPresetExplicit && _activeWatchTogetherSession() == null;
 
   /// Atomically publish a freshly opened [PlaybackSession] and refine the
   /// selection-intent fields from what the backend actually delivered
@@ -1106,8 +1160,8 @@ class VideoPlayerScreenState extends State<VideoPlayerScreen>
   }
 
   /// Collapse every waiter armed for the current open: the attempt's outcome
-  /// (frame-rate startup gate, post-open subtitle readiness, sidecar guard),
-  /// the track manager's pending automatic selection, and the 503 watchdog.
+  /// (frame-rate startup gate, sidecar guard), the track manager's pending
+  /// automatic selection, and the 503 watchdog.
   /// Idempotent. Called from the terminal player-error branches, shutdown,
   /// and dispose — before the player closes its streams, so nothing waits on
   /// a `Stream.first` that can only die with them.
@@ -1178,8 +1232,43 @@ class VideoPlayerScreenState extends State<VideoPlayerScreen>
     _attachToWatchTogetherSession(lease: widget.watchTogetherLease!);
   }
 
+  /// The Windows display-switch hold otherwise runs only behind a real
+  /// display-mode change on entering fullscreen.
   @visibleForTesting
-  bool debugInterceptEofForTesting() => _eofRecovery.interceptEof(player!);
+  Future<void> debugHoldPlaybackForDisplaySwitchForTesting(Duration delay) =>
+      _holdPlaybackForDisplaySwitch(player!, delay);
+
+  /// The TV background suspend otherwise fires only from its Android TV grace
+  /// timer; the restore then runs from the ordinary resume path.
+  @visibleForTesting
+  Future<void> debugSuspendForTvBackgroundForTesting() => _suspendPlayerForTvBackground();
+
+  /// What a completed startup leaves behind, for tests that seed [player]
+  /// directly instead of running the full open.
+  @visibleForTesting
+  Future<void> debugMarkPlaybackStartedForTesting() async {
+    final settings = await SettingsService.getInstance();
+    _volumeController ??= VideoVolumeController(
+      player: player!,
+      settings: settings,
+      initialVolume: 100,
+      onUserChange: _announceVolumeCommand,
+    );
+    setState(() => _isPlayerInitialized = true);
+    _firstFrame.markReady();
+  }
+
+  @visibleForTesting
+  void debugCompleteVideoForTesting() => _onVideoCompleted(true);
+
+  @visibleForTesting
+  bool get debugPlayNextPromptVisibleForTesting => _episode.showPlayNextDialog;
+
+  @visibleForTesting
+  int get debugAutoPlayCountdownForTesting => _episode.autoPlayCountdown.value;
+
+  @visibleForTesting
+  Future<bool> debugInterceptEofForTesting() => _eofRecovery.interceptEof(player!);
 
   @visibleForTesting
   bool get debugPlaybackParkedForTesting => _eofRecovery.parked;
@@ -1206,6 +1295,27 @@ class VideoPlayerScreenState extends State<VideoPlayerScreen>
   @visibleForTesting
   Future<void> debugWirePlayerStreamsForTesting() =>
       _wirePlayerStreams(currentPlayer: player!, settingsService: SettingsService.instance, useExoPlayer: false);
+
+  /// The service layer without standing up the whole player initialization —
+  /// the entry point for asserting what a screen publishes to the OS media
+  /// session.
+  @visibleForTesting
+  Future<void> debugInitializeServicesForTesting() => _initializeServices();
+
+  /// Whether the OS media session is up, which the startup flow gives no
+  /// observable sign of without a native media-controls plugin.
+  @visibleForTesting
+  bool get debugMediaControlsActiveForTesting => _mediaControlsManager != null;
+
+  /// The playback start otherwise runs only at the end of player
+  /// initialization, which no widget test finishes without a live native core.
+  @visibleForTesting
+  Future<void> debugStartPlaybackForTesting() => _startPlayback();
+
+  /// A channel zap, awaited to its end: the transports fire it and forget,
+  /// and its display negotiation outlives the zap's own transition.
+  @visibleForTesting
+  Future<void> debugSwitchLiveChannelForTesting(int delta) => _switchLiveChannel(delta);
 
   /// Adjacency otherwise arrives from the backend's queue containers, which
   /// no widget test stands up; this seeds what [_loadAdjacentEpisodes] would
@@ -1240,7 +1350,7 @@ class VideoPlayerScreenState extends State<VideoPlayerScreen>
       if (watchTogether != null && watchTogether.isPlaybackLeaseCurrent(launchLease)) {
         _watchTogetherProvider = watchTogether;
         _watchTogetherLease = launchLease;
-        watchTogether.onPlayerMediaSwitched = _handlePlayerMediaSwitch;
+        watchTogether.onPlayerMediaSwitched = _watchTogetherMediaSwitchHandler;
       }
     }
     unawaited(AndroidExitDiagnostics.markUiState(AndroidUiState.player));
@@ -1302,6 +1412,7 @@ class VideoPlayerScreenState extends State<VideoPlayerScreen>
     _preferredSubtitleTrack = SubtitlePreference.trackOrNull(widget.preferredSubtitleTrack);
     _preferredSecondarySubtitleTrack = SubtitlePreference.trackOrNull(widget.preferredSecondarySubtitleTrack);
     _selectedQualityPreset = widget.selectedQualityPreset ?? TranscodeQualityPreset.original;
+    _qualityPresetExplicit = widget.selectedQualityPreset != null;
 
     _playNextCancelFocusNode = FocusNode(debugLabel: 'PlayNextCancel');
     _playNextConfirmFocusNode = FocusNode(debugLabel: 'PlayNextConfirm');
@@ -1652,8 +1763,17 @@ class VideoPlayerScreenState extends State<VideoPlayerScreen>
             preferredSubtitleTrack: _preferredSubtitleTrack,
             sessionIdentifier: _playbackSessionIdentifier,
             transcodeSessionId: _playbackTranscodeSessionId,
+            // The same resume the open will land on (see
+            // _resolveOpenResumePosition): a stacked item opens the file
+            // holding it.
+            startPosition: resolveOpenResumePosition(
+              requested: widget.initialPosition,
+              shuffleFromBeginning: widget.initialPosition == null && _opensShuffledFromBeginning(settingsService),
+              viewOffsetMs: _currentMetadata.viewOffsetMs,
+            ),
           ),
           offlineLibraryMode: false,
+          downloadOutranksQuality: _downloadOutranksQuality,
         );
         // If MPV setup below throws before `_startPlayback` awaits this,
         // tell Dart we've "handled" the future so it's not reported as an
@@ -1716,6 +1836,18 @@ class VideoPlayerScreenState extends State<VideoPlayerScreen>
       if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS) {
         final dvConversionMode = settingsService.read(SettingsService.dvConversionMode);
         await currentPlayer.setProperty('dv-conversion-mode', dvConversionMode.nativeValue);
+      }
+      // Before the first file, so its opening route is already decided: a
+      // later write would start it on one renderer and move it to the other.
+      if (Platform.isAndroid && !useExoPlayer) {
+        final hdrSdrConversion = settingsService.read(SettingsService.hdrSdrConversion);
+        await currentPlayer.setProperty('hdr-sdr-conversion', hdrSdrConversion.nativeValue);
+      }
+      // Also before the first file: Android mpv picks the decoder per file
+      // before it opens, and tvOS asks the TV for a mode at the first frame.
+      if ((Platform.isAndroid && !useExoPlayer) || PlatformDetector.isAppleTV()) {
+        final disableDolbyVision = settingsService.read(SettingsService.disableDolbyVision);
+        await currentPlayer.setProperty('dolby-vision-output', disableDolbyVision ? 'no' : 'yes');
       }
       if (Platform.isIOS || Platform.isMacOS) {
         await currentPlayer.setProperty('dv-conversion-log', debugLoggingEnabled ? 'yes' : 'no');
@@ -1934,27 +2066,19 @@ class VideoPlayerScreenState extends State<VideoPlayerScreen>
         }
       }
 
-      final audioSyncOffset = ScopedPlayerPrefs.resolve(ScopedPlayerPrefs.audioSyncOffset, _currentMetadata);
-      if (audioSyncOffset != 0) {
-        final offsetSeconds = audioSyncOffset / 1000.0;
-        await currentPlayer.setProperty('audio-delay', offsetSeconds.toString());
-      }
-
-      final subtitleSyncOffset = ScopedPlayerPrefs.resolve(ScopedPlayerPrefs.subtitleSyncOffset, _currentMetadata);
-      if (subtitleSyncOffset != 0) {
-        final offsetSeconds = subtitleSyncOffset / 1000.0;
-        await currentPlayer.setProperty('sub-delay', offsetSeconds.toString());
-      }
+      await PlayerSyncOffsets.of(currentPlayer).applyFor(_currentMetadata);
 
       if (settingsService.read(SettingsService.audioNormalization)) {
         await currentPlayer.setAudioNormalization(true);
       }
 
-      // After the passthrough apply: downmix wins on both backends (mpv
-      // clears audio-spdif, ExoPlayer force-decodes encoded audio).
-      if (settingsService.read(SettingsService.audioDownmix)) {
-        await currentPlayer.setAudioDownmix(
-          enabled: true,
+      // After the passthrough apply: the stereo limit wins on both backends
+      // (mpv clears audio-spdif, ExoPlayer force-decodes encoded audio). The
+      // 5.1 limit only shapes decoded PCM and leaves passthrough alone.
+      final audioChannelLimit = settingsService.read(SettingsService.audioChannelLimit);
+      if (audioChannelLimit != AudioChannelLimit.original) {
+        await currentPlayer.setAudioChannelLimit(
+          audioChannelLimit,
           centerBoostDb: settingsService.read(SettingsService.downmixCenterBoost),
           normalize: settingsService.read(SettingsService.audioDownmixNormalize),
         );
@@ -2014,6 +2138,7 @@ class VideoPlayerScreenState extends State<VideoPlayerScreen>
         player: currentPlayer,
         settings: settingsService,
         initialVolume: savedVolume,
+        onUserChange: _announceVolumeCommand,
       );
 
       player = currentPlayer;
@@ -2054,7 +2179,7 @@ class VideoPlayerScreenState extends State<VideoPlayerScreen>
             OrientationHelper.setLandscapeOrientation();
           } else {
             // Unlocked: Allow all orientations immediately
-            unawaited(SystemChrome.setPreferredOrientations(DeviceOrientation.values));
+            unawaited(OrientationHelper.restoreDefaultOrientations());
             unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky));
           }
           // Immersive mode is requested once; a fold/unfold or display switch
@@ -2518,6 +2643,23 @@ class VideoPlayerScreenState extends State<VideoPlayerScreen>
     );
   }
 
+  /// Announce an accepted user volume command with the top pill, whatever the
+  /// chrome state. The visible chrome does render volume, but as a 100 px
+  /// slider that moves 3 % per wheel notch: a viewer on a handheld scrolled
+  /// themselves to silence without noticing (#2357). Every input reaches
+  /// here — wheel, shortcut keys, the OSD slider, companion remote — while
+  /// volume the player reports on its own never does.
+  void _announceVolumeCommand(double volume) {
+    if (!mounted) return;
+    final percent = volume.round();
+    final icon = percent == 0
+        ? Symbols.volume_off_rounded
+        : percent < 50
+        ? Symbols.volume_down_rounded
+        : Symbols.volume_up_rounded;
+    _toastController.show(icon, t.videoControls.volumePercent(percent: percent));
+  }
+
   /// Apply a transport command on behalf of a hardware remote (Apple TV bridge
   /// or a hardware media key). Mirrors the controls path: rewind-on-resume,
   /// then play/pause with playback intent, then announce.
@@ -2582,6 +2724,10 @@ class VideoPlayerScreenState extends State<VideoPlayerScreen>
   }
 
   String? _lastLogError;
+
+  /// Whether the transport layer has logged a fault for the current file;
+  /// latched per open, read by [SpuriousEofRecovery] to classify an EOF.
+  bool _transportFaultSeen = false;
 
   /// Statuses in [fatalPlaybackHttpStatuses] the player's own log stream
   /// reported for this open. Each latches independently: the reconnect path

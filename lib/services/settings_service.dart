@@ -31,6 +31,7 @@ export 'base_shared_preferences_service.dart'
         EnumPref,
         NullableEnumPref,
         JsonPref;
+import '../models/audio_channel_limit.dart';
 import '../models/audio_quality_preset.dart';
 import '../models/transcode_quality_preset.dart';
 import '../navigation/navigation_tabs.dart';
@@ -159,6 +160,24 @@ extension DvConversionModePreferenceNativeValue on DvConversionModePreference {
   };
 }
 
+/// Who converts HDR for a display without HDR output, on the Android mpv
+/// backend.
+///
+/// [device] leaves the video on the platform's video plane, as ExoPlayer,
+/// Kodi and VLC do: free on weak GPUs, colours up to the device. [player]
+/// tone-maps in mpv's GL renderer, which 4K outruns on low-end TV GPUs.
+/// [auto] picks [device] from Android 9, whose compositor converts an HDR
+/// layer itself, and [player] below it.
+enum HdrSdrConversion { auto, device, player }
+
+extension HdrSdrConversionNativeValue on HdrSdrConversion {
+  String get nativeValue => switch (this) {
+    HdrSdrConversion.auto => 'auto',
+    HdrSdrConversion.device => 'device',
+    HdrSdrConversion.player => 'player',
+  };
+}
+
 enum PlaybackBufferTier { auto, large, extraLarge }
 
 extension PlaybackBufferTierNativeValue on PlaybackBufferTier {
@@ -177,6 +196,7 @@ const String _legacyMpvConfigEntriesKey = 'mpv_config_entries';
 const String _legacyUseExoPlayerKey = 'use_exoplayer';
 const String _legacyAutoSkipIntroKey = 'auto_skip_intro';
 const String _legacyAutoSkipCreditsKey = 'auto_skip_credits';
+const String _legacyAudioDownmixKey = 'audio_downmix';
 
 /// Migrates from the legacy enum-string format and clamps to 1..5.
 class _LibraryDensityPref extends Pref<int> {
@@ -270,15 +290,25 @@ class _EpisodePosterModePref extends EnumPref<EpisodePosterMode> {
   }
 }
 
-/// Migrates from the legacy `auto_skip_*` booleans: on → [SkipMarkerMode.auto],
-/// off → [SkipMarkerMode.button], which is what each used to mean.
-class _SkipMarkerModePref extends EnumPref<SkipMarkerMode> {
+/// An [EnumPref] that replaced a boolean preference stored under [legacyKey].
+///
+/// The boolean is migrated on first read, and [SettingsService.legacyBoolPrefs]
+/// lets the portable settings codec and reset carry an unread one across too.
+class LegacyBoolEnumPref<T extends Enum> extends EnumPref<T> {
   final String legacyKey;
+  final T legacyTrue;
+  final T legacyFalse;
 
-  const _SkipMarkerModePref(super.key, {required this.legacyKey})
-    : super(values: SkipMarkerMode.values, defaultValue: SkipMarkerMode.button);
+  const LegacyBoolEnumPref(
+    super.key, {
+    required this.legacyKey,
+    required super.values,
+    required T super.defaultValue,
+    required this.legacyTrue,
+    required this.legacyFalse,
+  });
 
-  SkipMarkerMode fromLegacy(bool value) => value ? SkipMarkerMode.auto : SkipMarkerMode.button;
+  T fromLegacy(bool value) => value ? legacyTrue : legacyFalse;
 
   @override
   Future<void> removeFrom(BaseSharedPreferencesService svc, {void Function()? checkCurrent}) async {
@@ -288,8 +318,8 @@ class _SkipMarkerModePref extends EnumPref<SkipMarkerMode> {
   }
 
   @override
-  SkipMarkerMode readFrom(BaseSharedPreferencesService svc) {
-    // A committed mode is authoritative, including one restored before this
+  T readFrom(BaseSharedPreferencesService svc) {
+    // A committed value is authoritative, including one restored before this
     // preference's first read. A leftover boolean must never replace it.
     if (svc.prefs.containsKey(key)) {
       if (svc.prefs.containsKey(legacyKey)) svc.prefs.remove(legacyKey);
@@ -304,6 +334,18 @@ class _SkipMarkerModePref extends EnumPref<SkipMarkerMode> {
     }
     return super.readFrom(svc);
   }
+}
+
+/// Migrates from the legacy `auto_skip_*` booleans: on → [SkipMarkerMode.auto],
+/// off → [SkipMarkerMode.button], which is what each used to mean.
+class _SkipMarkerModePref extends LegacyBoolEnumPref<SkipMarkerMode> {
+  const _SkipMarkerModePref(super.key, {required super.legacyKey})
+    : super(
+        values: SkipMarkerMode.values,
+        defaultValue: SkipMarkerMode.button,
+        legacyTrue: SkipMarkerMode.auto,
+        legacyFalse: SkipMarkerMode.button,
+      );
 }
 
 /// Stored as the locale enum name; null/empty falls back to the device locale.
@@ -581,11 +623,13 @@ class SettingsService extends BaseSharedPreferencesService {
   static const skipIntroMode = _SkipMarkerModePref('skip_intro_mode', legacyKey: _legacyAutoSkipIntroKey);
   static const skipCreditsMode = _SkipMarkerModePref('skip_credits_mode', legacyKey: _legacyAutoSkipCreditsKey);
 
-  /// Previous format-v1 representations of these logical preferences.
-  /// Shared by the typed migration and portable settings codec.
-  static const legacySkipMarkerPrefs = {
+  /// Previous format-v1 boolean representations of enum preferences, keyed by
+  /// the old key. Shared by the typed migration, reset, and the portable
+  /// settings codec.
+  static const Map<String, LegacyBoolEnumPref<Enum>> legacyBoolPrefs = {
     _legacyAutoSkipIntroKey: skipIntroMode,
     _legacyAutoSkipCreditsKey: skipCreditsMode,
+    _legacyAudioDownmixKey: audioChannelLimit,
   };
 
   static const forceSkipMarkerFallback = BoolPref('force_skip_marker_fallback');
@@ -618,6 +662,17 @@ class SettingsService extends BaseSharedPreferencesService {
     values: DvConversionModePreference.values,
     defaultValue: DvConversionModePreference.auto,
   );
+
+  /// Play Dolby Vision files as the HDR10/HLG base layer they carry, so a TV
+  /// that mishandles Dolby Vision never receives it (#2543). Android mpv and
+  /// Apple TV only; Profile 5 has no base layer and stays Dolby Vision on
+  /// Android.
+  static const disableDolbyVision = BoolPref('disable_dolby_vision');
+  static const hdrSdrConversion = EnumPref<HdrSdrConversion>(
+    'hdr_sdr_conversion',
+    values: HdrSdrConversion.values,
+    defaultValue: HdrSdrConversion.auto,
+  );
   static const defaultQualityPreset = EnumPref<TranscodeQualityPreset>(
     'default_quality_preset',
     values: TranscodeQualityPreset.values,
@@ -639,6 +694,14 @@ class SettingsService extends BaseSharedPreferencesService {
   /// limitation (#2193). Plex-only by design: MediaBrowser servers make the
   /// equivalent direct-play-vs-transcode call server-side.
   static const directPlayCoveredQuality = BoolPref('direct_play_covered_quality', defaultValue: true);
+
+  /// Ids of the [RankedVideoCodec]s the user refused: the server transcodes
+  /// them instead of sending them, and never picks them as a transcode output
+  /// (#2443). Desktop-only because desktop has no hardware-decode probe; kept
+  /// device-local (not exported) because the point is one weak machine
+  /// refusing a codec the user's other devices decode fine. Stores the
+  /// unchecked codecs so a codec added to the list later starts accepted.
+  static const refusedVideoCodecs = StringListPref('refused_video_codecs');
   static const musicQualityPreset = EnumPref<AudioQualityPreset>(
     'music_quality_preset',
     values: AudioQualityPreset.values,
@@ -744,7 +807,16 @@ class SettingsService extends BaseSharedPreferencesService {
   static const ambientLighting = BoolPref('ambient_lighting');
   static const audioPassthrough = _AudioPassthroughPref();
   static const audioNormalization = BoolPref('audio_normalization');
-  static const audioDownmix = BoolPref('audio_downmix');
+
+  /// Replaced the `audio_downmix` stereo toggle: on → [AudioChannelLimit.stereo].
+  static const audioChannelLimit = LegacyBoolEnumPref<AudioChannelLimit>(
+    'audio_channel_limit',
+    legacyKey: _legacyAudioDownmixKey,
+    values: AudioChannelLimit.values,
+    defaultValue: AudioChannelLimit.original,
+    legacyTrue: AudioChannelLimit.stereo,
+    legacyFalse: AudioChannelLimit.original,
+  );
   static const audioDownmixNormalize = BoolPref('audio_downmix_normalize', defaultValue: true);
   static const liveTvDefaultFavorites = BoolPref('live_tv_default_favorites');
   static const matchRefreshRate = BoolPref('match_refresh_rate');
@@ -761,6 +833,13 @@ class SettingsService extends BaseSharedPreferencesService {
     return NullableStringPref(profileScopedPrefsKey(profileId, 'watch_together_recent_rooms'));
   }
 
+  static NullableStringPref recentMetadataTagsForProfile(String profileId) {
+    if (profileId.trim().isEmpty) {
+      throw ArgumentError.value(profileId, 'profileId', 'Must not be empty');
+    }
+    return NullableStringPref(profileScopedPrefsKey(profileId, 'metadata_recent_tags'));
+  }
+
   static final companionRemoteLastHostAddress = NullableStringPref(
     'companion_remote_last_host_address',
     transform: _trimEmptyAsNull,
@@ -768,7 +847,9 @@ class SettingsService extends BaseSharedPreferencesService {
 
   static final maxVolume = IntPref('max_volume', defaultValue: 100, transform: (v) => v.clamp(100, 300));
   static final downmixCenterBoost = IntPref('downmix_center_boost', transform: (v) => v.clamp(0, 12));
-  static final subtitlePosition = IntPref('subtitle_position', defaultValue: 100, transform: (v) => v.clamp(0, 100));
+  // mpv's sub-pos range: values above 100 move subtitles further down than
+  // their default bottom margin (#2331). ExoPlayer still caps at 100.
+  static final subtitlePosition = IntPref('subtitle_position', defaultValue: 100, transform: (v) => v.clamp(0, 150));
   static final defaultPlaybackSpeed = DoublePref(
     'default_playback_speed',
     defaultValue: 1.0,
@@ -1316,6 +1397,8 @@ class SettingsService extends BaseSharedPreferencesService {
     matchContentResolution,
     tunneledPlayback,
     dvConversionMode,
+    disableDolbyVision,
+    hdrSdrConversion,
     musicVolume,
     resumeMusicOnLaunch,
     autoPlayNextEpisode,
@@ -1348,7 +1431,7 @@ class SettingsService extends BaseSharedPreferencesService {
     ambientLighting,
     audioPassthrough,
     audioNormalization,
-    audioDownmix,
+    audioChannelLimit,
     audioDownmixNormalize,
     appLocale,
     autoPip,
@@ -1431,6 +1514,7 @@ class SettingsService extends BaseSharedPreferencesService {
     customRelayUrl,
     companionRemoteLastHostAddress,
     rememberedBrightnessLevel,
+    refusedVideoCodecs,
   ];
 
   /// Settings that "Reset All Settings" actually resets.
@@ -1463,7 +1547,8 @@ class SettingsService extends BaseSharedPreferencesService {
     'auto_skip_delay' => (1, 30),
     'subtitle_font_size' => (10, 80),
     'subtitle_border_size' => (0, 5),
-    'subtitle_position' || 'subtitle_background_opacity' || 'music_volume' => (0, 100),
+    'subtitle_position' => (0, 150),
+    'subtitle_background_opacity' || 'music_volume' => (0, 100),
     'volume' => (0, 300),
     'max_volume' => (100, 300),
     'downmix_center_boost' => (0, 12),
@@ -1522,11 +1607,13 @@ class SettingsService extends BaseSharedPreferencesService {
   }
 
   Future<void> resetAllSettings() async {
-    // Marker modes are portable-only. Preserve cold-upgrade choices before
-    // retiring their old representation, just as if they had already been read.
-    for (final entry in legacySkipMarkerPrefs.entries) {
+    // Materialize an unread legacy choice before retiring its old key, just as
+    // if it had already been read — but only where the new preference survives
+    // the reset (the portable-only marker modes); the rest are reset anyway.
+    final resettable = _resettablePrefs.toSet();
+    for (final entry in legacyBoolPrefs.entries) {
       final pref = entry.value;
-      if (!prefs.containsKey(pref.key)) {
+      if (!resettable.contains(pref) && !prefs.containsKey(pref.key)) {
         final legacyValue = readNullableBool(entry.key);
         if (legacyValue != null) await pref.writeTo(this, pref.fromLegacy(legacyValue));
       }

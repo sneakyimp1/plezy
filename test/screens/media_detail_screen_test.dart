@@ -3,7 +3,7 @@ import 'package:drift/native.dart';
 import 'package:plezy/media/ids.dart';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -53,6 +53,7 @@ import 'package:plezy/widgets/cycling_media_backdrop.dart';
 import 'package:plezy/widgets/episode_card.dart';
 import 'package:plezy/widgets/fitted_metadata_line.dart';
 import 'package:plezy/widgets/fitting_title_text.dart';
+import 'package:plezy/widgets/focusable_tab_chip.dart';
 import 'package:plezy/widgets/tv_browse_rail.dart';
 import 'package:plezy/widgets/media_card.dart';
 import 'package:plezy/widgets/media_details_sheet.dart';
@@ -1165,6 +1166,126 @@ void main() {
     semantics.dispose();
   });
 
+  testWidgets('TV detail hero adds the scores from the focused episode\'s own fetch (#2539)', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await SettingsService.getInstance();
+    tester.view.physicalSize = const Size(1920, 1080);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final show = testMediaItem(
+      id: 'show_1',
+      backend: MediaBackend.plex,
+      kind: MediaKind.show,
+      title: 'The Show',
+      serverId: 'server_1',
+      serverName: 'Server',
+    ).copyWith(ratings: const [MediaRatingSource(source: 'imdb', value: 8.4)]);
+    final season = testMediaItem(
+      id: 'season_1',
+      backend: MediaBackend.plex,
+      kind: MediaKind.season,
+      title: 'Season 1',
+      index: 1,
+      parentId: show.id,
+      serverId: show.serverId,
+      serverName: show.serverName,
+    );
+    // Rail entries as a Plex children listing sends them: the scalar TMDB
+    // pair only.
+    MediaItem episode(String id, int index, double tmdb) =>
+        testMediaItem(
+          id: id,
+          backend: MediaBackend.plex,
+          kind: MediaKind.episode,
+          title: 'Episode $index',
+          index: index,
+          parentId: season.id,
+          parentIndex: season.index,
+          grandparentId: show.id,
+          grandparentTitle: show.title,
+          serverId: show.serverId,
+          serverName: show.serverName,
+        ).copyWith(
+          ratings: [MediaRatingSource(source: 'tmdb', value: tmdb)],
+        );
+    final client = _FakeMediaServerClient(
+      show: show,
+      childrenByParent: {
+        show.id: [season],
+        season.id: [episode('ep1', 1, 7.7), episode('ep2', 2, 7.1)],
+      },
+      // Episode 1's own `/library/metadata/{id}` adds the `Rating[]` array;
+      // episode 2's fetch returns its listing entry unchanged.
+      rawItems: {
+        'ep1': {
+          'ratingKey': 'ep1',
+          'type': 'episode',
+          'title': 'Episode 1',
+          'parentRatingKey': season.id,
+          'grandparentRatingKey': show.id,
+          'parentIndex': 1,
+          'index': 1,
+          'audienceRating': 7.7,
+          'audienceRatingImage': 'themoviedb://image.rating',
+          'Rating': [
+            {'image': 'imdb://image.rating', 'value': 7.8, 'type': 'audience'},
+            {'image': 'themoviedb://image.rating', 'value': 7.7, 'type': 'audience'},
+          ],
+        },
+      },
+    );
+    final provider = testMultiServer(clients: [client]).provider;
+
+    await tester.pumpWidget(
+      TranslationProvider(
+        child: ChangeNotifierProvider<MultiServerProvider>.value(
+          value: provider,
+          child: MaterialApp(
+            theme: monoTheme(dark: true),
+            home: withProfileNavigationScope(
+              child: SizedBox(width: 1920, height: 1080, child: MediaDetailScreen(metadata: show)),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    final information = find.bySemanticsIdentifier('tv_detail_information');
+    String announced() => tester.getSemantics(information).label;
+
+    tester.state<TvBrowseRailState>(find.byType(TvBrowseRail)).requestFocus();
+    await tester.pump();
+    // The listing's score alone until the episode's fetch lands — never the
+    // show's IMDb standing in for the episode's.
+    expect(announced(), contains('TMDB 77%'));
+    expect(announced(), isNot(contains('IMDb')));
+
+    // Past the playback probe's debounce: the fetch it already makes carries
+    // the episode's IMDb score.
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump();
+    expect(announced(), contains('TMDB 77%, IMDb 7.8'));
+    expect(
+      find.descendant(of: find.byKey(const ValueKey('tv_detail_information_semantics')), matching: find.text('7.8')),
+      findsOneWidget,
+    );
+
+    // The scores belong to that episode alone.
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump();
+    expect(announced(), contains('Episode 2'));
+    expect(announced(), contains('TMDB 71%'));
+    expect(announced(), isNot(contains('IMDb')));
+    semantics.dispose();
+  });
+
   testWidgets('TV detail action row ends with the tracks Play will use, off the focus path', (tester) async {
     await SettingsService.getInstance();
     tester.view.physicalSize = const Size(1920, 1080);
@@ -2068,7 +2189,9 @@ void main() {
       // drop by usefulness — rating badges from the end first, then the
       // quality label, certification, and runtime — never by wrapping onto a
       // second run the height clip would hide. The interactive Rate chip and
-      // the year go last and first, respectively.
+      // the year go last and first, respectively. Phone widths take the
+      // scores off the strip onto a row of their own, where the strip's
+      // shedding can no longer hide every one of them (#2569).
       final movie =
           testMediaItem(
             id: 'chip_movie',
@@ -2130,14 +2253,28 @@ void main() {
       await resizeTo(660);
       expectChips(present: ['2017', 'PG-13', '1h 46min', '1080p', '9.2', rate], absent: ['7.4', '6.4']);
 
-      // Then the whole pill, the quality label, and the certification go —
-      // never the runtime, year, or Rate.
+      void expectScoresRow(List<String> scores) {
+        final rateDy = tester.getCenter(find.text(rate)).dy;
+        final rowDy = tester.getCenter(find.text(scores.first)).dy;
+        expect(rowDy, greaterThan(rateDy + 20), reason: 'the scores row sits beneath the strip');
+        for (final score in scores) {
+          expect(find.text(score), findsOneWidget, reason: '"$score" should be on the scores row');
+          expect(tester.getCenter(find.text(score)).dy, moreOrLessEquals(rowDy, epsilon: 4));
+        }
+      }
+
+      // Phone width: every score moves to its own row, and the strip sheds
+      // the quality label and the certification — never the runtime, year,
+      // or Rate.
       await resizeTo(420);
       expectChips(present: ['2017', '1h 46min', rate], absent: ['9.2', '7.4', '6.4', '1080p', 'PG-13']);
+      expectScoresRow(['9.2', '7.4', '6.4']);
 
-      // Down to the bone: the year and the interactive Rate chip survive.
+      // Down to the bone: the strip keeps the year and the interactive Rate
+      // chip, and the scores row still has room for all three.
       await resizeTo(320);
       expectChips(present: ['2017', rate], absent: ['1h 46min', '1080p', 'PG-13', '9.2']);
+      expectScoresRow(['9.2', '7.4', '6.4']);
     });
 
     testWidgets('phone-width hero centres the title, chip rows and actions; wider heroes stay left', (tester) async {
@@ -2181,6 +2318,44 @@ void main() {
       }
       expect(tester.widget<FittingTitleText>(title()).textAlign, TextAlign.center);
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('logo-less title gets a wider slot than the logo and shrinks to fit it', (tester) async {
+      // #1796: the fallback title used to be laid out in the 400px logo slot
+      // and ellipsized on its second line with most of a desktop hero still
+      // empty beside it. It gets twice the logo slot — not the whole hero,
+      // where a one-line title stops reading as a title block — and a title
+      // still too long for two lines of that shrinks instead of ellipsizing.
+      const title = 'A Title Long Enough To Need The Whole Wide Hero';
+      final movie = testMediaItem(
+        id: 'wide_title_movie',
+        backend: MediaBackend.jellyfin,
+        kind: MediaKind.movie,
+        title: title,
+        year: 2017,
+        serverId: 'server_1',
+        serverName: 'Server',
+      );
+      final client = _FakeMediaServerClient(show: movie, childrenByParent: const {});
+
+      await pumpPhoneDetail(tester, client, movie);
+
+      final titleFinder = find.descendant(of: find.byType(FittingTitleText), matching: find.text(title));
+      final paragraph = tester.renderObject<RenderParagraph>(titleFinder);
+      // Twice the 400px logo slot inside the 1068px hero column.
+      expect(paragraph.constraints.maxWidth, moreOrLessEquals(800, epsilon: 1));
+
+      // 47 glyphs at the 40px base need 1880px, more than two 800px lines:
+      // the size drops until the title fits without an ellipsis.
+      final style = tester.widget<Text>(titleFinder).style!;
+      expect(style.fontSize, lessThan(40));
+      final painter = TextPainter(
+        text: TextSpan(text: title, style: style),
+        maxLines: 2,
+        textDirection: TextDirection.ltr,
+      )..layout(maxWidth: paragraph.constraints.maxWidth);
+      expect(painter.didExceedMaxLines, isFalse);
+      painter.dispose();
     });
 
     testWidgets('portrait phone hero shows square art instead of the cropped backdrop', (tester) async {
@@ -2433,6 +2608,164 @@ void main() {
 
       expect(episodeRowHasProgress(tester, '1. Episode S1E1'), isFalse);
       expect(episodeRowWatched(tester, '1. Episode S1E1'), isTrue);
+    });
+
+    Future<void> tapSeason(WidgetTester tester, String title) async {
+      await tester.tap(find.text(title));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+
+    testWidgets('a failed season switch shows its error, not the previous season episodes', (tester) async {
+      final show = buildShow();
+      final season1 = buildSeason(show, 1);
+      final season2 = buildSeason(show, 2);
+      final client = _FakeMediaServerClient(
+        show: show,
+        childrenByParent: {
+          show.id: [season1, season2],
+          season1.id: [buildEpisode(show, season1, 1)],
+        },
+        childrenPageErrors: {season2.id: StateError('offline')},
+      );
+
+      await pumpPhoneDetail(tester, client, show);
+      expect(episodeCardFor('1. Episode S1E1'), findsOneWidget);
+
+      await tapSeason(tester, 'Season 2');
+
+      expect(episodeCardFor('1. Episode S1E1'), findsNothing);
+      expect(find.text(t.messages.episodesLoadFailed), findsOneWidget);
+    });
+
+    testWidgets('returning to a season whose load is still running shows its episodes when it lands', (tester) async {
+      final show = buildShow();
+      final seasons = [for (var index = 1; index <= 3; index++) buildSeason(show, index)];
+      final season2Page = Completer<List<MediaItem>>();
+      final season3Page = Completer<List<MediaItem>>();
+      final client = _FakeMediaServerClient(
+        show: show,
+        childrenByParent: {
+          show.id: seasons,
+          seasons[0].id: [buildEpisode(show, seasons[0], 1)],
+        },
+        childrenPageFutures: {seasons[1].id: season2Page.future, seasons[2].id: season3Page.future},
+      );
+
+      await pumpPhoneDetail(tester, client, show);
+      // Season 2 starts loading, Season 3 starts another load, and the return
+      // to Season 2 finds its first load still running.
+      await tapSeason(tester, 'Season 2');
+      await tapSeason(tester, 'Season 3');
+      await tapSeason(tester, 'Season 2');
+
+      season3Page.complete([buildEpisode(show, seasons[2], 1)]);
+      season2Page.complete([buildEpisode(show, seasons[1], 1)]);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(episodeCardFor('1. Episode S2E1'), findsOneWidget);
+      expect(episodeCardFor('1. Episode S3E1'), findsNothing);
+    });
+
+    testWidgets('refreshing a season discards its older continuation page', (tester) async {
+      final show = buildShow();
+      final season1 = buildSeason(show, 1);
+      final season2 = buildSeason(show, 2);
+      final episodes = [for (var index = 1; index <= 250; index++) buildEpisode(show, season1, index)];
+      // The continuation requested before the refresh answers with the rows
+      // the season had back then.
+      final staleContinuation = Completer<List<MediaItem>>();
+      final client = _FakeMediaServerClient(
+        show: show,
+        childrenByParent: {
+          show.id: [season1, season2],
+          season1.id: episodes,
+        },
+        childrenPageFuturesByStart: {'${season1.id}@200': staleContinuation.future},
+      );
+
+      await pumpPhoneDetail(tester, client, show);
+      final list = find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down).first;
+      int continuationRequests() =>
+          client.childrenPageCalls.where((call) => call.parentId == season1.id && call.start == 200).length;
+      Future<void> scrollToEnd({required int untilRequests}) async {
+        // Back off first: paging reacts to scrolling, and the list may already
+        // rest at its end.
+        await tester.drag(list, const Offset(0, 1000));
+        await tester.pump();
+        for (var i = 0; i < 40 && continuationRequests() < untilRequests; i++) {
+          await tester.drag(list, const Offset(0, -4000));
+          await tester.pump();
+        }
+      }
+
+      await scrollToEnd(untilRequests: 1);
+      expect(continuationRequests(), 1);
+
+      // Refresh the season while its old continuation is still in flight.
+      final refresh = tester.widget<EpisodeCard>(find.byType(EpisodeCard).first).onListRefresh!();
+      await tester.pump();
+      await refresh;
+      await tester.pump();
+
+      staleContinuation.complete([
+        ...episodes.take(200),
+        for (var index = 201; index <= 250; index++)
+          buildEpisode(show, season1, index).copyWith(title: 'Stale S1E$index'),
+      ]);
+      await tester.pump();
+      await tester.pump();
+
+      // The refreshed first page asks for its own continuation.
+      await scrollToEnd(untilRequests: 2);
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.drag(list, const Offset(0, -100000));
+      await tester.pump();
+
+      expect(find.textContaining('Stale S1E'), findsNothing);
+      expect(continuationRequests(), 2);
+      expect(episodeCardFor('250. Episode S1E250'), findsOneWidget);
+    });
+
+    testWidgets('deleting the selected season moves the selection to its neighbour', (tester) async {
+      final show = buildShow();
+      final season1 = buildSeason(show, 1);
+      final season2 = buildSeason(show, 2);
+      final client = _FakeMediaServerClient(
+        show: show,
+        childrenByParent: {
+          show.id: [season1, season2],
+          season1.id: [buildEpisode(show, season1, 1)],
+          season2.id: [buildEpisode(show, season2, 1)],
+        },
+      );
+
+      await pumpPhoneDetail(tester, client, show);
+      expect(episodeCardFor('1. Episode S1E1'), findsOneWidget);
+
+      await emit(
+        tester,
+        () => DeletionNotifier().notify(
+          DeletionEvent(
+            itemId: season1.id,
+            serverId: ServerId('server_1'),
+            parentChain: const [],
+            mediaType: 'season',
+            isDownloadOnly: false,
+            origin: DeletionOrigin.serverPush,
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Season 1'), findsNothing);
+      expect(episodeCardFor('1. Episode S1E1'), findsNothing);
+      expect(episodeCardFor('1. Episode S2E1'), findsOneWidget);
+      final season2Chip = tester.widget<FocusableTabChip>(
+        find.ancestor(of: find.text('Season 2'), matching: find.byType(FocusableTabChip)),
+      );
+      expect(season2Chip.isSelected, isTrue);
     });
   });
 
@@ -3002,6 +3335,10 @@ class _FakeMediaServerClient implements MediaServerClient {
   final MediaItem show;
   final Map<String, List<MediaItem>> childrenByParent;
   final Map<String, Future<List<MediaItem>>> childrenPageFutures;
+
+  /// One-shot overrides keyed by `parentId@start`: the next page request at
+  /// that offset is sliced from this future's list instead.
+  final Map<String, Future<List<MediaItem>>> childrenPageFuturesByStart;
   final Map<String, Future<List<MediaItem>>> childrenFutures;
   final Map<String, Object> childrenPageErrors;
   final Future<List<MediaItem>>? pendingPlayableDescendants;
@@ -3031,12 +3368,14 @@ class _FakeMediaServerClient implements MediaServerClient {
     required this.show,
     required this.childrenByParent,
     this.childrenPageFutures = const {},
+    Map<String, Future<List<MediaItem>>>? childrenPageFuturesByStart,
     this.childrenFutures = const {},
     this.childrenPageErrors = const {},
     this.pendingPlayableDescendants,
     this.mediaSourcesById = const {},
     Map<String, Map<String, dynamic>>? rawItems,
-  }) : rawItems = rawItems ?? {};
+  }) : rawItems = rawItems ?? {},
+       childrenPageFuturesByStart = childrenPageFuturesByStart ?? {};
 
   @override
   ServerId get serverId => ServerId('server_1');
@@ -3126,7 +3465,9 @@ class _FakeMediaServerClient implements MediaServerClient {
     final error = childrenPageErrors[parentId];
     if (error != null) throw error;
     final all =
-        await (childrenPageFutures[parentId] ?? Future.value(childrenByParent[parentId] ?? const <MediaItem>[]));
+        await (childrenPageFuturesByStart.remove('$parentId@$start') ??
+            childrenPageFutures[parentId] ??
+            Future.value(childrenByParent[parentId] ?? const <MediaItem>[]));
     return fakeLibraryPage(all, start: start, size: size);
   }
 

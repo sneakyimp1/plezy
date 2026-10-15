@@ -14,6 +14,8 @@ import 'package:plezy/media/media_item.dart';
 import 'package:plezy/media/media_kind.dart';
 import 'package:plezy/media/media_server_client.dart';
 import 'package:plezy/mpv/models.dart';
+import 'package:plezy/models/audio_channel_limit.dart';
+import 'package:plezy/models/companion_remote/remote_command.dart';
 import 'package:plezy/models/download_models.dart';
 import 'package:plezy/mpv/player/audio_rendering_mode.dart';
 import 'package:plezy/mpv/player/player.dart';
@@ -24,6 +26,7 @@ import 'package:plezy/providers/multi_server_provider.dart';
 import 'package:plezy/services/agent_control_protocol.dart';
 import 'package:plezy/services/agent_playback_commands.dart';
 import 'package:plezy/services/base_shared_preferences_service.dart';
+import 'package:plezy/services/companion_remote/companion_remote_receiver.dart';
 import 'package:plezy/services/discord_rpc_service.dart';
 import 'package:plezy/services/media_controls_manager.dart';
 import 'package:plezy/services/multi_server_manager.dart';
@@ -242,6 +245,9 @@ class FakePlayer implements Player {
   Duration? outgoingSourcePosition;
 
   @override
+  Duration get timelineOffset => Duration.zero;
+
+  @override
   bool get audioPassthroughActive => false;
 
   // Audio only; there is no video output to carry HDR.
@@ -258,6 +264,7 @@ class FakePlayer implements Player {
     bool isLive = false,
     List<SubtitleTrack>? externalSubtitles,
     Duration? timelineDuration,
+    Duration timelineOffset = Duration.zero,
   }) async {
     final gate = _openGates.isEmpty ? null : _openGates.removeAt(0);
     if (gate != null) await gate.block();
@@ -332,9 +339,6 @@ class FakePlayer implements Player {
   bool get supportsSecondarySubtitles => false;
 
   @override
-  bool get attachesExternalSubtitlesAtOpen => true;
-
-  @override
   bool get detectsFpsAfterRender => false;
 
   @override
@@ -342,9 +346,6 @@ class FakePlayer implements Player {
 
   @override
   bool get providesNativeStats => false;
-
-  @override
-  Future<void> addSubtitleTrack({required String uri, String? title, String? language, bool select = false}) async {}
 
   @override
   Future<void> setVolume(double volume) async => volumes.add(volume);
@@ -383,7 +384,11 @@ class FakePlayer implements Player {
   Future<void> setAudioNormalization(bool enabled) async {}
 
   @override
-  Future<void> setAudioDownmix({required bool enabled, required int centerBoostDb, required bool normalize}) async {}
+  Future<void> setAudioChannelLimit(
+    AudioChannelLimit limit, {
+    required int centerBoostDb,
+    required bool normalize,
+  }) async {}
 
   @override
   Future<bool> setVisible(bool visible, {bool restoreOnWindowVisible = false}) async => true;
@@ -696,6 +701,15 @@ class _Harness {
     );
     await pumpEventQueue();
   }
+
+  void dispose() {
+    service.dispose();
+    for (final player in players) {
+      player.closeControllers();
+    }
+    controls.closeControllers();
+    serverManager.dispose();
+  }
 }
 
 class _AgentDownloads extends Fake with ChangeNotifier implements DownloadProvider {
@@ -798,14 +812,7 @@ void main() {
     h = _Harness.create(volumePersistenceWriter: (volume) => persistenceWriter(volume));
   });
 
-  tearDown(() {
-    h.service.dispose();
-    for (final player in h.players) {
-      player.closeControllers();
-    }
-    h.controls.closeControllers();
-    h.serverManager.dispose();
-  });
+  tearDown(() => h.dispose());
 
   group('shuffled session start (#1811)', () {
     final playlist = [for (var i = 0; i < 6; i++) _track('p$i')];
@@ -1835,6 +1842,26 @@ void main() {
     });
   });
 
+  group('companion remote transport', () {
+    test('remote transport buttons drive the live session until it stops', () async {
+      final receiver = CompanionRemoteReceiver.instance;
+      addTearDown(() => receiver.musicTransport = null);
+      await h.playTracks([t1, t2]);
+
+      receiver.handleCommand(const RemoteCommand(type: RemoteCommandType.nextTrack), null);
+      await pumpEventQueue();
+      expect(h.service.currentTrack?.id, 't2');
+
+      receiver.handleCommand(const RemoteCommand(type: RemoteCommandType.pause), null);
+      await pumpEventQueue();
+      expect(h.player.pauseCalls, 1);
+
+      await h.service.stop();
+      await pumpEventQueue();
+      expect(receiver.musicTransport, isNull);
+    });
+  });
+
   group('Discord presence', () {
     late FakeDiscordRPC rpc;
     late DiscordRPCService rpcService;
@@ -1915,14 +1942,7 @@ void main() {
 
     _Harness harnessWithStore() {
       final harness = _Harness.create(sessionStore: store());
-      addTearDown(() {
-        harness.service.dispose();
-        for (final player in harness.players) {
-          player.closeControllers();
-        }
-        harness.controls.closeControllers();
-        harness.serverManager.dispose();
-      });
+      addTearDown(harness.dispose);
       return harness;
     }
 

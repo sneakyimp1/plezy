@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'package:path/path.dart' as path;
 import 'package:provider/provider.dart';
 
+import '../models/audio_channel_limit.dart';
 import '../models/external_player_models.dart';
 import '../models/hotkey_model.dart';
 import '../models/shader_preset.dart';
@@ -121,12 +122,17 @@ class AgentSettingsCommands {
           if (key == 'enable_companion_remote_server' && value == true && !context.hasProfile) return;
           if (!context.context.mounted) return;
           try {
-            await const SettingsMutationService().applyEffects(
+            final failure = await const SettingsMutationService().applyEffects(
               context.context,
               pref,
               checkCurrent: context.checkCurrent,
               rebuildRoot: false,
             );
+            // A declining effect is returned rather than thrown now; agent
+            // clients still contract on `effectFailed` for it.
+            if (failure != null) {
+              throw AgentControlException('effectFailed', failure.display, details: const {'persisted': true});
+            }
           } on AgentControlException {
             rethrow;
           } catch (_) {
@@ -176,7 +182,7 @@ class AgentSettingsCommands {
     final tv = PlatformDetector.isTV();
     final desktop = PlatformDetector.isDesktopOS();
     final mobile = (Platform.isAndroid || Platform.isIOS) && !tv;
-    final exo = Platform.isAndroid && SettingsService.instance.read(SettingsService.useExoPlayer);
+    final exo = _exoActive;
     switch (key) {
       case 'keyboard_hotkeys':
         if (!KeyboardShortcutsService.isPlatformSupported()) {
@@ -228,6 +234,12 @@ class AgentSettingsCommands {
         if (exo || Platform.isIOS) return 'Ambient lighting requires mpv on a non-Apple-mobile platform.';
       case 'hdr_tone_mapping':
         if (!Platform.isLinux) return 'HDR tone mapping selection requires the Linux native video plane.';
+      case 'hdr_sdr_conversion':
+        if (!Platform.isAndroid || exo) return 'HDR-to-SDR conversion selection requires the Android mpv backend.';
+      case 'disable_dolby_vision':
+        if (!(Platform.isAndroid && !exo) && !PlatformDetector.isAppleTV()) {
+          return 'Disabling Dolby Vision requires the Android mpv backend or Apple TV.';
+        }
       case 'tunneled_playback' || 'playback_buffer_tier' || 'subtitle_anchor_to_screen':
         if (!exo) return 'This setting requires the existing Android ExoPlayer backend.';
       case 'custom_shaders' || 'global_shader_preset':
@@ -256,6 +268,8 @@ class AgentSettingsCommands {
     return null;
   }
 
+  static bool get _exoActive => Platform.isAndroid && SettingsService.instance.read(SettingsService.useExoPlayer);
+
   static void _validatePlatformValue(String key, Object? value) {
     if (key == 'subtitle_render_resolution') {
       final choices = Platform.isIOS
@@ -269,6 +283,9 @@ class AgentSettingsCommands {
             ];
       if (!choices.contains(value)) throw const FormatException('Unsupported subtitle resolution on this platform');
     }
+    if (key == 'audio_channel_limit' && !AudioChannelLimit.available(exoPlayer: _exoActive).contains(value)) {
+      throw const FormatException('ExoPlayer can only mix down to stereo');
+    }
     if ((key == 'audio_sync_offset' || key == 'subtitle_sync_offset') &&
         value is int &&
         (value < ScopedPlayerPrefs.minimumSyncOffsetMs || value > ScopedPlayerPrefs.maximumSyncOffsetMs)) {
@@ -277,7 +294,7 @@ class AgentSettingsCommands {
   }
 
   static String _application(String key) {
-    if (key == 'app_locale' || key == 'force_tv_mode' || key == 'visual_effects') return 'rootRebuild';
+    if (SettingsMutationService.needsRootRebuild(key)) return 'rootRebuild';
     if (key == 'start_in_fullscreen' ||
         key == 'startup_section' ||
         key == 'require_profile_selection_on_open' ||
@@ -314,13 +331,15 @@ class AgentSettingsCommands {
     'match_content_resolution',
     'tunneled_playback',
     'dv_conversion_mode',
+    'disable_dolby_vision',
+    'hdr_sdr_conversion',
     'default_quality_preset',
     'cellular_quality_preset',
     'music_quality_preset',
     'direct_play_covered_quality',
     'audio_passthrough',
     'audio_normalization',
-    'audio_downmix',
+    'audio_channel_limit',
     'audio_downmix_normalize',
     'max_volume',
     'downmix_center_boost',
@@ -374,6 +393,9 @@ class AgentSettingsCommands {
                     ])
               .map((v) => v.name)
               .toList();
+    }
+    if (pref == SettingsService.audioChannelLimit) {
+      choices = AudioChannelLimit.available(exoPlayer: _exoActive).map((v) => v.name).toList();
     }
     return {
       'key': pref.key,

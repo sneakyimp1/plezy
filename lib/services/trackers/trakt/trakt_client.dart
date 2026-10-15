@@ -64,11 +64,10 @@ class TraktClient implements DisposableTrackerClient {
   Future<void> scrobbleStop(TraktScrobbleRequest body) =>
       _request('POST', '/scrobble/stop', body: body.toJson(), allowStatuses: _scrobbleAllowedStatuses);
 
-  Future<void> addToHistory(TraktScrobbleRequest item, {String? watchedAt}) =>
-      _request('POST', '/sync/history', body: item.toHistoryBody(watchedAt: watchedAt));
+  /// Body shape: see `trackerHistoryBody`.
+  Future<void> addToHistory(Map<String, dynamic> body) => _request('POST', '/sync/history', body: body);
 
-  Future<void> removeFromHistory(TraktScrobbleRequest item) =>
-      _request('POST', '/sync/history/remove', body: item.toHistoryBody());
+  Future<void> removeFromHistory(Map<String, dynamic> body) => _request('POST', '/sync/history/remove', body: body);
 
   Future<void> addRatings(Map<String, dynamic> body) =>
       _request('POST', '/sync/ratings', body: body, allowStatuses: const {200, 201});
@@ -294,8 +293,7 @@ class TraktClient implements DisposableTrackerClient {
     var res = await _send(method, path, body: body);
 
     if (res.statusCode == 401) {
-      // A failed refresh propagates its TrackerAuthException; MAL's equivalent
-      // path flattens the same failure into TrackerApiException(401).
+      // A failed refresh propagates its TrackerAuthException.
       await refresh();
       res = await _send(method, path, body: body);
     }

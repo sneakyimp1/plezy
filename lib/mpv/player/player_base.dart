@@ -6,6 +6,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart' show listEquals, protected, visibleForTesting;
 import 'package:flutter/services.dart';
 
+import '../../models/audio_channel_limit.dart';
 import '../../utils/app_logger.dart';
 import '../../utils/track_label_builder.dart';
 import '../font_loader.dart';
@@ -156,6 +157,7 @@ abstract class PlayerBase with PlayerStreamControllersMixin implements Player {
   }
 
   Duration? _timelineDuration;
+  int _timelineOffsetMs = 0;
   int _nextPropId = 0;
   final Map<int, String> _propIdToName = {};
   Map<String, List<SubtitleTrack>> _externalSubtitleMetadataByUri = const {};
@@ -214,6 +216,21 @@ abstract class PlayerBase with PlayerStreamControllersMixin implements Player {
       return null;
     }
     return round ? milliseconds.round() : milliseconds.toInt();
+  }
+
+  /// A source time the backend reported, in seconds, as a timeline position
+  /// in milliseconds; see [configureTimeline].
+  int? _timelineMsFromSourceSeconds(Object? value, {bool round = false}) {
+    final sourceMs = _millisecondsFromSeconds(value, round: round);
+    return sourceMs == null ? null : sourceMs + _timelineOffsetMs;
+  }
+
+  /// [timelinePosition] in the open source's own time, for commands the
+  /// backend executes against that source (seek targets, the start offset).
+  @protected
+  Duration sourcePositionFor(Duration timelinePosition) {
+    final source = timelinePosition - Duration(milliseconds: _timelineOffsetMs);
+    return source.isNegative ? Duration.zero : source;
   }
 
   static int? _finiteInt(Object? value) {
@@ -363,7 +380,7 @@ abstract class PlayerBase with PlayerStreamControllersMixin implements Player {
 
       case 'time-pos':
         if (sourceId != null && sourceId != _activeSourceId) break;
-        final positionMs = _millisecondsFromSeconds(value, round: true);
+        final positionMs = _timelineMsFromSourceSeconds(value, round: true);
         if (positionMs != null) {
           final pos = Duration(milliseconds: positionMs);
           _positionMs = positionMs;
@@ -398,7 +415,7 @@ abstract class PlayerBase with PlayerStreamControllersMixin implements Player {
         break;
 
       case 'demuxer-cache-time':
-        final bufferMs = _millisecondsFromSeconds(value);
+        final bufferMs = _timelineMsFromSourceSeconds(value);
         if (bufferMs != null) {
           final nowMs = _throttleSw.elapsedMilliseconds;
           if (nowMs - _lastCacheStateMs < 250) break;
@@ -516,7 +533,7 @@ abstract class PlayerBase with PlayerStreamControllersMixin implements Player {
     if (cacheState == null) return;
 
     // Extract cache-end for the single buffer duration (replaces demuxer-cache-time)
-    final cacheEndMs = _millisecondsFromSeconds(cacheState['cache-end']);
+    final cacheEndMs = _timelineMsFromSourceSeconds(cacheState['cache-end']);
     final buffer = cacheEndMs == null ? _state.buffer : Duration(milliseconds: cacheEndMs);
 
     // Extract seekable-ranges array
@@ -526,8 +543,8 @@ abstract class PlayerBase with PlayerStreamControllersMixin implements Player {
       parsedRanges = <BufferRange>[];
       for (final range in seekableRanges) {
         if (range is! Map) continue;
-        final startMs = _millisecondsFromSeconds(range['start']);
-        final endMs = _millisecondsFromSeconds(range['end']);
+        final startMs = _timelineMsFromSourceSeconds(range['start']);
+        final endMs = _timelineMsFromSourceSeconds(range['end']);
         if (startMs != null && endMs != null) {
           parsedRanges.add(
             BufferRange(
@@ -641,7 +658,7 @@ abstract class PlayerBase with PlayerStreamControllersMixin implements Player {
         _state = _state.copyWith(hasRenderedFrame: true);
         playbackRestartController.add(null);
         if (sourceId != null && !_activeSourceReadyEmitted) {
-          final positionMs = _millisecondsFromSeconds(data?['positionSeconds'], round: true);
+          final positionMs = _timelineMsFromSourceSeconds(data?['positionSeconds'], round: true);
           if (positionMs != null) {
             _positionMs = positionMs;
             _lastPositionWriter = _backendReportedWriter;
@@ -921,9 +938,16 @@ abstract class PlayerBase with PlayerStreamControllersMixin implements Player {
     seekableController.add(seekable);
   }
 
+  /// Lay the next source onto the playback timeline. [duration] overrides
+  /// the backend's own (a transcode reports a growing one; a stacked item
+  /// spans several files), and [offset] is where the source begins on the
+  /// timeline: every position the backend reports is shifted by it, and
+  /// every position Dart sends back is shifted the other way
+  /// ([sourcePositionFor]). Consumers only ever see timeline positions.
   @protected
-  void configureTimeline({Duration? duration}) {
+  void configureTimeline({Duration? duration, Duration offset = Duration.zero}) {
     _timelineDuration = duration;
+    _timelineOffsetMs = offset.inMilliseconds;
   }
 
   /// Report that something is moving the playhead discontinuously, to [target]
@@ -1121,14 +1145,16 @@ abstract class PlayerBase with PlayerStreamControllersMixin implements Player {
   @protected
   Duration? get configuredTimelineDuration => _timelineDuration;
 
-  /// Install a freshly opened source at [sourcePosition].
+  @override
+  Duration get timelineOffset => Duration(milliseconds: _timelineOffsetMs);
+
+  /// Install a freshly opened source at [position] (timeline time).
   ///
   /// An in-place reload — dead-stream recovery, a quality/version switch, a
   /// background-suspend resume — places the playhead here rather than through
   /// [runSeek], so this is the second way it can move discontinuously.
   @protected
-  void resetPlaybackProgress(Duration sourcePosition) {
-    final position = sourcePosition;
+  void resetPlaybackProgress(Duration position) {
     _positionMs = position.inMilliseconds;
     // A source is being installed at this position; nothing has been reported
     // about it yet, and its predecessor's position says nothing about it.
@@ -1297,9 +1323,6 @@ abstract class PlayerBase with PlayerStreamControllersMixin implements Player {
   bool get supportsSecondarySubtitles => true;
 
   @override
-  bool get attachesExternalSubtitlesAtOpen => false;
-
-  @override
   bool get detectsFpsAfterRender => false;
 
   @override
@@ -1336,9 +1359,9 @@ abstract class PlayerBase with PlayerStreamControllersMixin implements Player {
   /// Google TV Streamer, Box R 4K Plus) 8ch adds +2.62 CPU-s per media second
   /// against ~1 core, so 5.1 holds 0.35–0.57x and 7.1 0.33x real time under an
   /// underrun storm while stereo holds 0.985x; arm64 (Pixel 7, SHIELD) still
-  /// underruns 5–20 times a minute at 8ch. Downmixing at the AO
-  /// (`audio-channels=stereo`, the "Downmix to Stereo" setting) does not help
-  /// because it lands after the filter. Desktop and Apple measured clean at
+  /// underruns 5–20 times a minute at 8ch. Limiting channels at the AO
+  /// (`audio-channels`, the "Audio Channels" setting) does not help because
+  /// it lands after the filter. Desktop and Apple measured clean at
   /// 7.1 and keep the multichannel chain. `format=channels=` remixes through
   /// swresample, so the downmix options (`audio-swresample-o`,
   /// `audio-normalize-downmix`) apply to it as well.
@@ -1351,25 +1374,45 @@ abstract class PlayerBase with PlayerStreamControllersMixin implements Player {
     await setProperty('af', enabled ? _loudnormFilter : '');
   }
 
+  /// mpv's `audio-channels` for each limit. The 5.1 limit is a list so stereo
+  /// sources stay stereo instead of being padded to 5.1, while 7.1 and 6.1
+  /// fold to 5.1 and quad or 5.0 are padded to it. A list also keeps the
+  /// decoder's own downmix out of it: mpv only asks the decoder when the list
+  /// has a single entry, which is what `stereo` relies on.
+  static String _audioChannelsFor(AudioChannelLimit limit) => switch (limit) {
+    AudioChannelLimit.original => 'auto-safe',
+    AudioChannelLimit.surround51 => 'stereo,5.1',
+    AudioChannelLimit.stereo => 'stereo',
+  };
+
   @override
-  Future<void> setAudioDownmix({required bool enabled, required int centerBoostDb, required bool normalize}) async {
-    if (enabled) {
-      // Kodi's mechanism: center coefficient = 10^((-3 + boost)/20); the
-      // surround (-3 dB) and LFE (dropped) swresample defaults already match.
-      final c = math.pow(10, (-3 + centerBoostDb.clamp(0, 12)) / 20).toStringAsFixed(4);
-      // Swresample AVOptions are read once at audio-filter creation, so they
-      // must land before audio-channels triggers the chain (re)build.
-      await setProperty('audio-swresample-o', 'center_mix_level=$c');
-      await setProperty('audio-normalize-downmix', normalize ? 'yes' : 'no');
-      // Bounce through auto-safe so boost/normalize changes re-apply while
-      // downmix is already active (same-value option sets are no-ops in mpv).
-      await setProperty('audio-channels', 'auto-safe');
-      await setProperty('audio-channels', 'stereo');
-    } else {
+  Future<void> setAudioChannelLimit(
+    AudioChannelLimit limit, {
+    required int centerBoostDb,
+    required bool normalize,
+  }) async {
+    if (limit == AudioChannelLimit.original) {
       await setProperty('audio-channels', 'auto-safe');
       await setProperty('audio-swresample-o', '');
       await setProperty('audio-normalize-downmix', 'no');
+      return;
     }
+    // Kodi's mechanism: center coefficient = 10^((-3 + boost)/20); the
+    // surround (-3 dB) and LFE (dropped) swresample defaults already match.
+    // Only a stereo fold mixes the center away, so only it takes the boost.
+    final centerMixLevel = limit == AudioChannelLimit.stereo
+        ? 'center_mix_level=${math.pow(10, (-3 + centerBoostDb.clamp(0, 12)) / 20).toStringAsFixed(4)}'
+        : '';
+    // Swresample AVOptions are read once at audio-filter creation, so they
+    // must land before audio-channels triggers the chain (re)build.
+    // `audio-normalize-downmix` is swresample's `rematrix_maxval`, so it
+    // guards the 7.1 → 5.1 fold against clipping just as it does stereo.
+    await setProperty('audio-swresample-o', centerMixLevel);
+    await setProperty('audio-normalize-downmix', normalize ? 'yes' : 'no');
+    // Bounce through auto-safe so option changes re-apply while the same limit
+    // is already active (same-value option sets are no-ops in mpv).
+    await setProperty('audio-channels', 'auto-safe');
+    await setProperty('audio-channels', _audioChannelsFor(limit));
   }
 
   @override
@@ -1531,12 +1574,14 @@ abstract class PlayerBase with PlayerStreamControllersMixin implements Player {
 
   /// Injects the log + error events that would fire when the server rejects the
   /// stream with [status]. Used by the in-player debug buttons to preview the
-  /// end-to-end detection path without needing a real misbehaving server: 500
-  /// is a shared-user bandwidth/transcoding limit, 404 a file the server can no
-  /// longer read, 503 a server that keeps refusing the stream (the error event
-  /// stands in for the open-phase watchdog, which cannot arm once playback has
-  /// a frame). The warn-level log mirrors ffmpeg's real wording, which is what
-  /// [PlayerError.httpStatusFromLog] parses.
+  /// end-to-end detection path without needing a real misbehaving server: 403
+  /// is a refusal of this account or connection, 500 a shared-user
+  /// bandwidth/transcoding limit, 404 a file the server can no longer read, 503
+  /// a server that keeps refusing the stream (the error event stands in for the
+  /// open-phase watchdog, which cannot arm once playback has a frame). The
+  /// warn-level log mirrors ffmpeg's real wording, which is what
+  /// [PlayerError.httpStatusFromLog] parses; 403 has no cause tag, so the
+  /// latched status alone drives it, as it does for a real mpv open.
   void debugSimulateServerHttpError(int status) {
     if (_disposed) return;
     logController.add(

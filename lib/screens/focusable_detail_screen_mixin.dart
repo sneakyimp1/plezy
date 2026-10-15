@@ -37,7 +37,6 @@ mixin FocusableDetailScreenMixin<T extends StatefulWidget> on State<T>, GridFocu
   /// Called when items are available and we want to check if focus should be set
   bool get hasItems;
 
-  /// Called to get the list of app bar action configurations
   List<FocusableAction> getAppBarActions();
 
   /// Dispose focus-related resources. Call this from your dispose() method.
@@ -201,7 +200,8 @@ mixin FocusableDetailScreenMixin<T extends StatefulWidget> on State<T>, GridFocu
   /// grids pass the running total; single-grid screens keep the default 0.
   /// With an offset, up-navigation from this grid's first row falls through
   /// to framework traversal (crossing into the previous section's grid)
-  /// instead of jumping to the app bar.
+  /// instead of jumping to the app bar. [isOffline] renders downloaded items
+  /// from local artwork and opens them offline.
   Widget buildSparseFocusableGrid({
     required int totalItems,
     required MediaItem? Function(int index) itemAt,
@@ -211,6 +211,7 @@ mixin FocusableDetailScreenMixin<T extends StatefulWidget> on State<T>, GridFocu
     VoidCallback? onListRefresh,
     CardShape? shape,
     int indexOffset = 0,
+    bool isOffline = false,
   }) {
     return SettingsBuilder(
       prefs: const [SettingsService.viewMode, SettingsService.libraryDensity, SettingsService.tvFullCardLayout],
@@ -239,6 +240,7 @@ mixin FocusableDetailScreenMixin<T extends StatefulWidget> on State<T>, GridFocu
             onRefresh: onRefresh,
             collectionId: collectionId,
             onListRefresh: onListRefresh,
+            isOffline: isOffline,
             fullBleedImage: useFullCardLayout && position.isGrid,
             cardShapeOverride: shape,
             // The first section's first row reaches the app bar; later

@@ -152,10 +152,12 @@ jboolean is_same_object(jobject a, jobject b) {
   return resolve(a) == resolve(b) ? JNI_TRUE : JNI_FALSE;
 }
 
+// The app context and the MediaCodec callback bridge class are process-wide
+// references prepare_environment takes once; only Surfaces are per session.
 int live_surface_refs() {
   int count = 0;
   for (const auto& entry : global_refs) {
-    if (entry.second != &app_context) ++count;
+    if (entry.second != &app_context && entry.second != &jni.found_class) ++count;
   }
   return count;
 }
@@ -655,16 +657,36 @@ static int tracked_write_lock(pthread_rwlock_t* lock) {
   return pthread_rwlock_wrlock(lock);
 }
 
+// Binds the event thread to its handle before the loop runs, not at its first
+// wait: a thread retired before that wait exits without calling into mpv.
+struct EventThreadStart {
+  void* (*entry)(void*);
+  Session* session;
+};
+
+static void* bound_event_thread(void* arg) {
+  const EventThreadStart start = *static_cast<EventThreadStart*>(arg);
+  delete static_cast<EventThreadStart*>(arg);
+  event_handle = start.session->handle;
+  return start.entry(start.session);
+}
+
 static int controlled_thread_create(pthread_t* thread, const pthread_attr_t* attr, void* (*entry)(void*), void* arg) {
   std::lock_guard<std::mutex> lock(gate);
   if (fail_thread_create) {
     fail_thread_create = false;
     return EAGAIN;
   }
-  const int result = pthread_create(thread, attr, entry, arg);
+  Session* session = static_cast<Session*>(arg);
+  EventThreadStart* start = new EventThreadStart{entry, session};
+  const int result = pthread_create(thread, attr, bound_event_thread, start);
   // The event thread is started for one specific session, which is not
   // necessarily the newest one.
-  if (result == 0) static_cast<Session*>(arg)->handle->event_started = true;
+  if (result == 0) {
+    session->handle->event_started = true;
+  } else {
+    delete start;
+  }
   return result;
 }
 
@@ -719,7 +741,6 @@ extern "C" void mpv_terminate_destroy(mpv_handle* handle) {
 
 extern "C" mpv_event* mpv_wait_event(mpv_handle* handle, double) {
   std::unique_lock<std::mutex> lock(gate);
-  event_handle = handle;
   require_live(handle);
   await(lock, [&] { return handle->hook_pending || handle->woken; }, "event loop was not woken for teardown");
   handle->event = {};
@@ -839,6 +860,7 @@ extern "C" const char* mpv_error_string(int) { return "controlled MPV failure"; 
 extern "C" void mpv_free_node_contents(mpv_node*) {}
 extern "C" int av_jni_set_java_vm(void*, void*) { return 0; }
 extern "C" int av_jni_set_android_app_ctx(void*, void*) { return 0; }
+extern "C" int av_jni_set_mediacodec_callback_class(void*, void*) { return 0; }
 extern "C" int __android_log_print(int, const char*, const char*, ...) { return 0; }
 
 bool acquire_jni_env(JavaVM* supplied_vm, JNIEnv** env) {

@@ -122,11 +122,11 @@ class CatalogSourcesProvider extends ChangeNotifier with DisposableChangeNotifie
   CatalogSourceId? _preferredSourceId;
   String _activeUserUuid = '';
 
-  // Per-item watchlist candidates (see [watchlistCandidatesFor]): the future
-  // cache dedups/retries loads, the results map gives menu surfaces
-  // synchronous access for labeling, and the generation guard keeps a load
-  // that outlives a source rebind from repopulating disposed sources.
-  final KeyedFutureCache<String, List<WatchlistCandidate>> _watchlistCandidateLoads = KeyedFutureCache();
+  // Per-item watchlist candidates (see [watchlistCandidatesFor]): the
+  // coalescer keeps one load in flight per item, the results map gives menu
+  // surfaces synchronous access for labeling, and the generation guard keeps
+  // a load that outlives a source rebind from repopulating disposed sources.
+  final KeyedFutureCoalescer<String, List<WatchlistCandidate>> _watchlistCandidateLoads = KeyedFutureCoalescer();
   final Map<String, List<WatchlistCandidate>> _watchlistCandidateResults = {};
   int _watchlistCandidateGeneration = 0;
 
@@ -182,17 +182,26 @@ class CatalogSourcesProvider extends ChangeNotifier with DisposableChangeNotifie
   /// watchlist-capable source the item exists in, with its per-source ids.
   /// Shared by the detail screen and card context menus so an item resolves
   /// its external ids at most once per session. Failures are not cached (the
-  /// next call retries); a null [client] (server offline) resolves to
-  /// nothing without caching the miss. Invalidated when sources rebind.
+  /// next call retries) — nor is an answer missing a source that failed to
+  /// resolve, which would otherwise hide that source's action for the rest of
+  /// the session; a null [client] (server offline) resolves to nothing without
+  /// caching the miss. Invalidated when sources rebind.
   Future<List<WatchlistCandidate>> watchlistCandidatesFor(MediaItem item, {required MediaServerClient? client}) {
-    final cached = _watchlistCandidateResults[_watchlistItemKey(item)];
+    final key = _watchlistItemKey(item);
+    final cached = _watchlistCandidateResults[key];
     if (cached != null) return Future.value(cached);
     if (client == null) return Future.value(const []);
     final generation = _watchlistCandidateGeneration;
-    return _watchlistCandidateLoads.run(_watchlistItemKey(item), () async {
-      final candidates = await resolveWatchlistCandidates(client: client, item: item, sources: watchlistCapableSources);
-      if (!isDisposed && generation == _watchlistCandidateGeneration) {
-        _watchlistCandidateResults[_watchlistItemKey(item)] = candidates;
+    return _watchlistCandidateLoads.run(key, () async {
+      var complete = true;
+      final candidates = await resolveWatchlistCandidates(
+        client: client,
+        item: item,
+        sources: watchlistCapableSources,
+        onSourceFailed: (_) => complete = false,
+      );
+      if (complete && !isDisposed && generation == _watchlistCandidateGeneration) {
+        _watchlistCandidateResults[key] = candidates;
       }
       return candidates;
     });

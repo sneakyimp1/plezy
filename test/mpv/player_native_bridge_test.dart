@@ -2,6 +2,7 @@ import 'dart:async' show Completer;
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:plezy/models/audio_channel_limit.dart';
 import 'package:plezy/mpv/models.dart';
 import 'package:plezy/mpv/player/player_native.dart';
 import 'package:plezy/mpv/player/player_base.dart';
@@ -51,6 +52,20 @@ final class _GuardedInvokingPlayerNative extends PlayerNative {
   bool get nativeDisposeIsStaleGuarded => true;
 
   Future<T?> debugInvoke<T>(String method) => invoke<T>(method);
+}
+
+/// Delivers [event] on the player event channel, waiting for the platform
+/// reply and one microtask turn so the stream handler has run before the
+/// caller's next statement.
+Future<void> _sendPlatformEvent(Object? event) async {
+  final done = Completer<void>();
+  await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.handlePlatformMessage(
+    'com.plezy/mpv_player/events',
+    const StandardMethodCodec().encodeSuccessEnvelope(event),
+    (_) => done.complete(),
+  );
+  await done.future;
+  await Future<void>.delayed(Duration.zero);
 }
 
 void main() {
@@ -443,7 +458,7 @@ void main() {
             player.setVolume(25),
             player.setAudioPassthrough(true),
             player.setAudioNormalization(true),
-            player.setAudioDownmix(enabled: true, centerBoostDb: 3, normalize: true),
+            player.setAudioChannelLimit(AudioChannelLimit.stereo, centerBoostDb: 3, normalize: true),
             player.updateFrame(),
             player.abandonAudioFocus(),
           ]);
@@ -535,33 +550,19 @@ void main() {
         final subscription = player.streams.hdrOutputChanged.listen((_) => changes++);
         try {
           await player.setLogLevel('warn');
-          final messenger = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
-          const codec = StandardMethodCodec();
-
-          Future<void> sendEvent(Object? event) async {
-            final done = Completer<void>();
-            await messenger.handlePlatformMessage(
-              'com.plezy/mpv_player/events',
-              codec.encodeSuccessEnvelope(event),
-              (_) => done.complete(),
-            );
-            await done.future;
-            await Future<void>.delayed(Duration.zero);
-          }
-
-          await sendEvent(const {'type': 'event', 'name': 'hdr-output-changed'});
+          await _sendPlatformEvent(const {'type': 'event', 'name': 'hdr-output-changed'});
           expect(changes, 1);
 
           // The envelope needs both keys. Omitting `type` is not hypothetical -
           // it is exactly what the native side once sent, and the event was
           // dropped in silence, so the settings sheet kept whatever HDR verdict
           // it had from before the window moved.
-          await sendEvent(const {'name': 'hdr-output-changed'});
+          await _sendPlatformEvent(const {'name': 'hdr-output-changed'});
           expect(changes, 1);
 
           // And the channel is still live afterwards: a malformed sibling must
           // not take the subscription down with it.
-          await sendEvent(const {'type': 'event', 'name': 'hdr-output-changed'});
+          await _sendPlatformEvent(const {'type': 'event', 'name': 'hdr-output-changed'});
           expect(changes, 2);
         } finally {
           await subscription.cancel();
@@ -630,22 +631,9 @@ void main() {
         final player = PlayerNative();
         try {
           await player.setLogLevel('warn');
-          final messenger = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
-          const codec = StandardMethodCodec();
-
-          Future<void> sendEvent(Object? event) async {
-            final done = Completer<void>();
-            await messenger.handlePlatformMessage(
-              'com.plezy/mpv_player/events',
-              codec.encodeSuccessEnvelope(event),
-              (_) => done.complete(),
-            );
-            await done.future;
-            await Future<void>.delayed(Duration.zero);
-          }
 
           Future<void> sendObservation(String name, Object? value) async {
-            await sendEvent([observations[name], value]);
+            await _sendPlatformEvent([observations[name], value]);
           }
 
           await sendObservation('track-list', const [
@@ -691,9 +679,9 @@ void main() {
 
           // Malformed envelopes and malformed siblings are ignored without
           // taking down the event subscription or discarding valid siblings.
-          await sendEvent(['not-a-property-id', const {}]);
-          await sendEvent({'type': 'event', 'name': 7, 'data': const {}});
-          await sendEvent({'type': 'event', 'name': 'unknown', 'data': 'not-a-map'});
+          await _sendPlatformEvent(['not-a-property-id', const {}]);
+          await _sendPlatformEvent({'type': 'event', 'name': 7, 'data': const {}});
+          await _sendPlatformEvent({'type': 'event', 'name': 'unknown', 'data': 'not-a-map'});
           await sendObservation('track-list', const [
             {'type': 7, 'id': 'bad'},
             {
@@ -953,12 +941,12 @@ void main() {
       testBody: () async {
         final player = PlayerNative();
         try {
-          await player.setAudioDownmix(enabled: true, centerBoostDb: 2, normalize: false);
+          await player.setAudioChannelLimit(AudioChannelLimit.stereo, centerBoostDb: 2, normalize: false);
           writes.clear();
           rejectNextStereo = true;
 
           await expectLater(
-            player.setAudioDownmix(enabled: true, centerBoostDb: 9, normalize: true),
+            player.setAudioChannelLimit(AudioChannelLimit.stereo, centerBoostDb: 9, normalize: true),
             throwsA(isA<PlatformException>()),
           );
 
@@ -1087,6 +1075,56 @@ void main() {
             ('audio-spdif', ''),
             ('af', 'loudnorm=I=-14:TP=-3:LRA=4,format=srate=48000:format=floatp'),
             ('af', ''),
+            ('audio-spdif', 'ac3,eac3,dts,dts-hd,truehd'),
+          ]);
+        } finally {
+          await player.dispose();
+        }
+      },
+    );
+  });
+
+  test('a 5.1 channel limit keeps passthrough, stereo takes it over, and original hands it back', () async {
+    final audioWrites = <(String, String)>[];
+    await withMockPlayerChannels(
+      methodChannelName: 'com.plezy/mpv_player',
+      eventChannelName: 'com.plezy/mpv_player/events',
+      methodHandler: (call) async {
+        if (call.method == 'initialize') return true;
+        if (call.method == 'setProperty') {
+          final arguments = call.arguments as Map;
+          final name = arguments['name'] as String;
+          if (name == 'audio-spdif' || name == 'audio-channels' || name == 'audio-swresample-o') {
+            audioWrites.add((name, arguments['value'] as String));
+          }
+        }
+        return null;
+      },
+      testBody: () async {
+        final player = PlayerNative();
+        try {
+          await player.setAudioPassthrough(true);
+          await player.setAudioChannelLimit(AudioChannelLimit.surround51, centerBoostDb: 6, normalize: true);
+          expect(player.audioPassthroughActive, isTrue, reason: 'the 5.1 limit only shapes decoded PCM');
+
+          await player.setAudioChannelLimit(AudioChannelLimit.stereo, centerBoostDb: 6, normalize: true);
+          expect(player.audioPassthroughActive, isFalse);
+
+          await player.setAudioChannelLimit(AudioChannelLimit.original, centerBoostDb: 6, normalize: true);
+          expect(player.audioPassthroughActive, isTrue);
+
+          expect(audioWrites, [
+            ('audio-spdif', 'ac3,eac3,dts,dts-hd,truehd'),
+            // The center stays its own channel in a 5.1 fold, so no boost.
+            ('audio-swresample-o', ''),
+            ('audio-channels', 'auto-safe'),
+            ('audio-channels', 'stereo,5.1'),
+            ('audio-spdif', ''),
+            ('audio-swresample-o', 'center_mix_level=1.4125'),
+            ('audio-channels', 'auto-safe'),
+            ('audio-channels', 'stereo'),
+            ('audio-channels', 'auto-safe'),
+            ('audio-swresample-o', ''),
             ('audio-spdif', 'ac3,eac3,dts,dts-hd,truehd'),
           ]);
         } finally {

@@ -12,12 +12,14 @@ import '../../media/ids.dart';
 import '../../media/lyrics.dart';
 import '../../media/media_item.dart';
 import '../../media/media_server_client.dart';
+import '../../models/companion_remote/remote_command.dart';
 import '../../mpv/models.dart';
 import '../../mpv/player/player.dart';
 import '../../utils/app_logger.dart';
 import '../../utils/notification_permission.dart';
 import '../../utils/platform_detector.dart';
 import '../car_ux_restrictions_service.dart';
+import '../companion_remote/companion_remote_receiver.dart';
 import '../discord_rpc_service.dart';
 import '../driver_distraction.dart';
 import '../media_control_router.dart';
@@ -163,6 +165,10 @@ class MusicPlaybackServiceImpl extends MusicPlaybackService with WidgetsBindingO
   /// lifecycle as [_mediaControls]; routes to the same methods as
   /// [_mediaControlRouter].
   MusicHardwareTransportHandler? _hardwareTransport;
+
+  /// Companion-remote transport buttons (a paired phone), installed on
+  /// [CompanionRemoteReceiver] for the same lifecycle as [_hardwareTransport].
+  late final bool Function(RemoteCommandType type) _remoteTransport = _handleRemoteTransport;
 
   MusicPlaybackStatus _status = MusicPlaybackStatus.idle;
   MediaItem? _currentTrack;
@@ -1097,6 +1103,25 @@ class MusicPlaybackServiceImpl extends MusicPlaybackService with WidgetsBindingO
       onSkipForward: () => unawaited(_seekRelative(_defaultSkipInterval)),
       onSkipBackward: () => unawaited(_seekRelative(-_defaultSkipInterval)),
     )..register();
+    CompanionRemoteReceiver.instance.musicTransport = _remoteTransport;
+  }
+
+  bool _handleRemoteTransport(RemoteCommandType type) {
+    if (_disposed || _currentTrack == null) return false;
+    final Future<void> Function()? action = switch (type) {
+      RemoteCommandType.play => play,
+      RemoteCommandType.pause => pause,
+      RemoteCommandType.playPause => togglePlayPause,
+      RemoteCommandType.nextTrack => next,
+      RemoteCommandType.previousTrack => previous,
+      RemoteCommandType.stop => stop,
+      RemoteCommandType.seekForward => () => _seekRelative(_defaultSkipInterval),
+      RemoteCommandType.seekBackward => () => _seekRelative(-_defaultSkipInterval),
+      _ => null,
+    };
+    if (action == null) return false;
+    unawaited(action());
+    return true;
   }
 
   void _syncControlsAvailability() {
@@ -1561,20 +1586,14 @@ class MusicPlaybackServiceImpl extends MusicPlaybackService with WidgetsBindingO
   void setRepeatMode(MusicRepeatMode mode) {
     if (_queue.repeatMode == mode) return;
     _queue.repeatMode = mode;
-    _rearmIfNeeded();
-    _syncControlsAvailability();
-    _persistSessionSnapshot();
-    notifyListeners();
+    _afterQueueEdit();
   }
 
   @override
   void toggleShuffle() {
     if (_queue.isEmpty) return;
     _queue.toggleShuffle();
-    _rearmIfNeeded();
-    _syncControlsAvailability();
-    _persistSessionSnapshot();
-    notifyListeners();
+    _afterQueueEdit();
   }
 
   @override
@@ -1591,20 +1610,14 @@ class MusicPlaybackServiceImpl extends MusicPlaybackService with WidgetsBindingO
       unawaited(_advanceTo(_queue.cursor));
       return;
     }
-    _rearmIfNeeded();
-    _syncControlsAvailability();
-    _persistSessionSnapshot();
-    notifyListeners();
+    _afterQueueEdit();
   }
 
   @override
   void reorder(int from, int to) {
     if (from == to) return;
     _queue.move(from, to);
-    _rearmIfNeeded();
-    _syncControlsAvailability();
-    _persistSessionSnapshot();
-    notifyListeners();
+    _afterQueueEdit();
   }
 
   @override
@@ -1637,16 +1650,17 @@ class MusicPlaybackServiceImpl extends MusicPlaybackService with WidgetsBindingO
     } else {
       _queue.addToEnd(tracks);
     }
-    _rearmIfNeeded();
-    _syncControlsAvailability();
-    _persistSessionSnapshot();
-    notifyListeners();
+    _afterQueueEdit();
   }
 
   @override
   void clearUpcoming() {
     if (_queue.isEmpty) return;
     _queue.clearUpcoming();
+    _afterQueueEdit();
+  }
+
+  void _afterQueueEdit() {
     _rearmIfNeeded();
     _syncControlsAvailability();
     _persistSessionSnapshot();
@@ -1758,6 +1772,8 @@ class MusicPlaybackServiceImpl extends MusicPlaybackService with WidgetsBindingO
     // that tears the session down.
     _hardwareTransport?.unregister();
     _hardwareTransport = null;
+    final receiver = CompanionRemoteReceiver.instance;
+    if (identical(receiver.musicTransport, _remoteTransport)) receiver.musicTransport = null;
     for (final sub in _playerSubs) {
       unawaited(sub.cancel());
     }

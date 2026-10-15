@@ -364,9 +364,9 @@ Future<SymbolPlan> createSymbolPlan(
         : explicitArchive != null && explicitArchive.isNotEmpty
         ? path.join(
             path.isAbsolute(explicitArchive) ? explicitArchive : path.join(sourceRoot, explicitArchive),
-            'Products/Applications/Runner.app',
+            'Products/Applications/Plezy.app',
           )
-        : path.join(build, 'ios/iphoneos/Runner.app');
+        : path.join(build, 'ios/iphoneos/Plezy.app');
     if (!Directory(product).existsSync()) throw SymbolFailure('Missing selected release product: $product');
     for (final file in _files(product).where(isDebugObject)) {
       final artifact = await _inspect(file, command, 10);
@@ -516,8 +516,6 @@ Future<SymbolPlan> createSymbolPlan(
     entries == null ? null : mapFile.path,
     entries,
   );
-  batchSymbolArtifacts(plan.native);
-  batchSymbolArtifacts(plan.dart);
   return plan;
 }
 
@@ -549,10 +547,11 @@ Future<void> executeSymbolPlan(SymbolPlan plan, SymbolCommand command, {StringSi
 
   await upload(plan.native);
   await upload(plan.dart);
+  final sourceJobs = plan.sourceJobs;
   final temporary = await Directory.systemTemp.createTemp('plezy-symbol-upload-');
   try {
-    for (var index = 0; index < plan.sourceJobs.length; index++) {
-      final artifact = plan.sourceJobs[index];
+    for (var index = 0; index < sourceJobs.length; index++) {
+      final artifact = sourceJobs[index];
       final destination = Directory(path.join(temporary.path, 'sources-$index'))..createSync();
       await checked(['debug-files', 'bundle-sources', '--output', destination.path, artifact.file.path]);
       final sources = <SymbolArtifact>[];

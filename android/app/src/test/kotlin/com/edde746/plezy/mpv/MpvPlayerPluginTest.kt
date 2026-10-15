@@ -18,7 +18,6 @@ import android.view.ViewTreeObserver
 import android.widget.FrameLayout
 import com.edde746.plezy.libmpv.EndFileReason
 import com.edde746.plezy.libmpv.LogLevel
-import com.edde746.plezy.libmpv.LogMessage
 import com.edde746.plezy.libmpv.MpvEvent
 import com.edde746.plezy.libmpv.MpvPlayer
 import com.edde746.plezy.shared.AudioFocusManager
@@ -1090,7 +1089,7 @@ class MpvPlayerPluginTest {
   fun endFileDiagnosticsPreserveReasonIdAndExposeDependencyErrorLog() {
     val diagnostics = MpvEndFileDiagnostics()
     diagnostics.onStartFile()
-    diagnostics.onLogMessage(LogMessage("ffmpeg", LogLevel.Error, "Invalid data found when processing input"))
+    diagnostics.onLogMessage(MpvEvent.LogMessage("ffmpeg", LogLevel.Error, "Invalid data found when processing input"))
 
     assertEquals(
       mapOf(
@@ -1105,7 +1104,7 @@ class MpvPlayerPluginTest {
   @Test
   fun endFileDiagnosticsDoNotAttachStaleOrInventedDetails() {
     val diagnostics = MpvEndFileDiagnostics()
-    diagnostics.onLogMessage(LogMessage("ffmpeg", LogLevel.Error, "old failure"))
+    diagnostics.onLogMessage(MpvEvent.LogMessage("ffmpeg", LogLevel.Error, "old failure"))
     diagnostics.onStartFile()
 
     assertEquals(mapOf("reason" to 0), diagnostics.onEndFile(MpvEvent.EndFile(EndFileReason.Eof, null)))
@@ -1969,9 +1968,10 @@ class MpvPlayerPluginTest {
   @Test
   fun dvConversionModeMapsOntoForkDecoderOptions() {
     // The app-level `dv-conversion-mode` property must translate to the fork
-    // FFmpeg hevc_mediacodec options, mirroring the ExoPlayer DoviBridge
-    // modes. Robolectric reports no Dolby Vision display, so `auto` takes the
-    // no-DV branch deterministically.
+    // FFmpeg hevc_mediacodec options. Robolectric reports no Dolby Vision
+    // display and no file is loaded, so `auto` takes the no-DV branch for a
+    // file with no DOVI record deterministically; the per-file answer for a
+    // loaded P5/P8 is GpuVoPolicyTest's.
     val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
     val writes = ConcurrentLinkedQueue<Pair<String, String>>()
     val core = MpvPlayerCore(activity, audioOnly = false, propertyWriter = { name, value ->
@@ -1999,6 +1999,40 @@ class MpvPlayerPluginTest {
     assertEquals(listOf("vd-lavc-o" to "dolby_vision=1,dv_p7_mode=strip"), writes.toList())
 
     val invalid = apply("bogus")
+    assertTrue(invalid.isFailure)
+    assertTrue(writes.isEmpty())
+  }
+
+  @Test
+  fun disablingDolbyVisionOverridesEveryConversionMode() {
+    // `dolby-vision-output=no` (#2543) routes as auto on a display without
+    // DV whichever P7 mode the user picked, and `yes` restores that mode.
+    val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+    val writes = ConcurrentLinkedQueue<Pair<String, String>>()
+    val core = MpvPlayerCore(activity, audioOnly = false, propertyWriter = { name, value ->
+      writes.add(name to value)
+    })
+
+    fun apply(name: String, value: String): Result<Unit> {
+      writes.clear()
+      var outcome: Result<Unit>? = null
+      core.setProperty(name, value) { outcome = it }
+      awaitCondition { outcome != null }
+      return outcome!!
+    }
+
+    assertTrue(apply("dv-conversion-mode", "dv81").isSuccess)
+    assertTrue(apply("dolby-vision-output", "no").isSuccess)
+    assertEquals(listOf("vd-lavc-o" to "dolby_vision=0,dv_p7_mode=strip"), writes.toList())
+
+    // A mode chosen while Dolby Vision is disabled does not bring it back.
+    assertTrue(apply("dv-conversion-mode", "disabled").isSuccess)
+    assertEquals(listOf("vd-lavc-o" to "dolby_vision=0,dv_p7_mode=strip"), writes.toList())
+
+    assertTrue(apply("dolby-vision-output", "yes").isSuccess)
+    assertEquals(listOf("vd-lavc-o" to "dolby_vision=1,dv_p7_mode=native"), writes.toList())
+
+    val invalid = apply("dolby-vision-output", "maybe")
     assertTrue(invalid.isFailure)
     assertTrue(writes.isEmpty())
   }
@@ -2036,13 +2070,15 @@ class MpvPlayerPluginTest {
   @Test
   fun asynchronousMediaCodecFollowsMedia3sPlatformThreshold() {
     // Media3 trusts asynchronous MediaCodec from API 31; below it the decoder
-    // stays synchronous (bounded waits, polled), on the NDK either way.
+    // stays synchronous (bounded waits, polled). The Java wrapper on every
+    // level: the NDK one cannot read the crop rectangle below API 28 (#2427).
     fun entries(sdkInt: Int): Map<String, String> = MpvPlayerCore.initialDecoderEntries(sdkInt).toMap()
-    assertEquals("1", entries(31)["ndk_async"])
-    assertEquals("1", entries(36)["ndk_async"])
-    assertNull(entries(30)["ndk_async"])
-    assertNull(entries(25)["ndk_async"])
-    assertEquals("1", entries(25)["ndk_codec"])
+    assertEquals("1", entries(31)["async"])
+    assertEquals("1", entries(36)["async"])
+    assertNull(entries(30)["async"])
+    assertNull(entries(25)["async"])
+    assertEquals("0", entries(25)["ndk_codec"])
+    assertEquals("0", entries(36)["ndk_codec"])
   }
 
   private fun awaitQueueEntry(

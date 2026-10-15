@@ -20,7 +20,6 @@ class MpvPlayerPlugin: NSObject, FlutterPlugin, FlutterStreamHandler, MpvPluginS
   private var pipChannel: FlutterMethodChannel?
   private var autoPipEnabled = false
   private var isManualPipRequest = false
-  private var pipTimebaseSyncTimer: Timer?
   private var pendingInlineRestoreAfterPip = false
   private var sceneActivationObserverRegistered = false
 
@@ -196,6 +195,9 @@ class MpvPlayerPlugin: NSObject, FlutterPlugin, FlutterStreamHandler, MpvPluginS
         result(MpvPipController.isSupported)
       case "enter":
         self.enterPip(manual: true, result: result)
+      case "exit":
+        self.pipController?.stopPip()
+        result(nil)
       case "setAutoPipReady":
         if let args = call.arguments as? [String: Any], let ready = args["ready"] as? Bool {
           self.autoPipEnabled = ready
@@ -228,7 +230,6 @@ class MpvPlayerPlugin: NSObject, FlutterPlugin, FlutterStreamHandler, MpvPluginS
     pendingInlineRestoreAfterPip = false
     playerCore.setPipSubtitleCompositing(true)
     playerCore.isPipStarting = true
-    pip.syncTimebase(currentTime: playerCore.timePos, isPlaying: !playerCore.isPaused)
     pip.invalidatePlaybackState()
     return pip
   }
@@ -289,12 +290,10 @@ class MpvPlayerPlugin: NSObject, FlutterPlugin, FlutterStreamHandler, MpvPluginS
     playerCore?.isPipStarting = false
     playerCore?.isPipActive = false
     isManualPipRequest = false
-    stopPipTimebaseSync()
     if pause {
       playerCore?.setPropertyAsync("pause", value: "yes") { [weak self] propertyResult in
         guard case .success = propertyResult else { return }
         self?.pipController?.invalidatePlaybackState()
-        self?.syncPipTimebase()
       }
     }
     pendingInlineRestoreAfterPip = true
@@ -308,6 +307,18 @@ class MpvPlayerPlugin: NSObject, FlutterPlugin, FlutterStreamHandler, MpvPluginS
     if notify { pipChannel?.invokeMethod("onPipChanged", arguments: false) }
   }
 
+  /// Tear PiP down with its player. The controller detaches its delegate
+  /// before stopping the system PiP, so the did-stop callback never arrives;
+  /// tell Dart PiP ended here, or it keeps hiding every later player's controls.
+  private func teardownPip() {
+    let wasActive = playerCore?.isPipActive == true
+    pipController?.teardown()
+    pipController = nil
+    guard wasActive else { return }
+    playerCore?.isPipActive = false
+    pipChannel?.invokeMethod("onPipChanged", arguments: false)
+  }
+
   /// Scene became active — restore inline playback if needed and re-warm the
   /// sample-buffer layer so future auto-PiP remains possible.
   @objc private func sceneDidActivate() {
@@ -315,29 +326,6 @@ class MpvPlayerPlugin: NSObject, FlutterPlugin, FlutterStreamHandler, MpvPluginS
     if autoPipEnabled, let pip = pipController, let pc = playerCore, !pc.isPipActive {
       pip.warmLayer(currentTime: pc.timePos, isPlaying: !pc.isPaused)
     }
-  }
-
-  // MARK: - Timebase Sync
-
-  private func syncPipTimebase() {
-    guard let playerCore = playerCore, let pipController = pipController else { return }
-    pipController.syncTimebase(
-      currentTime: playerCore.timePos,
-      isPlaying: !playerCore.isPaused
-    )
-  }
-
-  private func startPipTimebaseSync() {
-    stopPipTimebaseSync()
-    pipTimebaseSyncTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) {
-      [weak self] _ in
-      self?.syncPipTimebase()
-    }
-  }
-
-  private func stopPipTimebaseSync() {
-    pipTimebaseSyncTimer?.invalidate()
-    pipTimebaseSyncTimer = nil
   }
 
   // MARK: - Platform-Specific Method Handlers
@@ -363,10 +351,8 @@ class MpvPlayerPlugin: NSObject, FlutterPlugin, FlutterStreamHandler, MpvPluginS
       }
 
       // A partially torn-down core must not survive a rapid route replacement.
-      self.pipController?.teardown()
-      self.pipController = nil
+      self.teardownPip()
       self.pendingInlineRestoreAfterPip = false
-      self.stopPipTimebaseSync()
       self.playerCore?.dispose()
       self.playerCore = nil
 
@@ -393,12 +379,10 @@ class MpvPlayerPlugin: NSObject, FlutterPlugin, FlutterStreamHandler, MpvPluginS
     DispatchQueue.main.async { [weak self] in
       guard let self = self else { result(nil); return }
       MpvLog.debug("[MpvPlayerPlugin] dispose preserveDisplayMode=\(preserveDisplayMode.description)")
-      self.pipController?.teardown()
-      self.pipController = nil
+      self.teardownPip()
       self.autoPipEnabled = false
       self.pendingInlineRestoreAfterPip = false
       self.unregisterSceneActivationObserver()
-      self.stopPipTimebaseSync()
       self.playerCore?.dispose(preserveDisplayCriteria: preserveDisplayMode)
       self.playerCore = nil
       result(nil)
@@ -407,7 +391,6 @@ class MpvPlayerPlugin: NSObject, FlutterPlugin, FlutterStreamHandler, MpvPluginS
 
   func didSetPauseProperty(value: String) {
     pipController?.invalidatePlaybackState()
-    if playerCore?.isPipActive == true { syncPipTimebase() }
   }
 
   private func handleAwaitDisplayModeSwitch(call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -508,8 +491,6 @@ extension MpvPlayerPlugin: MpvPipDelegate {
     playerCore?.isPipActive = true
     pendingInlineRestoreAfterPip = false
     pipChannel?.invokeMethod("onPipChanged", arguments: true)
-    syncPipTimebase()
-    startPipTimebaseSync()
 
     if isManualPipRequest {
       isManualPipRequest = false
@@ -530,7 +511,6 @@ extension MpvPlayerPlugin: MpvPipDelegate {
     playerCore?.setPropertyAsync("pause", value: playing ? "no" : "yes") { [weak self] propertyResult in
       guard case .success = propertyResult else { return }
       self?.pipController?.invalidatePlaybackState()
-      self?.syncPipTimebase()
     }
   }
 

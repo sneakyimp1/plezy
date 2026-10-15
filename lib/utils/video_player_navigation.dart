@@ -138,14 +138,6 @@ final class VideoPlayerLaunchIdentity {
   int get hashCode => Object.hash(globalKey, mediaIndex, mediaSourceId, selectedQualityPreset, isOffline, routeKind);
 }
 
-class VideoPlayerNavigationInFlightGuard {
-  final Set<VideoPlayerLaunchIdentity> _identities = <VideoPlayerLaunchIdentity>{};
-
-  bool tryStart(VideoPlayerLaunchIdentity identity) => _identities.add(identity);
-
-  void finish(VideoPlayerLaunchIdentity identity) => _identities.remove(identity);
-}
-
 class VideoPlayerActiveRouteGuard {
   Object? _owner;
   VideoPlayerLaunchIdentity? _identity;
@@ -175,16 +167,9 @@ class VideoPlayerActiveRouteGuard {
   }
 }
 
-final _videoPlayerNavigationInFlightGuard = VideoPlayerNavigationInFlightGuard();
-
-class WatchTogetherPlaybackNavigationException implements Exception {
-  final String message;
-
-  const WatchTogetherPlaybackNavigationException(this.message);
-
-  @override
-  String toString() => message;
-}
+/// Launch identities currently between the duplicate check and the route
+/// push; a second launch of the same identity in that window is dropped.
+final _inFlightLaunches = <VideoPlayerLaunchIdentity>{};
 
 /// Series (keyed by grandparent) or standalone-item key under
 /// [SettingsService.mediaVersionPreferences], scoped by server — raw Plex
@@ -343,12 +328,15 @@ Future<bool?> navigateToVideoPlayer(
       : null;
 
   // Plain Play on a downloaded item must target the version actually on
-  // disk. Only one version can be downloaded per item, and saved version
-  // preferences describe online intent — they may point at a version that
-  // was never downloaded (issue #1440). Explicit caller selections still win.
+  // disk, online too, so the player can open the local copy instead of
+  // streaming it (issue #2466). Only one version can be downloaded per item,
+  // and saved version preferences describe online intent — they may point at
+  // a version that was never downloaded (issue #1440). Explicit caller
+  // selections still win. A Watch Together launch keeps the room's version:
+  // a local session does not sync with the room.
   int? downloadedMediaIndex;
   String? downloadedMediaSourceId;
-  if (isOffline && selectedMediaIndex == null && selectedMediaSourceId == null) {
+  if ((isOffline || playbackLease == null) && selectedMediaIndex == null && selectedMediaSourceId == null) {
     final downloaded = await downloadProvider.getCompletedDownload(metadata.globalKey);
     if (downloaded != null) {
       downloadedMediaIndex = downloaded.mediaIndex;
@@ -380,7 +368,7 @@ Future<bool?> navigateToVideoPlayer(
   );
   var markedInFlight = false;
   if (!usePushReplacement) {
-    markedInFlight = _videoPlayerNavigationInFlightGuard.tryStart(launchIdentity);
+    markedInFlight = _inFlightLaunches.add(launchIdentity);
     if (!markedInFlight) {
       appLogger.d(
         'Video player navigation already in flight for ${metadata.id} (mediaIndex=$mediaIndex), '
@@ -410,34 +398,24 @@ Future<bool?> navigateToVideoPlayer(
             launchObserver.mark('blocked', blocker: 'externalPlayerOptionsUnsupported');
             return null;
           }
-          bool launched = false;
-
-          if (isOffline) {
-            final globalKey = metadata.globalKey;
+          String? videoUrl;
+          // A reachable download of the requested version plays from disk,
+          // online too; anything else streams from the server.
+          if (isOffline || downloadProvider.isDownloaded(metadata.globalKey)) {
             final videoPath = await downloadProvider.getVideoFilePath(
-              globalKey,
+              metadata.globalKey,
               mediaIndex: mediaIndex,
               mediaSourceId: mediaSourceId,
             );
             if (!launchCurrent()) return null;
-            if (videoPath != null && context.mounted) {
-              final videoUrl = videoPath.contains('://') ? videoPath : 'file://$videoPath';
-              launched = await ExternalPlayerService.launch(
-                context: context,
-                videoUrl: videoUrl,
-                metadata: metadata,
-                client: mediaClient,
-                offlineWatchService: offlineWatchService,
-                mediaIndex: mediaIndex,
-                mediaSourceId: mediaSourceId,
-                isLaunchCurrent: launchCurrent,
-                onHandoffPending: () => launchObserver?.mark('blocked', blocker: 'externalHandoffPending'),
-                onLaunched: () => launchObserver?.mark('externalLaunched'),
-              );
-            }
-          } else if (context.mounted) {
+            if (videoPath != null) videoUrl = videoPath.contains('://') ? videoPath : 'file://$videoPath';
+          }
+          // An offline item with no local file falls through to the built-in player.
+          var launched = false;
+          if ((!isOffline || videoUrl != null) && context.mounted) {
             launched = await ExternalPlayerService.launch(
               context: context,
+              videoUrl: videoUrl,
               metadata: metadata,
               client: mediaClient,
               offlineWatchService: offlineWatchService,
@@ -508,9 +486,7 @@ Future<bool?> navigateToVideoPlayer(
     pushFuture = route.push(navigator, replaceCurrent: usePushReplacement);
     launchObserver?.mark('opening');
   } finally {
-    if (markedInFlight) {
-      _videoPlayerNavigationInFlightGuard.finish(launchIdentity);
-    }
+    if (markedInFlight) _inFlightLaunches.remove(launchIdentity);
   }
   return pushFuture;
 }
@@ -657,14 +633,10 @@ Future<bool> navigateToWatchTogetherPlayback(
   final multiServer = context.read<MultiServerProvider>();
   final client = multiServer.getClientForServer(serverId);
 
-  if (client == null) {
-    throw const WatchTogetherPlaybackNavigationException('Watch Together server is unavailable');
-  }
+  if (client == null) throw StateError('Watch Together server is unavailable');
 
   final metadata = await client.fetchItem(ratingKey);
-  if (metadata == null) {
-    throw const WatchTogetherPlaybackNavigationException('Current Watch Together media is unavailable');
-  }
+  if (metadata == null) throw StateError('Current Watch Together media is unavailable');
 
   if (!context.mounted) return false;
 
