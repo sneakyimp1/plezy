@@ -4,7 +4,7 @@ import UIKit
 import Flutter
 import XCTest
 
-@testable import Runner
+@testable import Plezy
 
 final class ControllablePropertyCore: MpvPlayerCoreBase {
   var nextResult: Result<Void, Error>?
@@ -44,6 +44,7 @@ final class RecordingMpvPlugin: MpvPluginShared {
 
   func setPlayerVisible(_ visible: Bool, restoreOnWindowVisible: Bool) {}
   func updatePlayerFrame() {}
+  func setPlayerVideoZoom(_ scale: Double) {}
 
   func didSetPauseProperty(value: String) {
     pauseHookValues.append(value)
@@ -60,6 +61,18 @@ final class RecordingLifecycleDelegate: MpvPlayerDelegate {
 
   func onEvent(name: String, data: [String: Any]?) {
     events.append(name)
+  }
+}
+
+final class EventOrderRecorder: MpvPlayerDelegate {
+  private(set) var events: [(name: String, data: [String: Any]?)] = []
+  var onEndFile: (() -> Void)?
+
+  func onPropertyChange(name: String, value: Any?, sourceId: Int64?) {}
+
+  func onEvent(name: String, data: [String: Any]?) {
+    events.append((name, data))
+    if name == "end-file" { onEndFile?() }
   }
 }
 
@@ -90,6 +103,7 @@ final class RecordingPipDelegate: MpvPipDelegate {
   func pipSkip(byInterval seconds: Double, completion: @escaping () -> Void) { completion() }
   var isPipPlaying: Bool { true }
   var pipDuration: Double { 60 }
+  var pipPosition: Double { 0 }
 }
 
 final class ReleaseTrackingCore: MpvPlayerCoreBase {
@@ -208,6 +222,19 @@ final class MpvPlayerContractTests: XCTestCase {
     XCTAssertFalse(core.isPaused, "The accepted pause write must commit before completion")
   }
 
+  func testMpvContextsPreferAVFoundationOverAudioUnit() {
+    // ao_audiounit remixes 5.1/7.1 to stereo on AirPods (#2264); both the
+    // video and the music core must probe AVFoundation first.
+    let core = MpvAudioPlayerCore()
+    XCTAssertTrue(core.initialize())
+    defer {
+      core.dispose()
+      core.queue.sync {}
+    }
+
+    XCTAssertEqual(try awaitGetProperty(core, name: "options/ao").get(), "avfoundation,audiounit")
+  }
+
   func testPauseIntentUpdatesCacheBeforeAsyncWriteCompletes() {
     let core = MpvAudioPlayerCore()
     XCTAssertTrue(core.initialize())
@@ -235,6 +262,39 @@ final class MpvPlayerContractTests: XCTestCase {
     XCTAssertFalse(core.isPaused, "The public pause intent must be visible before the native write completes")
     releaseQueue.signal()
     wait(for: [completion], timeout: 2)
+  }
+
+  // ao_avfoundation queues seconds of audio filtered at the old speed. A Watch
+  // Together room pauses, changes its rate and plays; playback must run at the
+  // new rate from the paused position, not drift off while that queue drains.
+  func testSpeedWrittenWhilePausedTakesEffectOnPlay() throws {
+    let (core, file) = try startSilentPlayback()
+    defer { stopSilentPlayback(core, file: file) }
+
+    XCTAssertSuccess(awaitProperty(core, name: "pause", value: "yes"))
+    pump(0.5)
+    let pausedAt = try timePos(core)
+    XCTAssertSuccess(awaitProperty(core, name: "speed", value: "2"))
+    pump(0.5)
+    XCTAssertSuccess(awaitProperty(core, name: "pause", value: "no"))
+    let playedAt = Date()
+    pump(3)
+
+    let expected = pausedAt + 2 * Date().timeIntervalSince(playedAt)
+    XCTAssertEqual(try timePos(core), expected, accuracy: 0.5)
+  }
+
+  func testSpeedWrittenWhilePlayingTakesEffectAtOnce() throws {
+    let (core, file) = try startSilentPlayback()
+    defer { stopSilentPlayback(core, file: file) }
+
+    let changedFrom = try timePos(core)
+    let changedAt = Date()
+    XCTAssertSuccess(awaitProperty(core, name: "speed", value: "2"))
+    pump(3)
+
+    let expected = changedFrom + 2 * Date().timeIntervalSince(changedAt)
+    XCTAssertEqual(try timePos(core), expected, accuracy: 0.5)
   }
 
   func testOlderPauseReplyCannotOverwriteNewerUserIntent() {
@@ -414,6 +474,59 @@ final class MpvPlayerContractTests: XCTestCase {
     XCTAssertEqual(completionCount, 1)
   }
 
+  func testFailedOpenDeliversItsErrorLinesBeforeEndFileWhenTheEventQueueLags() {
+    let core = MpvAudioPlayerCore()
+    let recorder = EventOrderRecorder()
+    core.delegate = recorder
+    XCTAssertTrue(core.initialize())
+    defer {
+      core.dispose()
+      core.queue.sync {}
+    }
+
+    let missingFile = FileManager.default.temporaryDirectory
+      .appendingPathComponent("plezy-missing-\(UUID().uuidString).mkv").path
+    let events = eventsOfOpenFailingBehindHeldQueue(core, recorder: recorder, url: missingFile)
+
+    guard let endFile = events.firstIndex(where: { $0.name == "end-file" }) else {
+      return XCTFail("No end-file delivered")
+    }
+    XCTAssertEqual(events[endFile].data?["reason"] as? Int, Int(MPV_END_FILE_REASON_ERROR.rawValue))
+    XCTAssertTrue(
+      events[..<endFile].contains { isLogLine($0, level: "error", containing: "Failed to open") },
+      "The line explaining the failure must reach the delegate before the end-file"
+    )
+  }
+
+  func testBackgroundedCoreStillDeliversAFailedOpensWarningsAndErrorsOnly() {
+    let core = MpvAudioPlayerCore()
+    let recorder = EventOrderRecorder()
+    core.delegate = recorder
+    core.setBackgrounded(true)
+    XCTAssertTrue(core.initialize())
+    defer {
+      core.dispose()
+      core.queue.sync {}
+    }
+
+    let missingFile = FileManager.default.temporaryDirectory
+      .appendingPathComponent("plezy-missing-\(UUID().uuidString).mkv").path
+    let events = eventsOfOpenFailingBehindHeldQueue(core, recorder: recorder, url: missingFile)
+
+    guard let endFile = events.firstIndex(where: { $0.name == "end-file" }) else {
+      return XCTFail("No end-file delivered")
+    }
+    XCTAssertTrue(
+      events[..<endFile].contains { isLogLine($0, level: "error", containing: "Failed to open") },
+      "A failure while backgrounded must keep its explanation"
+    )
+    let levels = Set(events.compactMap { $0.name == "log-message" ? $0.data?["level"] as? String : nil })
+    XCTAssertTrue(
+      levels.isSubset(of: ["fatal", "error", "warn"]),
+      "Backgrounded, chattier lines stay native: \(levels)"
+    )
+  }
+
   func testNormalizedPlaybackDelayStringsPassThroughUnchanged() {
     let core = ControllablePropertyCore()
     let plugin = RecordingMpvPlugin(core: core)
@@ -552,24 +665,18 @@ final class MpvPlayerContractTests: XCTestCase {
     XCTAssertEqual(results, [false])
   }
 
-  func testPipTimeoutRecreatesControllerAndRejectsRetiredCallbacks() {
+  func testPipTimeoutKeepsTheLayersControllerForTheNextStart() {
+    // A second AVKit controller on the same layer crashes once the timed-out
+    // one is freed (AVSBDLPlayerControllerKey, #2884).
     let displayLayer = AVSampleBufferDisplayLayer()
-    let retired = FakePictureInPictureController()
-    let replacement = FakePictureInPictureController()
-    retired.isPictureInPicturePossible = true
-    replacement.isPictureInPicturePossible = true
+    let fake = FakePictureInPictureController()
     var timeouts: [() -> Void] = []
-    var replacementLayers: [AVSampleBufferDisplayLayer?] = []
     let controller = MpvPipController(
-      controller: retired,
+      controller: fake,
       sampleBufferDisplayLayer: displayLayer,
       readiness: { (true, true, true) },
       retryScheduler: { $0() },
-      startTimeoutScheduler: { timeouts.append($0) },
-      replacementControllerFactory: { layer in
-        replacementLayers.append(layer)
-        return replacement
-      }
+      startTimeoutScheduler: { timeouts.append($0) }
     )
     let delegate = RecordingPipDelegate()
     controller.delegate = delegate
@@ -577,42 +684,27 @@ final class MpvPlayerContractTests: XCTestCase {
     var results: [Bool] = []
 
     controller.startPip { results.append($0) }
-    XCTAssertEqual(retired.startCount, 1)
-    XCTAssertEqual(timeouts.count, 1)
-
     timeouts[0]()
     XCTAssertEqual(results, [false])
-    XCTAssertEqual(retired.stopCount, 1)
-    XCTAssertEqual(retired.automaticStartValues, [true, false])
-    XCTAssertEqual(replacementLayers.count, 1)
-    XCTAssertTrue(replacementLayers[0] === displayLayer)
-    XCTAssertEqual(replacement.automaticStartValues, [true])
+    XCTAssertEqual(fake.stopCount, 1)
+    XCTAssertEqual(fake.automaticStartValues, [true])
+
+    controller.pictureInPictureDidStart(from: fake)
+    XCTAssertEqual(fake.stopCount, 2, "A late start from the timed-out request must be stopped")
+    XCTAssertTrue(delegate.events.isEmpty)
 
     controller.startPip { results.append($0) }
-    XCTAssertEqual(replacement.startCount, 1)
+    XCTAssertEqual(fake.startCount, 2, "The next start must reuse the layer's controller")
     XCTAssertEqual(timeouts.count, 2)
 
-    controller.pictureInPictureWillStart(from: retired)
-    controller.pictureInPictureDidStart(from: retired)
-    controller.pictureInPictureFailedToStart(
-      from: retired,
-      error: NSError(domain: "late-retired-controller", code: 1)
-    )
-    controller.pictureInPictureDidStop(from: retired)
-    XCTAssertEqual(results, [false])
-    XCTAssertTrue(delegate.events.isEmpty)
-    XCTAssertEqual(retired.stopCount, 1)
-    XCTAssertEqual(
-      replacement.startCount,
-      1,
-      "A retired controller callback must not disturb the replacement's pending start"
-    )
-
-    controller.pictureInPictureWillStart(from: replacement)
-    controller.pictureInPictureDidStart(from: replacement)
+    controller.pictureInPictureWillStart(from: fake)
+    controller.pictureInPictureDidStart(from: fake)
     XCTAssertEqual(results, [false, true])
     XCTAssertEqual(delegate.events, ["willStart", "didStart"])
-    XCTAssertEqual(replacementLayers.count, 1)
+
+    timeouts[1]()
+    XCTAssertEqual(results, [false, true])
+    XCTAssertEqual(fake.stopCount, 2)
   }
 
   func testPipTeardownCancelsRetryAndLateWork() {
@@ -683,6 +775,110 @@ final class MpvPlayerContractTests: XCTestCase {
     return results
   }
 
+  /// Opens `url` while `core`'s event queue is held and releases the queue
+  /// only once mpv has posted END_FILE, so the end-file and the lines logged
+  /// before it are all pending when the drain runs: the lag under which mpv
+  /// hands END_FILE out first. Returns the events delivered through the
+  /// end-file.
+  private func eventsOfOpenFailingBehindHeldQueue(
+    _ core: MpvPlayerCoreBase,
+    recorder: EventOrderRecorder,
+    url: String
+  ) -> [(name: String, data: [String: Any]?)] {
+    guard let observer = core.createClientForTesting() else {
+      XCTFail("No second mpv client")
+      return []
+    }
+    defer { mpv_destroy(observer) }
+
+    let queueHeld = expectation(description: "mpv queue held")
+    let releaseQueue = DispatchSemaphore(value: 0)
+    core.queue.async {
+      queueHeld.fulfill()
+      releaseQueue.wait()
+    }
+    wait(for: [queueHeld], timeout: 2)
+
+    let endFileDelivered = expectation(description: "end-file delivered")
+    endFileDelivered.assertForOverFulfill = false
+    recorder.onEndFile = { endFileDelivered.fulfill() }
+    core.command(["loadfile", url])
+    var endFilePosted = false
+    while !endFilePosted, let event = mpv_wait_event(observer, 5), event.pointee.event_id != MPV_EVENT_NONE {
+      endFilePosted = event.pointee.event_id == MPV_EVENT_END_FILE
+    }
+    releaseQueue.signal()
+    XCTAssertTrue(endFilePosted, "mpv never ended the file")
+    wait(for: [endFileDelivered], timeout: 5)
+    return recorder.events
+  }
+
+  private func isLogLine(
+    _ event: (name: String, data: [String: Any]?),
+    level: String,
+    containing text: String
+  ) -> Bool {
+    event.name == "log-message" && event.data?["level"] as? String == level
+      && (event.data?["text"] as? String)?.contains(text) == true
+  }
+
+  /// An audio core playing 30 s of silence through ao_avfoundation for three
+  /// seconds, long enough to fill the renderer's read-ahead.
+  private func startSilentPlayback() throws -> (MpvAudioPlayerCore, URL) {
+    let file = FileManager.default.temporaryDirectory
+      .appendingPathComponent("plezy-silence-\(UUID().uuidString).wav")
+    try silentWav(seconds: 30).write(to: file)
+    let core = MpvAudioPlayerCore()
+    XCTAssertTrue(core.initialize())
+    core.command(["loadfile", file.path])
+    XCTAssertSuccess(awaitProperty(core, name: "pause", value: "no"))
+    pump(3)
+    XCTAssertEqual(try awaitGetProperty(core, name: "current-ao").get(), "avfoundation")
+    XCTAssertGreaterThan(try timePos(core), 2)
+    return (core, file)
+  }
+
+  private func stopSilentPlayback(_ core: MpvAudioPlayerCore, file: URL) {
+    core.dispose()
+    core.queue.sync {}
+    try? FileManager.default.removeItem(at: file)
+  }
+
+  /// 48 kHz stereo 16-bit PCM silence.
+  private func silentWav(seconds: Int) -> Data {
+    let sampleRate = 48_000
+    let blockAlign = 4
+    let dataSize = seconds * sampleRate * blockAlign
+    var wav = Data()
+    func append<T: FixedWidthInteger>(_ value: T) {
+      withUnsafeBytes(of: value.littleEndian) { wav.append(contentsOf: $0) }
+    }
+    wav.append(contentsOf: Array("RIFF".utf8))
+    append(UInt32(36 + dataSize))
+    wav.append(contentsOf: Array("WAVEfmt ".utf8))
+    append(UInt32(16))
+    append(UInt16(1))
+    append(UInt16(2))
+    append(UInt32(sampleRate))
+    append(UInt32(sampleRate * blockAlign))
+    append(UInt16(blockAlign))
+    append(UInt16(16))
+    wav.append(contentsOf: Array("data".utf8))
+    append(UInt32(dataSize))
+    wav.append(Data(count: dataSize))
+    return wav
+  }
+
+  private func pump(_ seconds: TimeInterval) {
+    let elapsed = expectation(description: "\(seconds) s elapsed")
+    DispatchQueue.main.asyncAfter(deadline: .now() + seconds) { elapsed.fulfill() }
+    wait(for: [elapsed], timeout: seconds + 2)
+  }
+
+  private func timePos(_ core: MpvPlayerCoreBase) throws -> Double {
+    try XCTUnwrap(Double(try awaitGetProperty(core, name: "time-pos").get() ?? ""))
+  }
+
   private func awaitProperty(
     _ core: MpvPlayerCoreBase,
     name: String,
@@ -691,6 +887,17 @@ final class MpvPlayerContractTests: XCTestCase {
     let completion = expectation(description: "set \(name)")
     var propertyResult: Result<Void, Error>?
     core.setPropertyAsync(name, value: value) {
+      propertyResult = $0
+      completion.fulfill()
+    }
+    wait(for: [completion], timeout: 2)
+    return propertyResult ?? .failure(failure)
+  }
+
+  private func awaitGetProperty(_ core: MpvPlayerCoreBase, name: String) -> Result<String?, Error> {
+    let completion = expectation(description: "get \(name)")
+    var propertyResult: Result<String?, Error>?
+    core.getPropertyAsync(name) {
       propertyResult = $0
       completion.fulfill()
     }

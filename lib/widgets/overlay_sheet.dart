@@ -654,6 +654,37 @@ class _OverlaySheetHostState extends State<OverlaySheetHost> with SingleTickerPr
     }
   }
 
+  /// Builds every page in the stack, showing only the top one.
+  ///
+  /// A pushed page covers the pages below it without replacing them: they stay
+  /// mounted (offstage, with tickers and focus off) so their [State] survives,
+  /// and a caller awaiting [OverlaySheetController.push] can still act on its
+  /// own context when the nested page returns. An offstage page lays out at the
+  /// smallest size, so the sheet keeps sizing to the top page alone.
+  Widget _buildPageStack() {
+    final top = _pageStack.last;
+    return Stack(
+      fit: StackFit.passthrough,
+      clipBehavior: Clip.none,
+      children: [
+        for (final entry in _pageStack)
+          KeyedSubtree(
+            key: ObjectKey(entry),
+            child: Offstage(
+              offstage: !identical(entry, top),
+              child: TickerMode(
+                enabled: identical(entry, top),
+                child: ExcludeFocus(
+                  excluding: !identical(entry, top),
+                  child: Builder(builder: entry.builder),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   Widget _buildSheet(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     final isDesktop = size.width > 600;
@@ -662,6 +693,12 @@ class _OverlaySheetHostState extends State<OverlaySheetHost> with SingleTickerPr
     final showHandle = _showDragHandle && !isTV && !isTop;
 
     final effectiveConstraints = _constraints ?? OverlaySheetController._defaultSheetConstraints(context);
+    // A sheet that spans the viewport keeps its surface (and drag handle)
+    // full-bleed and pads only its pages by the side insets, like the modal
+    // fallback; otherwise an asymmetric inset (iPhone Duo's portrait sensor
+    // column) would leave it hugging one edge. A capped or edge-padded sheet
+    // floats and clears the insets instead.
+    final spansWidth = !isDesktop && effectiveConstraints.maxWidth >= size.width;
 
     // Slide direction depends on alignment: bottom sheets slide up, top sheets slide down.
     // Use a pixel transform instead of FractionalTranslation so mouse-tracker
@@ -674,9 +711,10 @@ class _OverlaySheetHostState extends State<OverlaySheetHost> with SingleTickerPr
 
     final colorScheme = Theme.of(context).colorScheme;
 
-    Widget content = _pageStack.isNotEmpty ? Builder(builder: _pageStack.last.builder) : const SizedBox.shrink();
+    Widget content = _pageStack.isNotEmpty ? _buildPageStack() : const SizedBox.shrink();
     // Keep sheet scrollables from attaching to the route's primary controller.
     content = PrimaryScrollController.none(child: content);
+    if (spansWidth) content = SafeArea(top: false, bottom: false, child: content);
 
     // Wrap content in NotificationListener for scroll-aware drag-to-dismiss
     if (showHandle) {
@@ -761,8 +799,8 @@ class _OverlaySheetHostState extends State<OverlaySheetHost> with SingleTickerPr
             child: Transform.translate(
               offset: Offset(0, _dragOffset.clamp(0, double.infinity)),
               child: SafeArea(
-                left: true,
-                right: true,
+                left: !spansWidth,
+                right: !spansWidth,
                 top: false,
                 bottom: false,
                 child: Material(

@@ -41,11 +41,14 @@ class TranslationsZhHant extends TranslationsZh with BaseTranslations<AppLocale,
 
 	// Translations
 	@override late final _Translations$app$zh_Hant app = _Translations$app$zh_Hant._(_root);
+	@override late final _Translations$appIcon$zh_Hant appIcon = _Translations$appIcon$zh_Hant._(_root);
 	@override late final _Translations$auth$zh_Hant auth = _Translations$auth$zh_Hant._(_root);
 	@override late final _Translations$common$zh_Hant common = _Translations$common$zh_Hant._(_root);
 	@override late final _Translations$screens$zh_Hant screens = _Translations$screens$zh_Hant._(_root);
 	@override late final _Translations$update$zh_Hant update = _Translations$update$zh_Hant._(_root);
+	@override late final _Translations$supporter$zh_Hant supporter = _Translations$supporter$zh_Hant._(_root);
 	@override late final _Translations$settings$zh_Hant settings = _Translations$settings$zh_Hant._(_root);
+	@override late final _Translations$themeEditor$zh_Hant themeEditor = _Translations$themeEditor$zh_Hant._(_root);
 	@override late final _Translations$search$zh_Hant search = _Translations$search$zh_Hant._(_root);
 	@override late final _Translations$hotkeys$zh_Hant hotkeys = _Translations$hotkeys$zh_Hant._(_root);
 	@override late final _Translations$fileInfo$zh_Hant fileInfo = _Translations$fileInfo$zh_Hant._(_root);
@@ -101,6 +104,24 @@ class _Translations$app$zh_Hant extends Translations$app$zh {
 
 	// Translations
 	@override String get title => 'Plezy';
+}
+
+// Path: appIcon
+class _Translations$appIcon$zh_Hant extends Translations$appIcon$zh {
+	_Translations$appIcon$zh_Hant._(TranslationsZhHant root) : this._root = root, super.internal(root);
+
+	final TranslationsZhHant _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => '應用程式圖示';
+	@override String get defaultIcon => '預設';
+	@override String get current => '目前圖示';
+	@override String get locked => 'Supporter 專屬';
+	@override String get lockedHint => '其他圖示為 Supporter 專屬福利。';
+	@override String get changeFailed => '無法變更應用程式圖示';
+	@override String get launcherHint => '離開 Plezy 後，新圖示就會出現在主畫面上。';
+	@override String get tvLauncherHint => '離開 Plezy 後就會顯示新橫幅。在電視重新啟動前，Android TV 可能仍會顯示舊橫幅。';
+	@override late final _Translations$appIcon$names$zh_Hant names = _Translations$appIcon$names$zh_Hant._(_root);
 }
 
 // Path: auth
@@ -219,6 +240,33 @@ class _Translations$update$zh_Hant extends Translations$update$zh {
 	@override String get checkFailed => '無法檢查更新';
 }
 
+// Path: supporter
+class _Translations$supporter$zh_Hant extends Translations$supporter$zh {
+	_Translations$supporter$zh_Hant._(TranslationsZhHant root) : this._root = root, super.internal(root);
+
+	final TranslationsZhHant _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Plezy Supporter';
+	@override String get intro => '一次性購買，支持 Plezy 的開發並解鎖外觀加值項目：';
+	@override String get presetThemes => '精選主題';
+	@override String get presetThemesDescription => '餘燼、冰河、森林、李子與紙張';
+	@override String get customTheme => '自訂主題';
+	@override String get customThemeDescription => '自行挑選每一種顏色';
+	@override String get appIcons => '應用程式圖示';
+	@override String get appIconsDescription => '選擇其他 Plezy 圖示';
+	@override String buy({required Object price}) => '以 ${price} 購買';
+	@override String get loadingPrice => '正在載入價格…';
+	@override String get restore => '恢復購買';
+	@override String get pending => '您的購買正在等待付款或核准。商店完成交易後，加值項目就會立即解鎖。';
+	@override String get thankYouTitle => '感謝您支持 Plezy';
+	@override String get thankYouBody => '您的 Supporter 加值項目已解鎖。';
+	@override String get tileSubtitle => '一次性購買即可解鎖主題與應用程式圖示';
+	@override String get tileSubtitleThemesOnly => '一次性購買即可解鎖主題';
+	@override String get tileUnlocked => '感謝您的支持';
+	@override late final _Translations$supporter$errors$zh_Hant errors = _Translations$supporter$errors$zh_Hant._(_root);
+}
+
 // Path: settings
 class _Translations$settings$zh_Hant extends Translations$settings$zh {
 	_Translations$settings$zh_Hant._(TranslationsZhHant root) : this._root = root, super.internal(root);
@@ -249,6 +297,11 @@ class _Translations$settings$zh_Hant extends Translations$settings$zh {
 	@override String get lightTheme => '淺色';
 	@override String get darkTheme => '深色';
 	@override String get oledTheme => 'OLED 純黑';
+	@override String get emberTheme => '餘燼';
+	@override String get glacierTheme => '冰河';
+	@override String get forestTheme => '森林';
+	@override String get plumTheme => '李子';
+	@override String get paperTheme => '紙張';
 	@override String get libraryDensity => '媒體庫版面配置密度';
 	@override String get displayScale => '介面縮放';
 	@override String get compact => '緊湊';
@@ -279,6 +332,8 @@ class _Translations$settings$zh_Hant extends Translations$settings$zh {
 	@override String get alwaysKeepSidebarOpenDescription => '側邊欄保持展開狀態，內容區域自動調整';
 	@override String get showUnwatchedCount => '顯示未觀看數量';
 	@override String get showUnwatchedCountDescription => '在影集和單季上顯示未觀看的集數';
+	@override String get showWatchedIndicators => '顯示已觀看指示';
+	@override String get showWatchedIndicatorsDescription => '在已觀看的電影、影集和單集上顯示勾選標記';
 	@override String get showEpisodeNumberOnCards => '在卡片上顯示集數';
 	@override String get showEpisodeNumberOnCardsDescription => '在單集卡片上顯示季和集編號';
 	@override String get showSeasonPostersOnTabs => '在索引標籤上顯示單季海報';
@@ -308,6 +363,11 @@ class _Translations$settings$zh_Hant extends Translations$settings$zh {
 	@override String get defaultQualityTitle => '預設畫質';
 	@override String get cellularQualityTitle => '行動網路上的預設畫質';
 	@override String get cellularQualitySameAsDefault => '與預設畫質相同';
+	@override String get directPlayCoveredQuality => '以原始畫質播放較小影片';
+	@override String get directPlayCoveredQualityDescription => '已在畫質限制內的影片直接播放，而非轉碼';
+	@override String get videoCodecs => '影片編解碼器';
+	@override String get videoCodecsDescription => '未勾選的編解碼器將由伺服器轉碼';
+	@override String get videoCodecsAlwaysAccepted => '一律接受';
 	@override String get musicQualityTitle => '音樂品質';
 	@override String get subtitleStyling => '字幕樣式';
 	@override String get subtitleStylingDescription => '調整字幕外觀';
@@ -319,6 +379,7 @@ class _Translations$settings$zh_Hant extends Translations$settings$zh {
 	@override String minutesUnit({required Object minutes}) => '${minutes} 分鐘';
 	@override String get rememberTrackSelections => '記住每部影集或電影的音訊與字幕選擇';
 	@override String get rememberTrackSelectionsDescription => '記住每部影片的音軌與字幕選擇';
+	@override String get rememberTrackSelectionsBackendRule => 'Plex 會按檔案將每個選擇儲存在伺服器上；Jellyfin 還會開啟帳戶的「記住選擇」；不支援 Emby';
 	@override String get followServerTrackSelections => '使用伺服器為每集選擇的軌道';
 	@override String get followServerTrackSelectionsDescription => '切換劇集時，套用伺服器上為該集選擇的音訊與字幕，而不是沿用目前選擇';
 	@override String get resumeMusicOnLaunch => '記住音樂工作階段';
@@ -338,7 +399,7 @@ class _Translations$settings$zh_Hant extends Translations$settings$zh {
 	@override String get videoPlayerNavigation => '影片播放器導覽';
 	@override String get videoPlayerNavigationDescription => '使用方向鍵導覽影片播放器控制項';
 	@override String get watchTogetherRelay => '一起看中繼伺服器';
-	@override String get watchTogetherRelayDescription => '設定自訂中繼。所有人必須使用相同的伺服器。';
+	@override String get watchTogetherRelayDescription => '除非您自行設定，否則使用公開的 Open Watch Party 中繼伺服器';
 	@override String get watchTogetherRelayHint => 'https://my-relay.example.com';
 	@override String get watchTogetherRelayInvalid => '請輸入有效的 HTTP 或 HTTPS 中繼伺服器根網址。';
 	@override String get crashReporting => '當機報告';
@@ -364,6 +425,7 @@ class _Translations$settings$zh_Hant extends Translations$settings$zh {
 	@override String get importSettingsInvalidFile => '此檔案不是有效的 Plezy 設定匯出檔';
 	@override String get importSettingsNoUser => '匯入設定前請先登入';
 	@override String get shortcutsReset => '快速鍵已重設為預設值';
+	@override String get resetShortcutsConfirm => '這會將您的自訂快速鍵替換為預設值。要繼續嗎？';
 	@override String get about => '關於';
 	@override String get aboutDescription => '應用程式資訊與授權條款';
 	@override String get updates => '更新';
@@ -379,8 +441,21 @@ class _Translations$settings$zh_Hant extends Translations$settings$zh {
 	@override String get autoPlayAndSkip => '自動播放與跳過';
 	@override String get autoPlayNextEpisode => '自動播放下一集';
 	@override String get autoPlayNextEpisodeDescription => '目前單集結束時自動播放下一集';
+	@override String get shuffleStartsFromBeginning => '隨機播放從頭開始';
+	@override String get shuffleStartsFromBeginningDescription => '隨機播放時每集從頭開始播放，而非繼續播放';
 	@override String get playNextCountdown => '下一集倒數計時';
 	@override String get playNextCountdownImmediate => '立即播放';
+	@override String get skipIntroMode => '跳過片頭';
+	@override String get skipIntroModeOffDescription => '正常播放片頭，不顯示跳過按鈕';
+	@override String get skipIntroModeButtonDescription => '片頭開始時顯示跳過按鈕';
+	@override String get skipIntroModeAutoDescription => '在下方設定的延遲後自動跳過片頭';
+	@override String get skipCreditsMode => '跳過片尾';
+	@override String get skipCreditsModeOffDescription => '正常播放片尾，不顯示跳過按鈕';
+	@override String get skipCreditsModeButtonDescription => '片尾開始時顯示跳過按鈕';
+	@override String get skipCreditsModeAutoDescription => '自動跳過片尾並播放下一集';
+	@override String get skipMarkerModeOff => '關閉';
+	@override String get skipMarkerModeButton => '顯示按鈕';
+	@override String get skipMarkerModeAuto => '自動';
 	@override String get forceSkipMarkerFallback => '強制使用備用標記';
 	@override String get forceSkipMarkerFallbackDescription => '即使 Plex 有標記，也強制使用章節標題模式';
 	@override String get autoSkipDelay => '自動跳過延遲';
@@ -417,6 +492,8 @@ class _Translations$settings$zh_Hant extends Translations$settings$zh {
 	@override String get manageLibrariesDescription => '重新排序與隱藏媒體庫';
 	@override String get companionRemoteServer => '隨身遙控器伺服器';
 	@override String get companionRemoteServerDescription => '允許區域網路中的行動裝置控制此應用程式';
+	@override String get companionRemoteServerStartFailed => '無法啟動隨身遙控器伺服器';
+	@override String get companionRemoteServerStopFailed => '無法停止隨身遙控器伺服器';
 	@override String get autoPip => '自動進入子母畫面';
 	@override String get autoPipDescription => '播放影片時離開應用程式將自動進入子母畫面模式';
 	@override String get matchContentFrameRate => '符合影片影格率';
@@ -429,12 +506,20 @@ class _Translations$settings$zh_Hant extends Translations$settings$zh {
 	@override String get matchDynamicRangeDescription => 'HDR 內容切換至 HDR，播放結束切回 SDR';
 	@override String get displaySwitchDelay => '顯示器切換延遲時間';
 	@override String get tunneledPlayback => '通道化播放（Tunneled Playback）';
-	@override String get tunneledPlaybackDescription => '使用影片通道模式。若 HDR 播放出現黑畫面，請停用此項。';
+	@override String get tunneledPlaybackDescription => '使用影片通道模式。若 HDR 播放出現黑畫面或動態卡頓，請停用此項。';
 	@override String get audioPassthrough => '音訊直通';
 	@override String get audioPassthroughDescription => '將 Dolby/DTS 音訊不經重新編碼，直接傳送至擴大機或電視以保留環繞音效。若播放無聲，請關閉此設定。';
-	@override String get audioPassthroughDescriptionAppleTv => '使用 Apple 原生 Dolby 解碼器處理 Dolby Digital Plus（包括 Atmos）。DTS 與 TrueHD 仍以多聲道 PCM 播放。若沒有聲音，請關閉此設定。';
-	@override String get audioDownmix => '下混為立體聲';
-	@override String get audioDownmixDescription => '將環繞音效混合為雙聲道，適用於立體聲喇叭或耳機';
+	@override String get audioPassthroughDescriptionApple => '使用 Apple 原生 Dolby 解碼器處理 Dolby Digital Plus（包括 Atmos）。DTS 與 TrueHD 仍以多聲道 PCM 播放。若沒有聲音，請關閉此設定。';
+	@override String get audioPassthroughDescriptionAppleSpatial => '使用 Apple 原生 Dolby 解碼器處理 Dolby Digital Plus（包括 Atmos）。在 iOS、iPadOS 與 tvOS 26 或更新版本上，TrueHD Atmos 與 DTS:X 會以空間音訊播放。其他 DTS 與 TrueHD 音軌則以多聲道 PCM 播放。若沒有聲音，請關閉此設定。';
+	@override String get audioPassthroughOverriddenByNormalization => '音量標準化開啟時停用';
+	@override String get audioChannelLimit => '音訊聲道';
+	@override String get audioChannelLimitDescription => '將解碼後的音訊下混，以配合無法播放所有聲道的喇叭、耳機或 HDMI 設備';
+	@override String get audioChannelLimitOriginal => '原始';
+	@override String get audioChannelLimitOriginalDescription => '播放音軌中的所有聲道';
+	@override String get audioChannelLimitSurround51 => '最多 5.1';
+	@override String get audioChannelLimitSurround51Description => '將 7.1 下混為 5.1，適用於僅支援 5.1 PCM 的電視與擴大機。不影響直通。';
+	@override String get audioChannelLimitStereo => '立體聲';
+	@override String get audioChannelLimitStereoDescription => '下混為雙聲道，適用於立體聲喇叭或耳機。會關閉直通。';
 	@override String get downmixCenterBoost => '中置聲道增強';
 	@override String downmixCenterBoostValue({required Object db}) => '${db} dB';
 	@override String get downmixCenterBoostLabel => '增強（dB）';
@@ -442,7 +527,7 @@ class _Translations$settings$zh_Hant extends Translations$settings$zh {
 	@override String get audioDownmixNormalize => '下混時音量標準化';
 	@override String get audioDownmixNormalizeDescription => '降低混音電平以防止破音。關閉以保持原始音量（大音量場景可能會失真）。';
 	@override String get dvConversionMode => 'Dolby Vision 轉換模式';
-	@override String get dvConversionModeDescription => '選擇 ExoPlayer 如何處理 Dolby Vision Profile 7 檔案。';
+	@override String get dvConversionModeDescription => '選擇如何處理 Dolby Vision Profile 7 檔案。';
 	@override String get dvConversionAuto => '自動';
 	@override String get dvConversionNative => '原生 / 停用';
 	@override String get dvConversionDv81 => 'P7 → P8.1';
@@ -451,8 +536,24 @@ class _Translations$settings$zh_Hant extends Translations$settings$zh {
 	@override String get dvConversionNativeDescription => '強制使用原生 DV7 並停用 DV 轉換重試';
 	@override String get dvConversionDv81Description => '強制將內嵌的 RPU 轉換為 Dolby Vision Profile 8.1';
 	@override String get dvConversionHevcStripDescription => '移除 Dolby Vision RPU/EL 層，並以一般 HEVC 呈現';
+	@override String get disableDolbyVision => '停用 Dolby Vision';
+	@override String get disableDolbyVisionDescription => '檔案包含 HDR10 或 HLG 層時，改為播放該層而非 Dolby Vision';
+	@override String get hdrSdrConversion => 'HDR 轉 SDR';
+	@override String get hdrSdrConversionDescription => '選擇在顯示器無法顯示 HDR 時由誰轉換 HDR 影片。';
+	@override String get hdrSdrConversionAuto => '自動';
+	@override String get hdrSdrConversionAutoDescription => 'Android 9 及更新版本使用裝置，較舊版本使用播放器';
+	@override String get hdrSdrConversionDevice => '裝置';
+	@override String get hdrSdrConversionDeviceDescription => '由裝置的視訊硬體轉換。速度最快，但色彩取決於裝置';
+	@override String get hdrSdrConversionPlayer => '播放器';
+	@override String get hdrSdrConversionPlayerDescription => '由播放器轉換。色彩一致，但在低階電視盒上 4K 可能卡頓';
 	@override String get deinterlace => '去交錯';
 	@override String get deinterlaceDescription => '移除交錯影片中的梳狀雜訊（僅限 mpv 播放器）';
+	@override String get deinterlaceOff => '關閉';
+	@override String get deinterlaceOffDescription => '以解碼後的原樣顯示交錯影片';
+	@override String get deinterlaceVideo => '視訊';
+	@override String get deinterlaceVideoDescription => '將每個圖場轉為完整影格。適用於為電視拍攝的影片，例如體育賽事、新聞與演唱會';
+	@override String get deinterlaceFilm => '電影';
+	@override String get deinterlaceFilmDescription => '還原經 telecine 轉為 29.97 fps 的電影與動畫原始影格，常見於 NTSC DVD。為電視拍攝的影片會出現卡頓。直播電視會使用「視訊」';
 	@override String get requireProfileSelectionOnOpen => '開啟應用程式時要求選擇使用者';
 	@override String get requireProfileSelectionOnOpenDescription => '每次開啟應用程式時顯示使用者設定檔選擇畫面';
 	@override String get forceTvMode => '強制 TV 模式';
@@ -494,6 +595,8 @@ class _Translations$settings$zh_Hant extends Translations$settings$zh {
 	@override String get gestureVolumeSwipeDescription => '在螢幕右側邊緣上下滑動以調整音量';
 	@override String get gesturePinchToZoom => '雙指縮放';
 	@override String get gesturePinchToZoomDescription => '在影片上雙指捏合以放大或縮小';
+	@override String get rememberBrightnessLevel => '記住亮度';
+	@override String get rememberBrightnessLevelDescription => '以上次滑動設定的亮度開始播放';
 	@override String get controls => '控制';
 	@override String get rememberPlayerChanges => '記住播放器變更';
 	@override String get rememberPlayerChangesDescription => '播放期間所做的變更要儲存並從何處重新套用';
@@ -508,6 +611,42 @@ class _Translations$settings$zh_Hant extends Translations$settings$zh {
 	@override String get exportDialogTitle => '匯出 Plezy 設定';
 }
 
+// Path: themeEditor
+class _Translations$themeEditor$zh_Hant extends Translations$themeEditor$zh {
+	_Translations$themeEditor$zh_Hant._(TranslationsZhHant root) : this._root = root, super.internal(root);
+
+	final TranslationsZhHant _root; // ignore: unused_field
+
+	// Translations
+	@override String get builtIn => '內建';
+	@override String get presets => '精選';
+	@override String get custom => '自訂';
+	@override String get customEmpty => '尚未建立';
+	@override String get editCustom => '編輯自訂主題';
+	@override String get editCustomDescription => '自行選擇每一種顏色';
+	@override String get locked => '透過 Supporter 解鎖';
+	@override String get savedLocked => '已儲存 — 透過 Supporter 解鎖';
+	@override String get title => '自訂主題';
+	@override String get startFrom => '從現有主題開始';
+	@override String get startFromDescription => '從其他主題複製所有顏色';
+	@override String get colors => '顏色';
+	@override String get preview => '預覽';
+	@override late final _Translations$themeEditor$slots$zh_Hant slots = _Translations$themeEditor$slots$zh_Hant._(_root);
+	@override String get opacity => '不透明度';
+	@override String get hexHint => '#RRGGBB 或 #AARRGGBB';
+	@override String get fromOtherThemes => '來自其他主題';
+	@override String swatchLabel({required Object theme, required Object color}) => '${theme} ${color}';
+	@override late final _Translations$themeEditor$contrast$zh_Hant contrast = _Translations$themeEditor$contrast$zh_Hant._(_root);
+	@override String lowContrast({required Object pair, required Object ratio, required Object minimum}) => '${pair}：${ratio}:1，低於建議的 ${minimum}:1';
+	@override String get discardTitle => '要捨棄變更嗎？';
+	@override String get discardMessage => '您尚未儲存的顏色變更將會遺失。';
+	@override String get discard => '捨棄';
+	@override String previewCardTitle({required Object number}) => '第 ${number} 集';
+	@override String previewCardSubtitle({required Object minutes}) => '剩餘 ${minutes} 分鐘';
+	@override String get previewSwitch => '自動播放';
+	@override String get previewMutedText => '次要文字看起來像這樣';
+}
+
 // Path: search
 class _Translations$search$zh_Hant extends Translations$search$zh {
 	_Translations$search$zh_Hant._(TranslationsZhHant root) : this._root = root, super.internal(root);
@@ -519,6 +658,7 @@ class _Translations$search$zh_Hant extends Translations$search$zh {
 	@override String get tryDifferentTerm => '嘗試不同的關鍵字';
 	@override String get searchYourMedia => '搜尋媒體庫';
 	@override String get enterTitleActorOrKeyword => '輸入標題、演員或關鍵字';
+	@override String get people => '人物';
 }
 
 // Path: hotkeys
@@ -844,14 +984,15 @@ class _Translations$videoControls$zh_Hant extends Translations$videoControls$zh 
 	@override String get rotationLockButton => '旋轉鎖定';
 	@override String get lockScreen => '鎖定螢幕';
 	@override String get screenLockButton => '螢幕鎖定';
-	@override String get longPressToUnlock => '長按解鎖';
 	@override String get timelineSlider => '影片時間軸';
 	@override String get volumeSlider => '音量調整';
 	@override String endsAt({required Object time}) => '預計 ${time} 結束';
 	@override String get pipActive => '正在以子母畫面模式播放';
 	@override String get pipFailed => '啟動子母畫面失敗';
 	@override String get screenshotSaved => '螢幕截圖已儲存';
+	@override String get screenshotFailed => '無法擷取螢幕截圖';
 	@override String zoomPercent({required Object percent}) => '縮放 ${percent}%';
+	@override String volumePercent({required Object percent}) => '音量 ${percent}%';
 	@override late final _Translations$videoControls$pipErrors$zh_Hant pipErrors = _Translations$videoControls$pipErrors$zh_Hant._(_root);
 	@override String get chapters => '章節';
 	@override String get noChaptersAvailable => '沒有可用的章節';
@@ -902,6 +1043,9 @@ class _Translations$messages$zh_Hant extends Translations$messages$zh {
 	@override String get playbackDataInvalid => '伺服器傳回的播放資訊無效。';
 	@override String get playbackCancelled => '播放已取消。';
 	@override String get playbackFailed => '無法開始播放。';
+	@override String playbackFailedDetail({required Object error}) => '無法開始播放：${error}';
+	@override String get audioOutputFailed => '音訊輸出停止回應。請檢查電視或擴大機的音訊連接；如果其他應用程式也沒有聲音，請重新啟動裝置。';
+	@override String get mediaUnavailable => '此內容已無法使用。';
 	@override String errorLoadingFileInfo({required Object error}) => '載入檔案資訊時發生錯誤：${error}';
 	@override String get errorLoadingSeries => '載入影集時發生錯誤';
 	@override String get musicNotSupported => '目前不支援播放音樂';
@@ -936,6 +1080,8 @@ class _Translations$messages$zh_Hant extends Translations$messages$zh {
 	@override String get mediaUnreadableBody => '伺服器找到了此項目，但無法讀取其檔案（HTTP 404）。檔案可能已移動、刪除，或其儲存空間離線。請聯絡伺服器擁有者檢查檔案並重新掃描媒體庫。';
 	@override String get serverBusyTitle => '串流無法使用';
 	@override String get serverBusyBody => '伺服器持續拒絕串流此檔案（HTTP 503）。伺服器可能正在重新啟動、忙碌中，或檔案所在的儲存裝置可能已離線。請稍後再試；若問題持續發生，請要求伺服器擁有者檢查伺服器及檔案所在的儲存裝置。';
+	@override String get playbackNotAllowedTitle => '不允許播放';
+	@override String get playbackNotAllowedBody => '伺服器拒絕串流此項目（HTTP 403）。此帳戶可能沒有播放權限，或伺服器可能只允許在其區域網路內播放。';
 	@override String get logsUploaded => '日誌已上傳';
 	@override String get logsUploadFailed => '上傳日誌失敗';
 	@override String get logId => '日誌 ID';
@@ -945,6 +1091,7 @@ class _Translations$messages$zh_Hant extends Translations$messages$zh {
 	@override String get playbackDataNotPrepared => '播放資料尚未準備完成就已開始播放';
 	@override String get streamSelectionUnavailable => '此來源不支援選擇串流';
 	@override String get streamSelectionFailed => '無法套用所選串流';
+	@override String get trackSelectionNotRemembered => '此軌道選擇僅套用於目前播放。';
 	@override String get serverUnavailableForProfile => '使用中的使用者設定檔沒有可用的伺服器';
 }
 
@@ -971,6 +1118,8 @@ class _Translations$subtitlingStyling$zh_Hant extends Translations$subtitlingSty
 	@override String get overrideStrip => '移除樣式';
 	@override String get positionTop => '頂部';
 	@override String get positionBottom => '底部';
+	@override String get useMargins => '使用邊距';
+	@override String get useMarginsDescription => '允許文字字幕顯示在影片畫面之外的區域。樣式字幕可能保留其原始位置。';
 	@override String get anchorToScreen => '錨定至螢幕';
 	@override String get anchorToScreenDescription => '在寬螢幕影片下方的黑邊顯示文字字幕';
 	@override String get bold => '粗體';
@@ -1001,6 +1150,9 @@ class _Translations$mpvConfig$zh_Hant extends Translations$mpvConfig$zh {
 	@override String get presetDeleted => '預設組已刪除';
 	@override String get confirmDeletePreset => '確定要刪除此預設組嗎？';
 	@override String get configPlaceholder => 'gpu-api=vulkan\nhwdec=auto\n# 註解';
+	@override String get lineHint => 'option=value';
+	@override String get addLine => '新增行';
+	@override String get removeLine => '移除行';
 	@override String get embeddedVoHint => '在 Linux 上會忽略 vo、gpu-context 和 gpu-api：嵌入式影片一律透過影片平面上的 vo=libmpv 轉譯，而 gpu-next（ArtCNN 等計算著色器需要它）無法以嵌入式方式執行。';
 }
 
@@ -1031,6 +1183,8 @@ class _Translations$profiles$zh_Hant extends Translations$profiles$zh {
 	@override String get signOut => '登出';
 	@override String get signOutPlexTitle => '登出 Plex？';
 	@override String signOutPlexMessage({required Object displayName}) => '確定要移除 ${displayName} 與所有 Plex Home 使用者嗎？您可以隨時重新登入。';
+	@override String get signOutPlexDeleteDownloads => '一併刪除下載內容';
+	@override String get signOutPlexDeleteDownloadsDescription => '否則下載內容會保留在此裝置上，並在您重新登入此帳號時恢復。';
 	@override String get signedOutPlex => '已登出 Plex。';
 	@override String get signOutFailed => '登出失敗。';
 	@override String get sectionTitle => '使用者設定檔';
@@ -1067,7 +1221,7 @@ class _Translations$profiles$zh_Hant extends Translations$profiles$zh {
 	@override String borrowAddTo({required Object displayName}) => '新增至 ${displayName}';
 	@override String get borrowExplain => '共用另一個使用者設定檔的連線資訊。受 PIN 碼保護的設定檔需輸入 PIN 碼。';
 	@override String get borrowEmpty => '目前沒有可共用的連線。';
-	@override String get borrowEmptySubtitle => '請先將 Plex 或 Jellyfin 連線至另一個使用者設定檔。';
+	@override String get borrowEmptySubtitle => '請先將 Plex、Jellyfin 或 Emby 連線至另一個使用者設定檔。';
 	@override String get borrowLoadFailed => '無法載入可用的連線。請重試。';
 	@override String borrowFromProfile({required Object displayName}) => '來自 ${displayName}';
 	@override String get borrowConnectionBorrowed => '已共用連線。';
@@ -1095,10 +1249,12 @@ class _Translations$connections$zh_Hant extends Translations$connections$zh {
 	// Translations
 	@override String get sectionTitle => '連線';
 	@override String get addConnection => '新增連線';
-	@override String get addConnectionSubtitleNoProfile => '使用 Plex 登入或連線至 Jellyfin 伺服器';
-	@override String addConnectionSubtitleScoped({required Object displayName}) => '新增至 ${displayName}：Plex、Jellyfin 或其他設定檔連線';
+	@override String get addConnectionSubtitleNoProfile => '使用 Plex 登入或連線至 Jellyfin 或 Emby 伺服器';
+	@override String addConnectionSubtitleScoped({required Object displayName}) => '新增至 ${displayName}：Plex、Jellyfin、Emby 或其他設定檔連線';
 	@override String sessionExpiredOne({required Object name}) => '${name} 的工作階段已過期';
 	@override String sessionExpiredMany({required Object count}) => '${count} 個伺服器的工作階段已過期';
+	@override String accessDeniedOne({required Object name}) => '${name} 拒絕此帳戶存取';
+	@override String accessDeniedMany({required Object count}) => '${count} 台伺服器拒絕此帳戶存取';
 	@override String get signInAgain => '重新登入';
 	@override String editMediaBrowserTitle({required Object product}) => '編輯 ${product} 連線';
 	@override String editMediaBrowserIntro({required Object serverName}) => '為 ${serverName} 新增或移除 URL。Plezy 將使用延遲最低且可連線的 URL。';
@@ -1181,6 +1337,7 @@ class _Translations$discover$zh_Hant extends Translations$discover$zh {
 	@override String titleCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(n,
 		other: '${n} 部作品',
 	);
+	@override late final _Translations$discover$person$zh_Hant person = _Translations$discover$person$zh_Hant._(_root);
 }
 
 // Path: errors
@@ -1202,6 +1359,13 @@ class _Translations$errors$zh_Hant extends Translations$errors$zh {
 	@override String failedToSwitchProfile({required Object displayName}) => '無法切換至 ${displayName}';
 	@override String failedToDeleteProfile({required Object displayName}) => '無法刪除 ${displayName}';
 	@override String get failedToRate => '無法更新評分';
+	@override String get reasonTimedOut => '連線逾時';
+	@override String get reasonUnreachable => '無法連線至媒體伺服器';
+	@override String get reasonRefused => '媒體伺服器拒絕了此要求';
+	@override String get reasonNotFound => '該項目已不在媒體伺服器上';
+	@override String get reasonServerError => '媒體伺服器回報錯誤';
+	@override String get reasonCancelled => '要求已取消';
+	@override String get reasonUnexpected => '發生未預期的錯誤';
 }
 
 // Path: libraries
@@ -1256,6 +1420,7 @@ class _Translations$libraries$zh_Hant extends Translations$libraries$zh {
 	@override late final _Translations$libraries$groupings$zh_Hant groupings = _Translations$libraries$groupings$zh_Hant._(_root);
 	@override late final _Translations$libraries$filterCategories$zh_Hant filterCategories = _Translations$libraries$filterCategories$zh_Hant._(_root);
 	@override late final _Translations$libraries$sortLabels$zh_Hant sortLabels = _Translations$libraries$sortLabels$zh_Hant._(_root);
+	@override late final _Translations$libraries$advancedFilters$zh_Hant advancedFilters = _Translations$libraries$advancedFilters$zh_Hant._(_root);
 }
 
 // Path: about
@@ -1268,7 +1433,7 @@ class _Translations$about$zh_Hant extends Translations$about$zh {
 	@override String get title => '關於';
 	@override String get openSourceLicenses => '開源授權條款';
 	@override String versionLabel({required Object version}) => '版本 ${version}';
-	@override String get appDescription => '一款精美的 Plex 與 Jellyfin Flutter 用戶端';
+	@override String get appDescription => '一款精美的 Plex、Jellyfin 與 Emby Flutter 用戶端';
 	@override String get viewLicensesDescription => '查看第三方套件的授權條款';
 }
 
@@ -1400,6 +1565,9 @@ class _Translations$explore$zh_Hant extends Translations$explore$zh {
 	@override String get notInLibrary => '不在您的媒體庫中';
 	@override String get inTheseLibraries => '在這些媒體庫中';
 	@override String get checkingLibrary => '正在檢查您的媒體庫…';
+	@override String libraryCheckFailed({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(n,
+		other: '無法檢查 ${n} 台伺服器',
+	);
 	@override String get emptyTitle => '這裡還沒有任何內容';
 	@override String emptyMessage({required Object source}) => '當 ${source} 有內容時，相關資訊將顯示在此處。';
 	@override String searchHint({required Object source}) => '搜尋 ${source}';
@@ -1501,7 +1669,9 @@ class _Translations$liveTv$zh_Hant extends Translations$liveTv$zh {
 	@override String get editRuleAction => '編輯';
 	@override String get recordingRuleUpdated => '錄製規則已更新';
 	@override String get guideReloadRequested => '已要求更新節目表指南';
+	@override String get guideReloadFailed => '無法重新載入節目表指南';
 	@override String get rulesProcessRequested => '已要求重新評估規則';
+	@override String get rulesProcessFailed => '無法重新評估錄影規則';
 	@override String get recordShow => '錄製節目';
 	@override late final _Translations$liveTv$recordSettings$zh_Hant recordSettings = _Translations$liveTv$recordSettings$zh_Hant._(_root);
 	@override String startingInMinutes({required Object minutes}) => '${minutes} 分鐘後開始';
@@ -1509,6 +1679,8 @@ class _Translations$liveTv$zh_Hant extends Translations$liveTv$zh {
 	@override String invalidPlaybackData({required Object product}) => '${product} 傳回了無效的直播電視播放資料';
 	@override String get failedToStartChannel => '無法啟動直播頻道';
 	@override String get failedToBuildStreamUrl => '無法建立串流 URL';
+	@override String playbackStartFailed({required Object reason}) => '無法開始播放此頻道：${reason}';
+	@override String channelSwitchFailed({required Object reason}) => '無法切換頻道：${reason}';
 }
 
 // Path: collections
@@ -1622,71 +1794,112 @@ class _Translations$watchTogether$zh_Hant extends Translations$watchTogether$zh 
 	// Translations
 	@override String get title => '一起看';
 	@override String get description => '與親友同步觀看內容';
-	@override String get createSession => '建立「一起看」工作階段';
-	@override String get creating => '正在建立…';
-	@override String get joinSession => '加入工作階段';
-	@override String get joining => '正在加入…';
-	@override String get controlMode => '控制模式';
-	@override String get controlModeQuestion => '誰可以控制播放？';
-	@override String get hostOnly => '僅限主持人';
-	@override String get anyone => '任何人';
-	@override String get hostingSession => '主持「一起看」';
-	@override String get inSession => '在工作階段中';
-	@override String get sessionCode => '工作階段代碼';
-	@override String get openSessionControls => '開啟「一起看」工作階段控制面板';
-	@override String get copySessionCode => '複製工作階段代碼';
-	@override String get hostControlsPlayback => '主持人控制播放';
-	@override String get anyoneCanControl => '任何人都能控制播放';
-	@override String get hostControls => '主持人控制';
-	@override String get anyoneControls => '任何人控制';
-	@override String get participants => '參與者';
-	@override String get host => '主持人';
-	@override String get hostBadge => '主持人';
-	@override String get youAreHost => '您是主持人';
-	@override String get watchingWithOthers => '與他人一起觀看';
-	@override String get endSession => '結束工作階段';
-	@override String get leaveSession => '離開工作階段';
-	@override String get endSessionQuestion => '結束工作階段？';
-	@override String get leaveSessionQuestion => '離開工作階段？';
-	@override String get endSessionConfirm => '這將為所有參與者結束此「一起看」工作階段。';
-	@override String get leaveSessionConfirm => '您將退出此「一起看」工作階段。';
-	@override String get endSessionConfirmOverlay => '這將為所有參與者結束觀看工作階段。';
-	@override String get leaveSessionConfirmOverlay => '您將中斷與「一起看」工作階段的連線。';
-	@override String get end => '結束';
-	@override String get leave => '離開';
-	@override String get syncing => '同步中…';
-	@override String get joinWatchSession => '加入「一起看」工作階段';
-	@override String get enterCodeHint => '輸入 5 個英數字元的代碼';
-	@override String get pasteFromClipboard => '從剪貼簿貼上';
-	@override String get pleaseEnterCode => '請輸入工作階段代碼';
-	@override String get codeMustBe5Chars => '工作階段代碼必須為 5 個字元';
-	@override String get joinInstructions => '輸入主持人的工作階段代碼以加入「一起看」。';
-	@override String get failedToCreate => '建立工作階段失敗';
-	@override String get failedToJoin => '加入工作階段失敗';
-	@override String get sessionCodeCopied => '工作階段代碼已複製到剪貼簿';
-	@override String get relayUnreachable => '無法連線至中繼伺服器。ISP 封鎖可能會導致「一起看」無法使用。';
-	@override String get reconnectingToHost => '正在重新連線至主持人…';
-	@override String get currentPlayback => '目前播放內容';
-	@override String get joinCurrentPlayback => '加入目前播放點';
-	@override String get joinCurrentPlaybackDescription => '同步至主持人目前的觀看進度';
-	@override String get failedToOpenCurrentPlayback => '無法開啟目前播放點';
-	@override String participantJoined({required Object name}) => '${name} 已加入';
-	@override String participantLeft({required Object name}) => '${name} 已離開';
-	@override String participantPaused({required Object name}) => '${name} 暫停了播放';
-	@override String participantResumed({required Object name}) => '${name} 恢復了播放';
-	@override String participantSeeked({required Object name}) => '${name} 變更了播放位置';
-	@override String participantBuffering({required Object name}) => '${name} 正在緩衝';
-	@override String participantNeedsUpdate({required Object name}) => '${name} 正在使用舊版應用程式，無法進行同步';
-	@override String resumingWithout({required Object name}) => '不等待 ${name}，繼續播放';
-	@override String get waitingForParticipants => '正在等待其他人載入…';
-	@override String waitingForName({required Object name}) => '正在等待 ${name}…';
+	@override String get createRoom => '建立房間';
+	@override String get creatingRoom => '正在建立房間…';
+	@override String get joinRoom => '加入房間';
+	@override String get joiningRoom => '正在加入房間…';
+	@override String get connecting => '正在連線…';
+	@override String get relayPublic => '房間使用公開的 Open Watch Party 中繼伺服器。';
+	@override String relayCustom({required Object url}) => '房間使用您位於 ${url} 的中繼伺服器。';
 	@override String get recentRooms => '最近的房間';
+	@override String get roomActions => '房間操作';
 	@override String get renameRoom => '重新命名房間';
 	@override String get removeRoom => '移除';
-	@override String get guestSwitchUnavailable => '無法切換 — 伺服器無法進行同步';
-	@override String get guestSwitchFailed => '無法切換 — 在此伺服器上找不到內容';
-	@override String get defaultDisplayName => '使用者';
+	@override String get enterRoomCode => '請輸入主持人提供的 6 字元代碼。';
+	@override String get roomCode => '房間代碼';
+	@override String get paste => '貼上';
+	@override String get noCodeInClipboard => '剪貼簿中沒有房間代碼';
+	@override String get copyCode => '複製代碼';
+	@override String get codeCopied => '房間代碼已複製';
+	@override String get shareInvite => '分享邀請';
+	@override String get inviteCopied => '已複製邀請。請將其貼到訊息中。';
+	@override String inviteMessage({required Object code}) => '來 Plezy 加入我的「一起看」房間：開啟「一起看」，選擇「加入房間」，然後輸入 ${code}。';
+	@override String get openSessionControls => '開啟「一起看」工作階段控制面板';
+	@override String get reconnecting => '正在重新連線…';
+	@override String get reconnectingDescription => '連線已中斷。您將自動重新加入房間。';
+	@override String get connected => '已連線';
+	@override String get disconnected => '已中斷連線';
+	@override String get youAreHost => '您是主持人';
+	@override String hostedBy({required Object name}) => '主持人：${name}';
+	@override String get hostControlsPlayback => '主持人控制播放';
+	@override String get anyoneCanControl => '任何人都能控制播放';
+	@override String get roomLocked => '房間已鎖定';
+	@override String get nowPlaying => '正在播放';
+	@override String get nothingPlaying => '目前沒有播放內容';
+	@override String get nothingPlayingHost => '從任一媒體庫播放內容，即可與房間成員分享。';
+	@override String get nothingPlayingGuest => '主持人播放內容時，會在這裡開啟。';
+	@override String get notShareable => '這部影片在目錄中沒有相符項目，因此只有可存取同一台伺服器的人才能播放。';
+	@override String get searching => '正在您的媒體庫中尋找這部影片…';
+	@override String get yourCopy => '您的副本';
+	@override String get sharingYourCopy => '您正在分享您的副本';
+	@override String playingOtherLength({required Object difference}) => '正在播放您的副本，${difference}';
+	@override String get mismatchTitle => '您的副本長度不同';
+	@override String mismatchDescription({required Object difference}) => '您最接近的副本比房間的影片${difference}。可能是不同的剪輯版或版本。';
+	@override String get playAnyway => '仍要播放';
+	@override String get chooseAnotherCopy => '選擇其他副本';
+	@override String get dontPlay => '不要播放';
+	@override String get unavailableTitle => '您沒有這部影片';
+	@override String get unavailableDescription => 'Plezy 無法在您的媒體庫中找到這部影片。請自行選擇副本，或重新搜尋。';
+	@override String get chooseCopy => '選擇副本';
+	@override String get searchAgain => '重新搜尋';
+	@override String get noCandidates => '在您的媒體庫中找不到任何副本。';
+	@override String get choiceFailed => '無法為房間播放此副本';
+	@override String lengthLonger({required Object duration}) => '長了 ${duration}';
+	@override String lengthShorter({required Object duration}) => '短了 ${duration}';
+	@override String get lengthSame => '長度相同';
+	@override String get lengthUnknown => '長度未知';
+	@override String get joinCurrentPlayback => '加入目前播放點';
+	@override String get joinCurrentPlaybackDescription => '同步至主持人目前的觀看進度';
+	@override String get stopMedia => '為所有人停止影片';
+	@override String get syncOffset => '同步偏移';
+	@override String get syncOffsetDescription => '若您的影片比房間超前或落後，可在此調整。';
+	@override String offsetHint({required Object difference}) => '您的副本比房間的影片${difference}。';
+	@override String applyDifference({required Object offset}) => '套用 ${offset}';
+	@override String get offsetMinusSecond => '-1 秒';
+	@override String get offsetMinusTenth => '-100 毫秒';
+	@override String get offsetPlusTenth => '+100 毫秒';
+	@override String get offsetPlusSecond => '+1 秒';
+	@override String get participants => '參與者';
+	@override String participantCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(n,
+		other: '${n} 位參與者',
+	);
+	@override String get hostBadge => '主持人';
+	@override String nameYou({required Object name}) => '${name}（您）';
+	@override String get playerIdle => '閒置';
+	@override String get playerLoading => '載入中';
+	@override String get playerReady => '就緒';
+	@override String get playerBuffering => '緩衝中';
+	@override String get matchSearching => '搜尋中';
+	@override String get matchMatched => '有此影片';
+	@override String get matchMismatched => '長度不同';
+	@override String get matchUnavailable => '沒有此影片';
+	@override String participantOffset({required Object offset}) => '偏移 ${offset}';
+	@override String get makeHost => '設為主持人';
+	@override String get makeHostQuestion => '移交主持人？';
+	@override String makeHostConfirm({required Object name}) => '${name} 將控制播放並主導所有人的工作階段。';
+	@override String get transfer => '移交';
+	@override String get removeParticipant => '從房間移除';
+	@override String removeParticipantQuestion({required Object name}) => '要移除 ${name} 嗎？';
+	@override String removeParticipantConfirm({required Object name}) => '${name} 將離開房間。除非您鎖定房間，否則對方可以使用代碼再次加入。';
+	@override String get remove => '移除';
+	@override String get roomSettings => '房間設定';
+	@override String get letEveryoneControl => '允許所有人控制播放';
+	@override String get lockRoom => '鎖定房間';
+	@override String get lockRoomDescription => '不允許新成員加入';
+	@override String get leaveRoom => '離開房間';
+	@override String get leaveRoomQuestion => '要離開房間嗎？';
+	@override String get leaveRoomConfirm => '您可以使用房間代碼再次加入。';
+	@override String get leave => '離開';
+	@override String get endRoom => '結束房間';
+	@override String get endRoomQuestion => '要結束房間嗎？';
+	@override String get endRoomConfirm => '這會為所有人結束此房間。';
+	@override String get end => '結束';
+	@override String get playBlockedTitle => '播放未開始';
+	@override String get playBlockedDescription => '按下播放，開始與房間成員一起觀看。';
+	@override late final _Translations$watchTogether$notices$zh_Hant notices = _Translations$watchTogether$notices$zh_Hant._(_root);
+	@override late final _Translations$watchTogether$ended$zh_Hant ended = _Translations$watchTogether$ended$zh_Hant._(_root);
 	@override late final _Translations$watchTogether$errors$zh_Hant errors = _Translations$watchTogether$errors$zh_Hant._(_root);
+	@override String untitledEpisode({required Object number}) => '第 ${number} 集';
 }
 
 // Path: downloads
@@ -1710,10 +1923,14 @@ class _Translations$downloads$zh_Hant extends Translations$downloads$zh {
 	@override String get downloadQueued => '下載已排隊';
 	@override String get downloadResumed => '下載已繼續';
 	@override String get serverErrorBitrate => '伺服器錯誤：檔案位元率可能超過遠端位元率限制';
-	@override String get storageFull => '裝置儲存空間已滿，因此下載已停止。請釋出空間後再試一次。';
+	@override String get storageFull => '為保護剩餘儲存空間，下載已停止。請釋出空間或選擇其他下載位置，然後再試一次。';
+	@override String get storageUnavailable => '無法檢查可用儲存空間，因此下載已停止。請檢查下載位置後再試一次。';
 	@override String episodesQueued({required Object count}) => '已將 ${count} 集影片加入下載佇列';
 	@override String get downloadDeleted => '下載內容已刪除';
 	@override String deleteConfirm({required Object title}) => '確定要從此裝置刪除「${title}」嗎？';
+	@override String get deleteCollectionDownloads => '刪除下載內容';
+	@override String deleteCollectionDownloadsConfirm({required Object title}) => '確定要從此裝置刪除「${title}」中的所有下載內容嗎？';
+	@override String get collectionDownloadsDeleted => '下載內容已刪除';
 	@override String get cancelledDownloadTitle => '已取消的下載';
 	@override String get cancelledDownloadMessage => '此下載已取消。您想要如何處理？';
 	@override String get allEpisodesAlreadyDownloaded => '所有單集都已下載完成';
@@ -1731,6 +1948,8 @@ class _Translations$downloads$zh_Hant extends Translations$downloads$zh {
 	@override String get noDownloadsTree => '目前沒有下載內容';
 	@override String get pauseAll => '全部暫停';
 	@override String get resumeAll => '全部繼續';
+	@override String get retryAll => '全部重試';
+	@override String get retryFailed => '重試失敗的下載';
 	@override String get deleteAll => '全部刪除';
 	@override String get selectVersion => '選擇版本';
 	@override String get allEpisodes => '所有單集';
@@ -1767,17 +1986,27 @@ class _Translations$downloads$zh_Hant extends Translations$downloads$zh {
 	@override String get syncRuleAvailable => '可用';
 	@override String get syncRuleOffline => '離線';
 	@override String get syncRuleSignInRequired => '需要登入';
+	@override String get syncRuleAccessDenied => '存取遭拒';
 	@override String get syncRuleNotAvailableForProfile => '目前使用者設定檔無法使用';
 	@override String get syncRuleUnknownServer => '未知伺服器';
 	@override String get syncRuleListCreated => '同步規則已建立';
 	@override late final _Translations$downloads$backgroundWarning$zh_Hant backgroundWarning = _Translations$downloads$backgroundWarning$zh_Hant._(_root);
+	@override String get options => '下載選項';
+	@override late final _Translations$downloads$groupings$zh_Hant groupings = _Translations$downloads$groupings$zh_Hant._(_root);
+	@override String get unknownLibrary => '未知媒體庫';
 	@override String get unknownShow => '未知節目';
 	@override String get unknownSeason => '未知季度';
 	@override String get unknownAlbum => '未知專輯';
 	@override String completedOfTotal({required Object completed, required Object total}) => '已完成 ${completed}/${total}';
 	@override String get errorFileNotFound => '找不到檔案（404）';
+	@override String get errorDownloadNotAllowed => '伺服器不允許下載（403）';
 	@override String get errorDownloadFailed => '下載失敗';
-	@override String errorPostProcessing({required Object error}) => '後續處理失敗：${error}';
+	@override String errorDownloadFailedWithReason({required Object reason}) => '下載失敗：${reason}';
+	@override String errorHttpStatus({required Object status}) => '下載失敗（HTTP ${status}）';
+	@override String errorPostProcessing({required Object reason}) => '後續處理失敗：${reason}';
+	@override String get reasonFileNotSaved => '無法將檔案儲存到此裝置';
+	@override String get reasonCannotResume => '無法繼續未完成的下載';
+	@override String get reasonDeviceStorageFull => '此裝置的儲存空間已滿';
 	@override String get notificationDownloading => '正在下載…';
 	@override String get notificationComplete => '下載完成';
 	@override String get notificationPaused => '下載已暫停';
@@ -1854,7 +2083,7 @@ class _Translations$videoSettings$zh_Hant extends Translations$videoSettings$zh 
 	@override String get audioOutputSpatial => '空間音訊';
 	@override String get audioOutputStereo => '立體聲';
 	@override String get audioNormalization => '音量標準化';
-	@override String get audioDownmix => '下混為立體聲';
+	@override String get audioNormalizationDisablesPassthrough => '將音訊解碼為 PCM；開啟時直通關閉';
 }
 
 // Path: performanceOverlay
@@ -1876,6 +2105,13 @@ class _Translations$performanceOverlay$zh_Hant extends Translations$performanceO
 	@override String get rotation => '旋轉角度';
 	@override String get dvSource => 'DV 來源';
 	@override String get dvPath => 'DV 路徑';
+	@override String get dvRouteDecoder => 'Dolby Vision 解碼器';
+	@override String get dvRouteDecoderP81 => 'Dolby Vision 解碼器（P7→8.1）';
+	@override String get dvRouteBaseLayer => '基礎層';
+	@override String get dvRouteBaseLayerHdr10 => 'HDR10 基礎層';
+	@override String get dvRouteBaseLayerHlg => 'HLG 基礎層';
+	@override String get dvRouteBaseLayerSdr => 'SDR 基礎層';
+	@override String get dvRouteReshaped => 'RPU 重塑（gpu-next）';
 	@override String get p7Conversion => 'P7 轉換';
 	@override String get sampleRate => '取樣率';
 	@override String get pixelFormat => '像素格式';
@@ -1899,7 +2135,7 @@ class _Translations$performanceOverlay$zh_Hant extends Translations$performanceO
 	@override String get speed => '速度';
 	@override String get player => '播放器';
 	@override String get memory => '記憶體';
-	@override String get uiFps => 'UI FPS';
+	@override String get uiFps => '介面 FPS';
 	@override String get fps => 'FPS';
 	@override String get decoderAndroidHw => 'Android 硬體';
 	@override String get decoderNvidiaHw => 'NVIDIA 硬體';
@@ -2018,6 +2254,7 @@ class _Translations$metadataEdit$zh_Hant extends Translations$metadataEdit$zh {
 	@override String get country => '國家/地區';
 	@override String get collection => '收藏集';
 	@override String get label => '標記';
+	@override String get quickTag => '快速標籤…';
 }
 
 // Path: matchScreen
@@ -2100,6 +2337,10 @@ class _Translations$seerr$zh_Hant extends Translations$seerr$zh {
 	@override String get qualityProfile => '畫質設定檔（Quality Profile）';
 	@override String get rootFolder => '根目錄資料夾';
 	@override String get languageProfile => '語言設定檔（Language Profile）';
+	@override String get tags => '標籤';
+	@override String get noTags => '沒有標籤';
+	@override String defaultOption({required Object name}) => '${name}（預設）';
+	@override String get animeNote => '此影集為動畫。';
 	@override String get requestSubmitted => '請求已送出';
 	@override String requestFailed({required Object error}) => '請求失敗：${error}';
 	@override String get requestsLoadFailed => '無法載入請求選項';
@@ -2111,6 +2352,7 @@ class _Translations$seerr$zh_Hant extends Translations$seerr$zh {
 	@override String get statusBlocklisted => '已加入封鎖清單';
 	@override String couldNotReach({required Object url, required Object error}) => '無法連線至 ${url}：${error}';
 	@override String noInstanceAtUrl({required Object url, required Object status}) => '在 ${url} 找不到 Seerr 執行個體（HTTP ${status}）';
+	@override String get behindAuthProxy => '回應來自需要驗證的反向代理（SSO 或 HTTP 驗證），而非 Seerr。Plezy 無法透過它登入：請讓 Seerr 的 /api/v1 路徑為此應用程式繞過代理，或使用可直接連線至 Seerr 的位址。';
 	@override String get invalidUrl => '請輸入伺服器位址，例如 https://seerr.example.com';
 	@override String get quickConnectUnsupported => '此 Seerr 執行個體不支援 Quick Connect。需要 Seerr 3.4 或更新版本。';
 	@override String get notInitialized => '此 Seerr 執行個體尚未完成首次執行設定';
@@ -2121,6 +2363,8 @@ class _Translations$seerr$zh_Hant extends Translations$seerr$zh {
 	@override String get freshCookieRejected => 'Seerr 拒絕了新的工作階段 Cookie';
 	@override String get noUserInformation => 'Seerr 未傳回使用者資訊';
 	@override String get sessionRejectedAfterReauth => '重新登入後，工作階段遭到拒絕';
+	@override String get permissionDenied => 'Seerr 拒絕了此操作：您的帳戶不再具備所需權限';
+	@override String get permissionRevoked => '您不再具有請求此內容的權限';
 }
 
 // Path: services
@@ -2141,6 +2385,7 @@ class _Translations$services$zh_Hant extends Translations$services$zh {
 	@override String disconnectConfirmBody({required Object service}) => 'Plezy 將停止更新 ${service}。您可以隨時重新連線。';
 	@override String connectFailed({required Object service}) => '無法連線至 ${service}。請重試。';
 	@override late final _Translations$services$names$zh_Hant names = _Translations$services$names$zh_Hant._(_root);
+	@override late final _Translations$services$simklReconnect$zh_Hant simklReconnect = _Translations$services$simklReconnect$zh_Hant._(_root);
 	@override late final _Translations$services$deviceCode$zh_Hant deviceCode = _Translations$services$deviceCode$zh_Hant._(_root);
 	@override late final _Translations$services$oauthProxy$zh_Hant oauthProxy = _Translations$services$oauthProxy$zh_Hant._(_root);
 	@override late final _Translations$services$pendingAuth$zh_Hant pendingAuth = _Translations$services$pendingAuth$zh_Hant._(_root);
@@ -2203,6 +2448,38 @@ class _Translations$addServer$zh_Hant extends Translations$addServer$zh {
 	@override String redirectUnsupportedEnterFinal({required Object product}) => '伺服器重新導向至不支援的 URL。請直接輸入最終的 ${product} URL。';
 }
 
+// Path: appIcon.names
+class _Translations$appIcon$names$zh_Hant extends Translations$appIcon$names$zh {
+	_Translations$appIcon$names$zh_Hant._(TranslationsZhHant root) : this._root = root, super.internal(root);
+
+	final TranslationsZhHant _root; // ignore: unused_field
+
+	// Translations
+	@override String get midnight => '午夜';
+	@override String get ember => '餘燼';
+	@override String get paper => '紙張';
+	@override String get oled => 'OLED';
+	@override String get line => '線條';
+	@override String get ocean => '海洋';
+	@override String get ultraviolet => '紫外線';
+	@override String get matcha => '抹茶';
+	@override String get sunset => '日落';
+	@override String get gold => '金色';
+	@override String get titanium => '鈦金屬';
+	@override String get glass => '玻璃';
+	@override String get crt => 'CRT';
+	@override String get vhs => 'VHS';
+	@override String get synthwave => 'Synthwave';
+	@override String get pixel => '像素';
+	@override String get neon => '霓虹';
+	@override String get sticker => '貼紙';
+	@override String get ticket => '票券';
+	@override String get pop => '普普風';
+	@override String get strata => '層疊';
+	@override String get facet => '切面';
+	@override String get tilde => '波浪號';
+}
+
 // Path: common.ratingSource
 class _Translations$common$ratingSource$zh_Hant extends Translations$common$ratingSource$zh {
 	_Translations$common$ratingSource$zh_Hant._(TranslationsZhHant root) : this._root = root, super.internal(root);
@@ -2221,6 +2498,8 @@ class _Translations$common$ratingSource$zh_Hant extends Translations$common$rati
 	@override String get trakt => 'Trakt';
 	@override String get rottenTomatoesCritic => 'Rotten Tomatoes 影評人';
 	@override String get rottenTomatoesAudience => 'Rotten Tomatoes 觀眾';
+	@override String get metacritic => 'Metacritic';
+	@override String get letterboxd => 'Letterboxd';
 }
 
 // Path: common.mediaKind
@@ -2242,6 +2521,52 @@ class _Translations$common$mediaKind$zh_Hant extends Translations$common$mediaKi
 	@override String get clip => '短片';
 	@override String get photo => '相片';
 	@override String get folder => '資料夾';
+}
+
+// Path: supporter.errors
+class _Translations$supporter$errors$zh_Hant extends Translations$supporter$errors$zh {
+	_Translations$supporter$errors$zh_Hant._(TranslationsZhHant root) : this._root = root, super.internal(root);
+
+	final TranslationsZhHant _root; // ignore: unused_field
+
+	// Translations
+	@override String get storeUnavailable => '目前無法購買。請確認您已登入商店，且此裝置允許購買。';
+	@override String get productNotFound => '您的商店目前無法購買 Supporter。';
+	@override String get productQueryFailed => '無法載入價格。請檢查網路連線後重試。';
+	@override String get purchaseFailed => '購買未完成。請重試。';
+	@override String get restoreFailed => '無法連線至商店以恢復您的購買。請重試。';
+	@override String get nothingToRestore => '此商店帳號找不到 Supporter 購買紀錄。';
+}
+
+// Path: themeEditor.slots
+class _Translations$themeEditor$slots$zh_Hant extends Translations$themeEditor$slots$zh {
+	_Translations$themeEditor$slots$zh_Hant._(TranslationsZhHant root) : this._root = root, super.internal(root);
+
+	final TranslationsZhHant _root; // ignore: unused_field
+
+	// Translations
+	@override String get bg => '背景';
+	@override String get surface => '面板';
+	@override String get outline => '外框';
+	@override String get text => '文字';
+	@override String get textMuted => '次要文字';
+	@override String get accent => '強調色';
+}
+
+// Path: themeEditor.contrast
+class _Translations$themeEditor$contrast$zh_Hant extends Translations$themeEditor$contrast$zh {
+	_Translations$themeEditor$contrast$zh_Hant._(TranslationsZhHant root) : this._root = root, super.internal(root);
+
+	final TranslationsZhHant _root; // ignore: unused_field
+
+	// Translations
+	@override String get textOnBg => '背景上的文字';
+	@override String get textOnSurface => '面板上的文字';
+	@override String get textMutedOnBg => '背景上的次要文字';
+	@override String get textMutedOnSurface => '面板上的次要文字';
+	@override String get accentOnBg => '背景上的強調色';
+	@override String get accentOnSurface => '面板上的強調色';
+	@override String get labelOnAccent => '強調色上的按鈕文字';
 }
 
 // Path: hotkeys.actions
@@ -2378,6 +2703,20 @@ class _Translations$accountPreferences$mediaReviewsOptions$zh_Hant extends Trans
 	@override String get nobody => '隱藏';
 }
 
+// Path: discover.person
+class _Translations$discover$person$zh_Hant extends Translations$discover$person$zh {
+	_Translations$discover$person$zh_Hant._(TranslationsZhHant root) : this._root = root, super.internal(root);
+
+	final TranslationsZhHant _root; // ignore: unused_field
+
+	// Translations
+	@override String get born => '出生';
+	@override String get died => '逝世';
+	@override String get birthplace => '出生地';
+	@override String dateWithAge({required Object date, required Object age}) => '${date}（${age} 歲）';
+	@override String dateWithAgeAtDeath({required Object date, required Object age}) => '${date}（享年 ${age} 歲）';
+}
+
 // Path: libraries.tabs
 class _Translations$libraries$tabs$zh_Hant extends Translations$libraries$tabs$zh {
 	_Translations$libraries$tabs$zh_Hant._(TranslationsZhHant root) : this._root = root, super.internal(root);
@@ -2424,6 +2763,7 @@ class _Translations$libraries$filterCategories$zh_Hant extends Translations$libr
 	@override String get unwatched => '未觀看';
 	@override String get unplayed => '未播放';
 	@override String get favorites => '我的最愛';
+	@override String get filePath => '檔案路徑';
 }
 
 // Path: libraries.sortLabels
@@ -2453,6 +2793,44 @@ class _Translations$libraries$sortLabels$zh_Hant extends Translations$libraries$
 	@override String get dateShared => '分享日期';
 	@override String get latestEpisodeAirDate => '最新一集播出日期';
 	@override String get lastEpisodeDateAdded => '最新一集新增日期';
+	@override String get dateDownloaded => '下載日期';
+	@override String get size => '大小';
+	@override String get library => '媒體庫';
+}
+
+// Path: libraries.advancedFilters
+class _Translations$libraries$advancedFilters$zh_Hant extends Translations$libraries$advancedFilters$zh {
+	_Translations$libraries$advancedFilters$zh_Hant._(TranslationsZhHant root) : this._root = root, super.internal(root);
+
+	final TranslationsZhHant _root; // ignore: unused_field
+
+	// Translations
+	@override String get include => '包含';
+	@override String get exclude => '排除';
+	@override String get any => '不限';
+	@override String get yes => '是';
+	@override String get no => '否';
+	@override String not({required Object value}) => '非 ${value}';
+	@override String valueCount({required Object count}) => '已選取 ${count} 個';
+	@override String valueCountExcluded({required Object count}) => '已排除 ${count} 個';
+	@override String get searchValues => '搜尋選項';
+	@override String get noValues => '沒有選項';
+	@override String get matchContains => '包含';
+	@override String get matchNotContains => '不包含';
+	@override String get matchIs => '是';
+	@override String get matchIsNot => '不是';
+	@override String get matchBeginsWith => '開頭為';
+	@override String get matchEndsWith => '結尾為';
+	@override String get textHint => '輸入要比對的文字';
+	@override String get from => '從';
+	@override String get to => '至';
+	@override String range({required Object from, required Object to}) => '${from} 至 ${to}';
+	@override String atLeast({required Object value}) => '${value} 以上';
+	@override String atMost({required Object value}) => '${value} 以下';
+	@override String dateLastDays({required Object count}) => '過去 ${count} 天';
+	@override String get dateLastYear => '過去一年';
+	@override String dateOlderThanDays({required Object count}) => '超過 ${count} 天前';
+	@override String get dateOlderThanYear => '超過一年前';
 }
 
 // Path: explore.rows
@@ -2603,6 +2981,7 @@ class _Translations$explore$creditRole$zh_Hant extends Translations$explore$cred
 	final TranslationsZhHant _root; // ignore: unused_field
 
 	// Translations
+	@override String get actor => '演員';
 	@override String get director => '導演';
 	@override String get writer => '編劇';
 	@override String get producer => '製作人';
@@ -2697,6 +3076,54 @@ class _Translations$music$discography$zh_Hant extends Translations$music$discogr
 	@override String get compilations => '合輯';
 }
 
+// Path: watchTogether.notices
+class _Translations$watchTogether$notices$zh_Hant extends Translations$watchTogether$notices$zh {
+	_Translations$watchTogether$notices$zh_Hant._(TranslationsZhHant root) : this._root = root, super.internal(root);
+
+	final TranslationsZhHant _root; // ignore: unused_field
+
+	// Translations
+	@override String pressedPlay({required Object name}) => '${name} 按下了播放';
+	@override String get playbackStarted => '已開始播放';
+	@override String paused({required Object name}) => '${name} 暫停了播放';
+	@override String get playbackPaused => '已暫停播放';
+	@override String jumpedTo({required Object name, required Object position}) => '${name} 跳至 ${position}';
+	@override String roomJumpedTo({required Object position}) => '已跳至 ${position}';
+	@override String changedSpeed({required Object name, required Object speed}) => '${name} 將速度設為 ${speed}';
+	@override String speedChanged({required Object speed}) => '速度已設為 ${speed}';
+	@override String startedMedia({required Object name, required Object title}) => '${name} 開始播放「${title}」';
+	@override String mediaStarted({required Object title}) => '正在播放「${title}」';
+	@override String stoppedMedia({required Object name}) => '${name} 停止了影片';
+	@override String get mediaStopped => '影片已停止';
+	@override String waitingFor({required Object name}) => '正在等待 ${name}…';
+	@override String get waitingForSomeone => '正在等待其他人跟上…';
+	@override String get finished => '播放完畢';
+	@override String hostChangedTo({required Object name}) => '${name} 現在是主持人';
+	@override String get youAreNowHost => '您現在是主持人';
+	@override String joined({required Object name}) => '${name} 已加入';
+	@override String left({required Object name}) => '${name} 已離開';
+	@override String get controlRefused => '只有主持人可以控制播放';
+	@override String get searchFailed => '部分伺服器無法搜尋房間的影片';
+	@override String get playBlocked => '按下播放即可開始';
+	@override String get shareFailed => '無法與房間分享此影片';
+	@override String get downloadNotShared => '下載內容所屬的伺服器離線時，無法與房間分享';
+	@override String get openFailed => '無法開啟房間的影片';
+}
+
+// Path: watchTogether.ended
+class _Translations$watchTogether$ended$zh_Hant extends Translations$watchTogether$ended$zh {
+	_Translations$watchTogether$ended$zh_Hant._(TranslationsZhHant root) : this._root = root, super.internal(root);
+
+	final TranslationsZhHant _root; // ignore: unused_field
+
+	// Translations
+	@override String get ended => '主持人已結束房間';
+	@override String get kicked => '您已被移出房間';
+	@override String get expired => '房間已過期';
+	@override String get replaced => '您已在其他裝置上加入此房間';
+	@override String get lost => '與房間的連線已中斷';
+}
+
 // Path: watchTogether.errors
 class _Translations$watchTogether$errors$zh_Hant extends Translations$watchTogether$errors$zh {
 	_Translations$watchTogether$errors$zh_Hant._(TranslationsZhHant root) : this._root = root, super.internal(root);
@@ -2704,10 +3131,20 @@ class _Translations$watchTogether$errors$zh_Hant extends Translations$watchToget
 	final TranslationsZhHant _root; // ignore: unused_field
 
 	// Translations
-	@override String get timedOut => '中繼伺服器未及時回應';
-	@override String get connectionLost => '工作階段就緒前連線已中斷';
-	@override String get invalidRelayResponse => '中繼伺服器傳回了非預期的回應';
-	@override String get sessionEnded => '主持人已結束工作階段';
+	@override String get invalidCode => '這不是有效的房間代碼。代碼由 6 個字母與數字組成，不含 0、1、I、L 或 O。';
+	@override String get roomNotFound => '沒有使用此代碼的房間。房間可能已結束。';
+	@override String get roomFull => '該房間已滿。';
+	@override String get roomLocked => '主持人已鎖定該房間。';
+	@override String get relayFull => '「一起看」目前忙碌中。請稍後再試。';
+	@override String get unreachable => '無法連線至「一起看」中繼伺服器。請檢查網路連線。';
+	@override String get rateLimited => '嘗試次數過多。請稍候再試。';
+	@override String get clientBlocked => '此版本的 Plezy 無法使用中繼伺服器。請更新應用程式。';
+	@override String get forbidden => '只有主持人可以執行此操作。';
+	@override String get notInRoom => '您不在房間中。';
+	@override String get alreadyInRoom => '您已在房間中。';
+	@override String get resumeFailed => '無法重新加入房間。';
+	@override String get unsupported => '中繼伺服器不支援此操作。';
+	@override String get generic => '發生錯誤。請重試。';
 }
 
 // Path: downloads.backgroundWarning
@@ -2743,6 +3180,17 @@ class _Translations$downloads$backgroundWarning$zh_Hant extends Translations$dow
 	@override String get statusUnknown => '尚未檢查';
 	@override String get settingsUnavailable => '無法在這部裝置上開啟系統設定';
 	@override String get linkUnavailable => '無法在這部裝置上開啟 dontkillmyapp.com';
+}
+
+// Path: downloads.groupings
+class _Translations$downloads$groupings$zh_Hant extends Translations$downloads$groupings$zh {
+	_Translations$downloads$groupings$zh_Hant._(TranslationsZhHant root) : this._root = root, super.internal(root);
+
+	final TranslationsZhHant _root; // ignore: unused_field
+
+	// Translations
+	@override String get library => '媒體庫';
+	@override String get collections => '收藏集';
 }
 
 // Path: companionRemote.session
@@ -2857,6 +3305,17 @@ class _Translations$services$names$zh_Hant extends Translations$services$names$z
 	@override String get mdblist => 'MDBList';
 }
 
+// Path: services.simklReconnect
+class _Translations$services$simklReconnect$zh_Hant extends Translations$services$simklReconnect$zh {
+	_Translations$services$simklReconnect$zh_Hant._(TranslationsZhHant root) : this._root = root, super.internal(root);
+
+	final TranslationsZhHant _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => '重新連線 Simkl';
+	@override String get subtitle => 'Simkl 即將停用此連線所使用的登入方式。重新連線會開啟 simkl.com 以核准 Plezy — Plezy 絕不會看到您的密碼。您的觀看紀錄仍會保留在 Simkl 上。';
+}
+
 // Path: services.deviceCode
 class _Translations$services$deviceCode$zh_Hant extends Translations$services$deviceCode$zh {
 	_Translations$services$deviceCode$zh_Hant._(TranslationsZhHant root) : this._root = root, super.internal(root);
@@ -2925,6 +3384,37 @@ extension on TranslationsZhHant {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
 			'app.title' => 'Plezy',
+			'appIcon.title' => '應用程式圖示',
+			'appIcon.defaultIcon' => '預設',
+			'appIcon.current' => '目前圖示',
+			'appIcon.locked' => 'Supporter 專屬',
+			'appIcon.lockedHint' => '其他圖示為 Supporter 專屬福利。',
+			'appIcon.changeFailed' => '無法變更應用程式圖示',
+			'appIcon.launcherHint' => '離開 Plezy 後，新圖示就會出現在主畫面上。',
+			'appIcon.tvLauncherHint' => '離開 Plezy 後就會顯示新橫幅。在電視重新啟動前，Android TV 可能仍會顯示舊橫幅。',
+			'appIcon.names.midnight' => '午夜',
+			'appIcon.names.ember' => '餘燼',
+			'appIcon.names.paper' => '紙張',
+			'appIcon.names.oled' => 'OLED',
+			'appIcon.names.line' => '線條',
+			'appIcon.names.ocean' => '海洋',
+			'appIcon.names.ultraviolet' => '紫外線',
+			'appIcon.names.matcha' => '抹茶',
+			'appIcon.names.sunset' => '日落',
+			'appIcon.names.gold' => '金色',
+			'appIcon.names.titanium' => '鈦金屬',
+			'appIcon.names.glass' => '玻璃',
+			'appIcon.names.crt' => 'CRT',
+			'appIcon.names.vhs' => 'VHS',
+			'appIcon.names.synthwave' => 'Synthwave',
+			'appIcon.names.pixel' => '像素',
+			'appIcon.names.neon' => '霓虹',
+			'appIcon.names.sticker' => '貼紙',
+			'appIcon.names.ticket' => '票券',
+			'appIcon.names.pop' => '普普風',
+			'appIcon.names.strata' => '層疊',
+			'appIcon.names.facet' => '切面',
+			'appIcon.names.tilde' => '波浪號',
 			'auth.signInWithPlex' => '使用 Plex 登入',
 			'auth.showQRCode' => '顯示 QR 碼',
 			'auth.authenticate' => '驗證',
@@ -2999,6 +3489,8 @@ extension on TranslationsZhHant {
 			'common.ratingSource.trakt' => 'Trakt',
 			'common.ratingSource.rottenTomatoesCritic' => 'Rotten Tomatoes 影評人',
 			'common.ratingSource.rottenTomatoesAudience' => 'Rotten Tomatoes 觀眾',
+			'common.ratingSource.metacritic' => 'Metacritic',
+			'common.ratingSource.letterboxd' => 'Letterboxd',
 			'common.notAvailable' => 'N/A',
 			'common.url' => 'URL',
 			'common.letterKeys' => 'ABC',
@@ -3026,6 +3518,29 @@ extension on TranslationsZhHant {
 			'update.viewRelease' => '查看版本詳情',
 			'update.latestVersion' => '已安裝的版本為最新版本',
 			'update.checkFailed' => '無法檢查更新',
+			'supporter.title' => 'Plezy Supporter',
+			'supporter.intro' => '一次性購買，支持 Plezy 的開發並解鎖外觀加值項目：',
+			'supporter.presetThemes' => '精選主題',
+			'supporter.presetThemesDescription' => '餘燼、冰河、森林、李子與紙張',
+			'supporter.customTheme' => '自訂主題',
+			'supporter.customThemeDescription' => '自行挑選每一種顏色',
+			'supporter.appIcons' => '應用程式圖示',
+			'supporter.appIconsDescription' => '選擇其他 Plezy 圖示',
+			'supporter.buy' => ({required Object price}) => '以 ${price} 購買',
+			'supporter.loadingPrice' => '正在載入價格…',
+			'supporter.restore' => '恢復購買',
+			'supporter.pending' => '您的購買正在等待付款或核准。商店完成交易後，加值項目就會立即解鎖。',
+			'supporter.thankYouTitle' => '感謝您支持 Plezy',
+			'supporter.thankYouBody' => '您的 Supporter 加值項目已解鎖。',
+			'supporter.tileSubtitle' => '一次性購買即可解鎖主題與應用程式圖示',
+			'supporter.tileSubtitleThemesOnly' => '一次性購買即可解鎖主題',
+			'supporter.tileUnlocked' => '感謝您的支持',
+			'supporter.errors.storeUnavailable' => '目前無法購買。請確認您已登入商店，且此裝置允許購買。',
+			'supporter.errors.productNotFound' => '您的商店目前無法購買 Supporter。',
+			'supporter.errors.productQueryFailed' => '無法載入價格。請檢查網路連線後重試。',
+			'supporter.errors.purchaseFailed' => '購買未完成。請重試。',
+			'supporter.errors.restoreFailed' => '無法連線至商店以恢復您的購買。請重試。',
+			'supporter.errors.nothingToRestore' => '此商店帳號找不到 Supporter 購買紀錄。',
 			'settings.title' => '設定',
 			'settings.supportDeveloper' => '贊助 Plezy',
 			'settings.supportDeveloperDescription' => '透過 Liberapay 捐款支持開發者',
@@ -3049,6 +3564,11 @@ extension on TranslationsZhHant {
 			'settings.lightTheme' => '淺色',
 			'settings.darkTheme' => '深色',
 			'settings.oledTheme' => 'OLED 純黑',
+			'settings.emberTheme' => '餘燼',
+			'settings.glacierTheme' => '冰河',
+			'settings.forestTheme' => '森林',
+			'settings.plumTheme' => '李子',
+			'settings.paperTheme' => '紙張',
 			'settings.libraryDensity' => '媒體庫版面配置密度',
 			'settings.displayScale' => '介面縮放',
 			'settings.compact' => '緊湊',
@@ -3079,6 +3599,8 @@ extension on TranslationsZhHant {
 			'settings.alwaysKeepSidebarOpenDescription' => '側邊欄保持展開狀態，內容區域自動調整',
 			'settings.showUnwatchedCount' => '顯示未觀看數量',
 			'settings.showUnwatchedCountDescription' => '在影集和單季上顯示未觀看的集數',
+			'settings.showWatchedIndicators' => '顯示已觀看指示',
+			'settings.showWatchedIndicatorsDescription' => '在已觀看的電影、影集和單集上顯示勾選標記',
 			'settings.showEpisodeNumberOnCards' => '在卡片上顯示集數',
 			'settings.showEpisodeNumberOnCardsDescription' => '在單集卡片上顯示季和集編號',
 			'settings.showSeasonPostersOnTabs' => '在索引標籤上顯示單季海報',
@@ -3108,6 +3630,11 @@ extension on TranslationsZhHant {
 			'settings.defaultQualityTitle' => '預設畫質',
 			'settings.cellularQualityTitle' => '行動網路上的預設畫質',
 			'settings.cellularQualitySameAsDefault' => '與預設畫質相同',
+			'settings.directPlayCoveredQuality' => '以原始畫質播放較小影片',
+			'settings.directPlayCoveredQualityDescription' => '已在畫質限制內的影片直接播放，而非轉碼',
+			'settings.videoCodecs' => '影片編解碼器',
+			'settings.videoCodecsDescription' => '未勾選的編解碼器將由伺服器轉碼',
+			'settings.videoCodecsAlwaysAccepted' => '一律接受',
 			'settings.musicQualityTitle' => '音樂品質',
 			'settings.subtitleStyling' => '字幕樣式',
 			'settings.subtitleStylingDescription' => '調整字幕外觀',
@@ -3119,6 +3646,7 @@ extension on TranslationsZhHant {
 			'settings.minutesUnit' => ({required Object minutes}) => '${minutes} 分鐘',
 			'settings.rememberTrackSelections' => '記住每部影集或電影的音訊與字幕選擇',
 			'settings.rememberTrackSelectionsDescription' => '記住每部影片的音軌與字幕選擇',
+			'settings.rememberTrackSelectionsBackendRule' => 'Plex 會按檔案將每個選擇儲存在伺服器上；Jellyfin 還會開啟帳戶的「記住選擇」；不支援 Emby',
 			'settings.followServerTrackSelections' => '使用伺服器為每集選擇的軌道',
 			'settings.followServerTrackSelectionsDescription' => '切換劇集時，套用伺服器上為該集選擇的音訊與字幕，而不是沿用目前選擇',
 			'settings.resumeMusicOnLaunch' => '記住音樂工作階段',
@@ -3138,7 +3666,7 @@ extension on TranslationsZhHant {
 			'settings.videoPlayerNavigation' => '影片播放器導覽',
 			'settings.videoPlayerNavigationDescription' => '使用方向鍵導覽影片播放器控制項',
 			'settings.watchTogetherRelay' => '一起看中繼伺服器',
-			'settings.watchTogetherRelayDescription' => '設定自訂中繼。所有人必須使用相同的伺服器。',
+			'settings.watchTogetherRelayDescription' => '除非您自行設定，否則使用公開的 Open Watch Party 中繼伺服器',
 			'settings.watchTogetherRelayHint' => 'https://my-relay.example.com',
 			'settings.watchTogetherRelayInvalid' => '請輸入有效的 HTTP 或 HTTPS 中繼伺服器根網址。',
 			'settings.crashReporting' => '當機報告',
@@ -3164,6 +3692,7 @@ extension on TranslationsZhHant {
 			'settings.importSettingsInvalidFile' => '此檔案不是有效的 Plezy 設定匯出檔',
 			'settings.importSettingsNoUser' => '匯入設定前請先登入',
 			'settings.shortcutsReset' => '快速鍵已重設為預設值',
+			'settings.resetShortcutsConfirm' => '這會將您的自訂快速鍵替換為預設值。要繼續嗎？',
 			'settings.about' => '關於',
 			'settings.aboutDescription' => '應用程式資訊與授權條款',
 			'settings.updates' => '更新',
@@ -3179,8 +3708,21 @@ extension on TranslationsZhHant {
 			'settings.autoPlayAndSkip' => '自動播放與跳過',
 			'settings.autoPlayNextEpisode' => '自動播放下一集',
 			'settings.autoPlayNextEpisodeDescription' => '目前單集結束時自動播放下一集',
+			'settings.shuffleStartsFromBeginning' => '隨機播放從頭開始',
+			'settings.shuffleStartsFromBeginningDescription' => '隨機播放時每集從頭開始播放，而非繼續播放',
 			'settings.playNextCountdown' => '下一集倒數計時',
 			'settings.playNextCountdownImmediate' => '立即播放',
+			'settings.skipIntroMode' => '跳過片頭',
+			'settings.skipIntroModeOffDescription' => '正常播放片頭，不顯示跳過按鈕',
+			'settings.skipIntroModeButtonDescription' => '片頭開始時顯示跳過按鈕',
+			'settings.skipIntroModeAutoDescription' => '在下方設定的延遲後自動跳過片頭',
+			'settings.skipCreditsMode' => '跳過片尾',
+			'settings.skipCreditsModeOffDescription' => '正常播放片尾，不顯示跳過按鈕',
+			'settings.skipCreditsModeButtonDescription' => '片尾開始時顯示跳過按鈕',
+			'settings.skipCreditsModeAutoDescription' => '自動跳過片尾並播放下一集',
+			'settings.skipMarkerModeOff' => '關閉',
+			'settings.skipMarkerModeButton' => '顯示按鈕',
+			'settings.skipMarkerModeAuto' => '自動',
 			'settings.forceSkipMarkerFallback' => '強制使用備用標記',
 			'settings.forceSkipMarkerFallbackDescription' => '即使 Plex 有標記，也強制使用章節標題模式',
 			'settings.autoSkipDelay' => '自動跳過延遲',
@@ -3217,6 +3759,8 @@ extension on TranslationsZhHant {
 			'settings.manageLibrariesDescription' => '重新排序與隱藏媒體庫',
 			'settings.companionRemoteServer' => '隨身遙控器伺服器',
 			'settings.companionRemoteServerDescription' => '允許區域網路中的行動裝置控制此應用程式',
+			'settings.companionRemoteServerStartFailed' => '無法啟動隨身遙控器伺服器',
+			'settings.companionRemoteServerStopFailed' => '無法停止隨身遙控器伺服器',
 			'settings.autoPip' => '自動進入子母畫面',
 			'settings.autoPipDescription' => '播放影片時離開應用程式將自動進入子母畫面模式',
 			'settings.matchContentFrameRate' => '符合影片影格率',
@@ -3229,12 +3773,20 @@ extension on TranslationsZhHant {
 			'settings.matchDynamicRangeDescription' => 'HDR 內容切換至 HDR，播放結束切回 SDR',
 			'settings.displaySwitchDelay' => '顯示器切換延遲時間',
 			'settings.tunneledPlayback' => '通道化播放（Tunneled Playback）',
-			'settings.tunneledPlaybackDescription' => '使用影片通道模式。若 HDR 播放出現黑畫面，請停用此項。',
+			'settings.tunneledPlaybackDescription' => '使用影片通道模式。若 HDR 播放出現黑畫面或動態卡頓，請停用此項。',
 			'settings.audioPassthrough' => '音訊直通',
 			'settings.audioPassthroughDescription' => '將 Dolby/DTS 音訊不經重新編碼，直接傳送至擴大機或電視以保留環繞音效。若播放無聲，請關閉此設定。',
-			'settings.audioPassthroughDescriptionAppleTv' => '使用 Apple 原生 Dolby 解碼器處理 Dolby Digital Plus（包括 Atmos）。DTS 與 TrueHD 仍以多聲道 PCM 播放。若沒有聲音，請關閉此設定。',
-			'settings.audioDownmix' => '下混為立體聲',
-			'settings.audioDownmixDescription' => '將環繞音效混合為雙聲道，適用於立體聲喇叭或耳機',
+			'settings.audioPassthroughDescriptionApple' => '使用 Apple 原生 Dolby 解碼器處理 Dolby Digital Plus（包括 Atmos）。DTS 與 TrueHD 仍以多聲道 PCM 播放。若沒有聲音，請關閉此設定。',
+			'settings.audioPassthroughDescriptionAppleSpatial' => '使用 Apple 原生 Dolby 解碼器處理 Dolby Digital Plus（包括 Atmos）。在 iOS、iPadOS 與 tvOS 26 或更新版本上，TrueHD Atmos 與 DTS:X 會以空間音訊播放。其他 DTS 與 TrueHD 音軌則以多聲道 PCM 播放。若沒有聲音，請關閉此設定。',
+			'settings.audioPassthroughOverriddenByNormalization' => '音量標準化開啟時停用',
+			'settings.audioChannelLimit' => '音訊聲道',
+			'settings.audioChannelLimitDescription' => '將解碼後的音訊下混，以配合無法播放所有聲道的喇叭、耳機或 HDMI 設備',
+			'settings.audioChannelLimitOriginal' => '原始',
+			'settings.audioChannelLimitOriginalDescription' => '播放音軌中的所有聲道',
+			'settings.audioChannelLimitSurround51' => '最多 5.1',
+			'settings.audioChannelLimitSurround51Description' => '將 7.1 下混為 5.1，適用於僅支援 5.1 PCM 的電視與擴大機。不影響直通。',
+			'settings.audioChannelLimitStereo' => '立體聲',
+			'settings.audioChannelLimitStereoDescription' => '下混為雙聲道，適用於立體聲喇叭或耳機。會關閉直通。',
 			'settings.downmixCenterBoost' => '中置聲道增強',
 			'settings.downmixCenterBoostValue' => ({required Object db}) => '${db} dB',
 			'settings.downmixCenterBoostLabel' => '增強（dB）',
@@ -3242,7 +3794,7 @@ extension on TranslationsZhHant {
 			'settings.audioDownmixNormalize' => '下混時音量標準化',
 			'settings.audioDownmixNormalizeDescription' => '降低混音電平以防止破音。關閉以保持原始音量（大音量場景可能會失真）。',
 			'settings.dvConversionMode' => 'Dolby Vision 轉換模式',
-			'settings.dvConversionModeDescription' => '選擇 ExoPlayer 如何處理 Dolby Vision Profile 7 檔案。',
+			'settings.dvConversionModeDescription' => '選擇如何處理 Dolby Vision Profile 7 檔案。',
 			'settings.dvConversionAuto' => '自動',
 			'settings.dvConversionNative' => '原生 / 停用',
 			'settings.dvConversionDv81' => 'P7 → P8.1',
@@ -3251,8 +3803,24 @@ extension on TranslationsZhHant {
 			'settings.dvConversionNativeDescription' => '強制使用原生 DV7 並停用 DV 轉換重試',
 			'settings.dvConversionDv81Description' => '強制將內嵌的 RPU 轉換為 Dolby Vision Profile 8.1',
 			'settings.dvConversionHevcStripDescription' => '移除 Dolby Vision RPU/EL 層，並以一般 HEVC 呈現',
+			'settings.disableDolbyVision' => '停用 Dolby Vision',
+			'settings.disableDolbyVisionDescription' => '檔案包含 HDR10 或 HLG 層時，改為播放該層而非 Dolby Vision',
+			'settings.hdrSdrConversion' => 'HDR 轉 SDR',
+			'settings.hdrSdrConversionDescription' => '選擇在顯示器無法顯示 HDR 時由誰轉換 HDR 影片。',
+			'settings.hdrSdrConversionAuto' => '自動',
+			'settings.hdrSdrConversionAutoDescription' => 'Android 9 及更新版本使用裝置，較舊版本使用播放器',
+			'settings.hdrSdrConversionDevice' => '裝置',
+			'settings.hdrSdrConversionDeviceDescription' => '由裝置的視訊硬體轉換。速度最快，但色彩取決於裝置',
+			'settings.hdrSdrConversionPlayer' => '播放器',
+			'settings.hdrSdrConversionPlayerDescription' => '由播放器轉換。色彩一致，但在低階電視盒上 4K 可能卡頓',
 			'settings.deinterlace' => '去交錯',
 			'settings.deinterlaceDescription' => '移除交錯影片中的梳狀雜訊（僅限 mpv 播放器）',
+			'settings.deinterlaceOff' => '關閉',
+			'settings.deinterlaceOffDescription' => '以解碼後的原樣顯示交錯影片',
+			'settings.deinterlaceVideo' => '視訊',
+			'settings.deinterlaceVideoDescription' => '將每個圖場轉為完整影格。適用於為電視拍攝的影片，例如體育賽事、新聞與演唱會',
+			'settings.deinterlaceFilm' => '電影',
+			'settings.deinterlaceFilmDescription' => '還原經 telecine 轉為 29.97 fps 的電影與動畫原始影格，常見於 NTSC DVD。為電視拍攝的影片會出現卡頓。直播電視會使用「視訊」',
 			'settings.requireProfileSelectionOnOpen' => '開啟應用程式時要求選擇使用者',
 			'settings.requireProfileSelectionOnOpenDescription' => '每次開啟應用程式時顯示使用者設定檔選擇畫面',
 			'settings.forceTvMode' => '強制 TV 模式',
@@ -3294,6 +3862,8 @@ extension on TranslationsZhHant {
 			'settings.gestureVolumeSwipeDescription' => '在螢幕右側邊緣上下滑動以調整音量',
 			'settings.gesturePinchToZoom' => '雙指縮放',
 			'settings.gesturePinchToZoomDescription' => '在影片上雙指捏合以放大或縮小',
+			'settings.rememberBrightnessLevel' => '記住亮度',
+			'settings.rememberBrightnessLevelDescription' => '以上次滑動設定的亮度開始播放',
 			'settings.controls' => '控制',
 			'settings.rememberPlayerChanges' => '記住播放器變更',
 			'settings.rememberPlayerChangesDescription' => '播放期間所做的變更要儲存並從何處重新套用',
@@ -3306,10 +3876,51 @@ extension on TranslationsZhHant {
 			'settings.playerScopeLibrary' => '依媒體庫',
 			'settings.playerScopeTitle' => '依影集或電影',
 			'settings.exportDialogTitle' => '匯出 Plezy 設定',
+			'themeEditor.builtIn' => '內建',
+			'themeEditor.presets' => '精選',
+			'themeEditor.custom' => '自訂',
+			'themeEditor.customEmpty' => '尚未建立',
+			'themeEditor.editCustom' => '編輯自訂主題',
+			'themeEditor.editCustomDescription' => '自行選擇每一種顏色',
+			'themeEditor.locked' => '透過 Supporter 解鎖',
+			'themeEditor.savedLocked' => '已儲存 — 透過 Supporter 解鎖',
+			'themeEditor.title' => '自訂主題',
+			'themeEditor.startFrom' => '從現有主題開始',
+			'themeEditor.startFromDescription' => '從其他主題複製所有顏色',
+			'themeEditor.colors' => '顏色',
+			'themeEditor.preview' => '預覽',
+			'themeEditor.slots.bg' => '背景',
+			'themeEditor.slots.surface' => '面板',
+			'themeEditor.slots.outline' => '外框',
+			'themeEditor.slots.text' => '文字',
+			'themeEditor.slots.textMuted' => '次要文字',
+			'themeEditor.slots.accent' => '強調色',
+			_ => null,
+		} ?? switch (path) {
+			'themeEditor.opacity' => '不透明度',
+			'themeEditor.hexHint' => '#RRGGBB 或 #AARRGGBB',
+			'themeEditor.fromOtherThemes' => '來自其他主題',
+			'themeEditor.swatchLabel' => ({required Object theme, required Object color}) => '${theme} ${color}',
+			'themeEditor.contrast.textOnBg' => '背景上的文字',
+			'themeEditor.contrast.textOnSurface' => '面板上的文字',
+			'themeEditor.contrast.textMutedOnBg' => '背景上的次要文字',
+			'themeEditor.contrast.textMutedOnSurface' => '面板上的次要文字',
+			'themeEditor.contrast.accentOnBg' => '背景上的強調色',
+			'themeEditor.contrast.accentOnSurface' => '面板上的強調色',
+			'themeEditor.contrast.labelOnAccent' => '強調色上的按鈕文字',
+			'themeEditor.lowContrast' => ({required Object pair, required Object ratio, required Object minimum}) => '${pair}：${ratio}:1，低於建議的 ${minimum}:1',
+			'themeEditor.discardTitle' => '要捨棄變更嗎？',
+			'themeEditor.discardMessage' => '您尚未儲存的顏色變更將會遺失。',
+			'themeEditor.discard' => '捨棄',
+			'themeEditor.previewCardTitle' => ({required Object number}) => '第 ${number} 集',
+			'themeEditor.previewCardSubtitle' => ({required Object minutes}) => '剩餘 ${minutes} 分鐘',
+			'themeEditor.previewSwitch' => '自動播放',
+			'themeEditor.previewMutedText' => '次要文字看起來像這樣',
 			'search.hint' => '搜尋電影、影集、音樂…',
 			'search.tryDifferentTerm' => '嘗試不同的關鍵字',
 			'search.searchYourMedia' => '搜尋媒體庫',
 			'search.enterTitleActorOrKeyword' => '輸入標題、演員或關鍵字',
+			'search.people' => '人物',
 			'hotkeys.setShortcutFor' => ({required Object actionName}) => '為 ${actionName} 設定快速鍵',
 			'hotkeys.clearShortcut' => '清除快速鍵',
 			'hotkeys.noShortcutSet' => '未設定快速鍵',
@@ -3436,8 +4047,6 @@ extension on TranslationsZhHant {
 			'fileInfo.optimizedVersion' => '最佳化版本',
 			'fileInfo.optimizationTarget' => '最佳化目標',
 			'fileInfo.deletedAt' => '已刪除',
-			_ => null,
-		} ?? switch (path) {
 			'fileInfo.remoteSource' => '遠端來源',
 			'fileInfo.infiniteStream' => '無限串流',
 			'fileInfo.directPlay' => '直接播放',
@@ -3583,14 +4192,15 @@ extension on TranslationsZhHant {
 			'videoControls.rotationLockButton' => '旋轉鎖定',
 			'videoControls.lockScreen' => '鎖定螢幕',
 			'videoControls.screenLockButton' => '螢幕鎖定',
-			'videoControls.longPressToUnlock' => '長按解鎖',
 			'videoControls.timelineSlider' => '影片時間軸',
 			'videoControls.volumeSlider' => '音量調整',
 			'videoControls.endsAt' => ({required Object time}) => '預計 ${time} 結束',
 			'videoControls.pipActive' => '正在以子母畫面模式播放',
 			'videoControls.pipFailed' => '啟動子母畫面失敗',
 			'videoControls.screenshotSaved' => '螢幕截圖已儲存',
+			'videoControls.screenshotFailed' => '無法擷取螢幕截圖',
 			'videoControls.zoomPercent' => ({required Object percent}) => '縮放 ${percent}%',
+			'videoControls.volumePercent' => ({required Object percent}) => '音量 ${percent}%',
 			'videoControls.pipErrors.androidVersion' => '需要 Android 8.0 或更高版本',
 			'videoControls.pipErrors.iosVersion' => '需要 iOS 15.0 或更高版本',
 			'videoControls.pipErrors.permissionDisabled' => '子母畫面權限已停用。請在系統設定中啟用。',
@@ -3637,6 +4247,9 @@ extension on TranslationsZhHant {
 			'messages.playbackDataInvalid' => '伺服器傳回的播放資訊無效。',
 			'messages.playbackCancelled' => '播放已取消。',
 			'messages.playbackFailed' => '無法開始播放。',
+			'messages.playbackFailedDetail' => ({required Object error}) => '無法開始播放：${error}',
+			'messages.audioOutputFailed' => '音訊輸出停止回應。請檢查電視或擴大機的音訊連接；如果其他應用程式也沒有聲音，請重新啟動裝置。',
+			'messages.mediaUnavailable' => '此內容已無法使用。',
 			'messages.errorLoadingFileInfo' => ({required Object error}) => '載入檔案資訊時發生錯誤：${error}',
 			'messages.errorLoadingSeries' => '載入影集時發生錯誤',
 			'messages.musicNotSupported' => '目前不支援播放音樂',
@@ -3671,6 +4284,8 @@ extension on TranslationsZhHant {
 			'messages.mediaUnreadableBody' => '伺服器找到了此項目，但無法讀取其檔案（HTTP 404）。檔案可能已移動、刪除，或其儲存空間離線。請聯絡伺服器擁有者檢查檔案並重新掃描媒體庫。',
 			'messages.serverBusyTitle' => '串流無法使用',
 			'messages.serverBusyBody' => '伺服器持續拒絕串流此檔案（HTTP 503）。伺服器可能正在重新啟動、忙碌中，或檔案所在的儲存裝置可能已離線。請稍後再試；若問題持續發生，請要求伺服器擁有者檢查伺服器及檔案所在的儲存裝置。',
+			'messages.playbackNotAllowedTitle' => '不允許播放',
+			'messages.playbackNotAllowedBody' => '伺服器拒絕串流此項目（HTTP 403）。此帳戶可能沒有播放權限，或伺服器可能只允許在其區域網路內播放。',
 			'messages.logsUploaded' => '日誌已上傳',
 			'messages.logsUploadFailed' => '上傳日誌失敗',
 			'messages.logId' => '日誌 ID',
@@ -3680,6 +4295,7 @@ extension on TranslationsZhHant {
 			'messages.playbackDataNotPrepared' => '播放資料尚未準備完成就已開始播放',
 			'messages.streamSelectionUnavailable' => '此來源不支援選擇串流',
 			'messages.streamSelectionFailed' => '無法套用所選串流',
+			'messages.trackSelectionNotRemembered' => '此軌道選擇僅套用於目前播放。',
 			'messages.serverUnavailableForProfile' => '使用中的使用者設定檔沒有可用的伺服器',
 			'subtitlingStyling.text' => '文字',
 			'subtitlingStyling.border' => '邊框',
@@ -3697,6 +4313,8 @@ extension on TranslationsZhHant {
 			'subtitlingStyling.overrideStrip' => '移除樣式',
 			'subtitlingStyling.positionTop' => '頂部',
 			'subtitlingStyling.positionBottom' => '底部',
+			'subtitlingStyling.useMargins' => '使用邊距',
+			'subtitlingStyling.useMarginsDescription' => '允許文字字幕顯示在影片畫面之外的區域。樣式字幕可能保留其原始位置。',
 			'subtitlingStyling.anchorToScreen' => '錨定至螢幕',
 			'subtitlingStyling.anchorToScreenDescription' => '在寬螢幕影片下方的黑邊顯示文字字幕',
 			'subtitlingStyling.bold' => '粗體',
@@ -3718,6 +4336,9 @@ extension on TranslationsZhHant {
 			'mpvConfig.presetDeleted' => '預設組已刪除',
 			'mpvConfig.confirmDeletePreset' => '確定要刪除此預設組嗎？',
 			'mpvConfig.configPlaceholder' => 'gpu-api=vulkan\nhwdec=auto\n# 註解',
+			'mpvConfig.lineHint' => 'option=value',
+			'mpvConfig.addLine' => '新增行',
+			'mpvConfig.removeLine' => '移除行',
 			'mpvConfig.embeddedVoHint' => '在 Linux 上會忽略 vo、gpu-context 和 gpu-api：嵌入式影片一律透過影片平面上的 vo=libmpv 轉譯，而 gpu-next（ArtCNN 等計算著色器需要它）無法以嵌入式方式執行。',
 			'dialog.confirmAction' => '確認操作',
 			'profiles.addPlezyProfile' => '新增 Plezy 使用者設定檔',
@@ -3730,6 +4351,8 @@ extension on TranslationsZhHant {
 			'profiles.signOut' => '登出',
 			'profiles.signOutPlexTitle' => '登出 Plex？',
 			'profiles.signOutPlexMessage' => ({required Object displayName}) => '確定要移除 ${displayName} 與所有 Plex Home 使用者嗎？您可以隨時重新登入。',
+			'profiles.signOutPlexDeleteDownloads' => '一併刪除下載內容',
+			'profiles.signOutPlexDeleteDownloadsDescription' => '否則下載內容會保留在此裝置上，並在您重新登入此帳號時恢復。',
 			'profiles.signedOutPlex' => '已登出 Plex。',
 			'profiles.signOutFailed' => '登出失敗。',
 			'profiles.sectionTitle' => '使用者設定檔',
@@ -3766,7 +4389,7 @@ extension on TranslationsZhHant {
 			'profiles.borrowAddTo' => ({required Object displayName}) => '新增至 ${displayName}',
 			'profiles.borrowExplain' => '共用另一個使用者設定檔的連線資訊。受 PIN 碼保護的設定檔需輸入 PIN 碼。',
 			'profiles.borrowEmpty' => '目前沒有可共用的連線。',
-			'profiles.borrowEmptySubtitle' => '請先將 Plex 或 Jellyfin 連線至另一個使用者設定檔。',
+			'profiles.borrowEmptySubtitle' => '請先將 Plex、Jellyfin 或 Emby 連線至另一個使用者設定檔。',
 			'profiles.borrowLoadFailed' => '無法載入可用的連線。請重試。',
 			'profiles.borrowFromProfile' => ({required Object displayName}) => '來自 ${displayName}',
 			'profiles.borrowConnectionBorrowed' => '已共用連線。',
@@ -3785,10 +4408,14 @@ extension on TranslationsZhHant {
 			'profiles.tokenIdentityMismatch' => 'Plex 使用者設定檔權杖解析到非預期的伺服器',
 			'connections.sectionTitle' => '連線',
 			'connections.addConnection' => '新增連線',
-			'connections.addConnectionSubtitleNoProfile' => '使用 Plex 登入或連線至 Jellyfin 伺服器',
-			'connections.addConnectionSubtitleScoped' => ({required Object displayName}) => '新增至 ${displayName}：Plex、Jellyfin 或其他設定檔連線',
+			'connections.addConnectionSubtitleNoProfile' => '使用 Plex 登入或連線至 Jellyfin 或 Emby 伺服器',
+			_ => null,
+		} ?? switch (path) {
+			'connections.addConnectionSubtitleScoped' => ({required Object displayName}) => '新增至 ${displayName}：Plex、Jellyfin、Emby 或其他設定檔連線',
 			'connections.sessionExpiredOne' => ({required Object name}) => '${name} 的工作階段已過期',
 			'connections.sessionExpiredMany' => ({required Object count}) => '${count} 個伺服器的工作階段已過期',
+			'connections.accessDeniedOne' => ({required Object name}) => '${name} 拒絕此帳戶存取',
+			'connections.accessDeniedMany' => ({required Object count}) => '${count} 台伺服器拒絕此帳戶存取',
 			'connections.signInAgain' => '重新登入',
 			'connections.editMediaBrowserTitle' => ({required Object product}) => '編輯 ${product} 連線',
 			'connections.editMediaBrowserIntro' => ({required Object serverName}) => '為 ${serverName} 新增或移除 URL。Plezy 將使用延遲最低且可連線的 URL。',
@@ -3874,6 +4501,11 @@ extension on TranslationsZhHant {
 			'discover.minutesLeft' => ({required Object minutes}) => '剩餘 ${minutes} 分鐘',
 			'discover.moreLikeThis' => '更多類似內容',
 			'discover.titleCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(n, other: '${n} 部作品', ), 
+			'discover.person.born' => '出生',
+			'discover.person.died' => '逝世',
+			'discover.person.birthplace' => '出生地',
+			'discover.person.dateWithAge' => ({required Object date, required Object age}) => '${date}（${age} 歲）',
+			'discover.person.dateWithAgeAtDeath' => ({required Object date, required Object age}) => '${date}（享年 ${age} 歲）',
 			'errors.searchFailed' => ({required Object error}) => '搜尋失敗：${error}',
 			'errors.searchUnavailable' => '搜尋無法連線至任何媒體伺服器。',
 			'errors.connectionTimeout' => ({required Object context}) => '載入 ${context} 時連線逾時',
@@ -3886,6 +4518,13 @@ extension on TranslationsZhHant {
 			'errors.failedToSwitchProfile' => ({required Object displayName}) => '無法切換至 ${displayName}',
 			'errors.failedToDeleteProfile' => ({required Object displayName}) => '無法刪除 ${displayName}',
 			'errors.failedToRate' => '無法更新評分',
+			'errors.reasonTimedOut' => '連線逾時',
+			'errors.reasonUnreachable' => '無法連線至媒體伺服器',
+			'errors.reasonRefused' => '媒體伺服器拒絕了此要求',
+			'errors.reasonNotFound' => '該項目已不在媒體伺服器上',
+			'errors.reasonServerError' => '媒體伺服器回報錯誤',
+			'errors.reasonCancelled' => '要求已取消',
+			'errors.reasonUnexpected' => '發生未預期的錯誤',
 			'libraries.title' => '媒體庫',
 			'libraries.fallbackTitle' => '媒體庫',
 			'libraries.scanLibraryFiles' => '掃描媒體庫檔案',
@@ -3948,10 +4587,9 @@ extension on TranslationsZhHant {
 			'libraries.filterCategories.unwatched' => '未觀看',
 			'libraries.filterCategories.unplayed' => '未播放',
 			'libraries.filterCategories.favorites' => '我的最愛',
+			'libraries.filterCategories.filePath' => '檔案路徑',
 			'libraries.sortLabels.title' => '標題',
 			'libraries.sortLabels.dateAdded' => '新增日期',
-			_ => null,
-		} ?? switch (path) {
 			'libraries.sortLabels.releaseDate' => '發行日期',
 			'libraries.sortLabels.rating' => '評分',
 			'libraries.sortLabels.communityRating' => '社群評分',
@@ -3970,10 +4608,39 @@ extension on TranslationsZhHant {
 			'libraries.sortLabels.dateShared' => '分享日期',
 			'libraries.sortLabels.latestEpisodeAirDate' => '最新一集播出日期',
 			'libraries.sortLabels.lastEpisodeDateAdded' => '最新一集新增日期',
+			'libraries.sortLabels.dateDownloaded' => '下載日期',
+			'libraries.sortLabels.size' => '大小',
+			'libraries.sortLabels.library' => '媒體庫',
+			'libraries.advancedFilters.include' => '包含',
+			'libraries.advancedFilters.exclude' => '排除',
+			'libraries.advancedFilters.any' => '不限',
+			'libraries.advancedFilters.yes' => '是',
+			'libraries.advancedFilters.no' => '否',
+			'libraries.advancedFilters.not' => ({required Object value}) => '非 ${value}',
+			'libraries.advancedFilters.valueCount' => ({required Object count}) => '已選取 ${count} 個',
+			'libraries.advancedFilters.valueCountExcluded' => ({required Object count}) => '已排除 ${count} 個',
+			'libraries.advancedFilters.searchValues' => '搜尋選項',
+			'libraries.advancedFilters.noValues' => '沒有選項',
+			'libraries.advancedFilters.matchContains' => '包含',
+			'libraries.advancedFilters.matchNotContains' => '不包含',
+			'libraries.advancedFilters.matchIs' => '是',
+			'libraries.advancedFilters.matchIsNot' => '不是',
+			'libraries.advancedFilters.matchBeginsWith' => '開頭為',
+			'libraries.advancedFilters.matchEndsWith' => '結尾為',
+			'libraries.advancedFilters.textHint' => '輸入要比對的文字',
+			'libraries.advancedFilters.from' => '從',
+			'libraries.advancedFilters.to' => '至',
+			'libraries.advancedFilters.range' => ({required Object from, required Object to}) => '${from} 至 ${to}',
+			'libraries.advancedFilters.atLeast' => ({required Object value}) => '${value} 以上',
+			'libraries.advancedFilters.atMost' => ({required Object value}) => '${value} 以下',
+			'libraries.advancedFilters.dateLastDays' => ({required Object count}) => '過去 ${count} 天',
+			'libraries.advancedFilters.dateLastYear' => '過去一年',
+			'libraries.advancedFilters.dateOlderThanDays' => ({required Object count}) => '超過 ${count} 天前',
+			'libraries.advancedFilters.dateOlderThanYear' => '超過一年前',
 			'about.title' => '關於',
 			'about.openSourceLicenses' => '開源授權條款',
 			'about.versionLabel' => ({required Object version}) => '版本 ${version}',
-			'about.appDescription' => '一款精美的 Plex 與 Jellyfin Flutter 用戶端',
+			'about.appDescription' => '一款精美的 Plex、Jellyfin 與 Emby Flutter 用戶端',
 			'about.viewLicensesDescription' => '查看第三方套件的授權條款',
 			'serverSelection.noServersFoundForAccount' => ({required Object username, required Object email}) => '找不到 ${username}（${email}） 的伺服器',
 			'serverSelection.failedToLoadServers' => ({required Object error}) => '無法載入伺服器：${error}',
@@ -4056,6 +4723,7 @@ extension on TranslationsZhHant {
 			'explore.notInLibrary' => '不在您的媒體庫中',
 			'explore.inTheseLibraries' => '在這些媒體庫中',
 			'explore.checkingLibrary' => '正在檢查您的媒體庫…',
+			'explore.libraryCheckFailed' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(n, other: '無法檢查 ${n} 台伺服器', ), 
 			'explore.emptyTitle' => '這裡還沒有任何內容',
 			'explore.emptyMessage' => ({required Object source}) => '當 ${source} 有內容時，相關資訊將顯示在此處。',
 			'explore.searchHint' => ({required Object source}) => '搜尋 ${source}',
@@ -4120,6 +4788,7 @@ extension on TranslationsZhHant {
 			'explore.sourceMaterial.webComic' => '網路漫畫',
 			'explore.sourceMaterial.musicRelease' => '音樂',
 			'explore.sourceMaterial.otherMedia' => '其他',
+			'explore.creditRole.actor' => '演員',
 			'explore.creditRole.director' => '導演',
 			'explore.creditRole.writer' => '編劇',
 			'explore.creditRole.producer' => '製作人',
@@ -4239,7 +4908,9 @@ extension on TranslationsZhHant {
 			'liveTv.editRuleAction' => '編輯',
 			'liveTv.recordingRuleUpdated' => '錄製規則已更新',
 			'liveTv.guideReloadRequested' => '已要求更新節目表指南',
+			'liveTv.guideReloadFailed' => '無法重新載入節目表指南',
 			'liveTv.rulesProcessRequested' => '已要求重新評估規則',
+			'liveTv.rulesProcessFailed' => '無法重新評估錄影規則',
 			'liveTv.recordShow' => '錄製節目',
 			'liveTv.recordSettings.startEarly' => '提早開始（秒）',
 			'liveTv.recordSettings.endLate' => '延後結束（秒）',
@@ -4252,8 +4923,12 @@ extension on TranslationsZhHant {
 			'liveTv.startingInMinutes' => ({required Object minutes}) => '${minutes} 分鐘後開始',
 			'liveTv.dayAtTime' => ({required Object day, required Object time}) => '${day} ${time}',
 			'liveTv.invalidPlaybackData' => ({required Object product}) => '${product} 傳回了無效的直播電視播放資料',
+			_ => null,
+		} ?? switch (path) {
 			'liveTv.failedToStartChannel' => '無法啟動直播頻道',
 			'liveTv.failedToBuildStreamUrl' => '無法建立串流 URL',
+			'liveTv.playbackStartFailed' => ({required Object reason}) => '無法開始播放此頻道：${reason}',
+			'liveTv.channelSwitchFailed' => ({required Object reason}) => '無法切換頻道：${reason}',
 			'collections.title' => '收藏集',
 			'collections.collection' => '收藏集',
 			'collections.empty' => '收藏集為空',
@@ -4331,74 +5006,151 @@ extension on TranslationsZhHant {
 			'music.discography.compilations' => '合輯',
 			'watchTogether.title' => '一起看',
 			'watchTogether.description' => '與親友同步觀看內容',
-			'watchTogether.createSession' => '建立「一起看」工作階段',
-			'watchTogether.creating' => '正在建立…',
-			'watchTogether.joinSession' => '加入工作階段',
-			'watchTogether.joining' => '正在加入…',
-			'watchTogether.controlMode' => '控制模式',
-			'watchTogether.controlModeQuestion' => '誰可以控制播放？',
-			'watchTogether.hostOnly' => '僅限主持人',
-			'watchTogether.anyone' => '任何人',
-			'watchTogether.hostingSession' => '主持「一起看」',
-			'watchTogether.inSession' => '在工作階段中',
-			'watchTogether.sessionCode' => '工作階段代碼',
-			'watchTogether.openSessionControls' => '開啟「一起看」工作階段控制面板',
-			'watchTogether.copySessionCode' => '複製工作階段代碼',
-			'watchTogether.hostControlsPlayback' => '主持人控制播放',
-			'watchTogether.anyoneCanControl' => '任何人都能控制播放',
-			'watchTogether.hostControls' => '主持人控制',
-			'watchTogether.anyoneControls' => '任何人控制',
-			'watchTogether.participants' => '參與者',
-			'watchTogether.host' => '主持人',
-			'watchTogether.hostBadge' => '主持人',
-			'watchTogether.youAreHost' => '您是主持人',
-			'watchTogether.watchingWithOthers' => '與他人一起觀看',
-			'watchTogether.endSession' => '結束工作階段',
-			'watchTogether.leaveSession' => '離開工作階段',
-			'watchTogether.endSessionQuestion' => '結束工作階段？',
-			'watchTogether.leaveSessionQuestion' => '離開工作階段？',
-			'watchTogether.endSessionConfirm' => '這將為所有參與者結束此「一起看」工作階段。',
-			'watchTogether.leaveSessionConfirm' => '您將退出此「一起看」工作階段。',
-			'watchTogether.endSessionConfirmOverlay' => '這將為所有參與者結束觀看工作階段。',
-			'watchTogether.leaveSessionConfirmOverlay' => '您將中斷與「一起看」工作階段的連線。',
-			'watchTogether.end' => '結束',
-			'watchTogether.leave' => '離開',
-			'watchTogether.syncing' => '同步中…',
-			'watchTogether.joinWatchSession' => '加入「一起看」工作階段',
-			'watchTogether.enterCodeHint' => '輸入 5 個英數字元的代碼',
-			'watchTogether.pasteFromClipboard' => '從剪貼簿貼上',
-			'watchTogether.pleaseEnterCode' => '請輸入工作階段代碼',
-			'watchTogether.codeMustBe5Chars' => '工作階段代碼必須為 5 個字元',
-			'watchTogether.joinInstructions' => '輸入主持人的工作階段代碼以加入「一起看」。',
-			'watchTogether.failedToCreate' => '建立工作階段失敗',
-			'watchTogether.failedToJoin' => '加入工作階段失敗',
-			'watchTogether.sessionCodeCopied' => '工作階段代碼已複製到剪貼簿',
-			'watchTogether.relayUnreachable' => '無法連線至中繼伺服器。ISP 封鎖可能會導致「一起看」無法使用。',
-			'watchTogether.reconnectingToHost' => '正在重新連線至主持人…',
-			'watchTogether.currentPlayback' => '目前播放內容',
-			'watchTogether.joinCurrentPlayback' => '加入目前播放點',
-			'watchTogether.joinCurrentPlaybackDescription' => '同步至主持人目前的觀看進度',
-			'watchTogether.failedToOpenCurrentPlayback' => '無法開啟目前播放點',
-			'watchTogether.participantJoined' => ({required Object name}) => '${name} 已加入',
-			'watchTogether.participantLeft' => ({required Object name}) => '${name} 已離開',
-			'watchTogether.participantPaused' => ({required Object name}) => '${name} 暫停了播放',
-			'watchTogether.participantResumed' => ({required Object name}) => '${name} 恢復了播放',
-			'watchTogether.participantSeeked' => ({required Object name}) => '${name} 變更了播放位置',
-			'watchTogether.participantBuffering' => ({required Object name}) => '${name} 正在緩衝',
-			'watchTogether.participantNeedsUpdate' => ({required Object name}) => '${name} 正在使用舊版應用程式，無法進行同步',
-			'watchTogether.resumingWithout' => ({required Object name}) => '不等待 ${name}，繼續播放',
-			'watchTogether.waitingForParticipants' => '正在等待其他人載入…',
-			'watchTogether.waitingForName' => ({required Object name}) => '正在等待 ${name}…',
+			'watchTogether.createRoom' => '建立房間',
+			'watchTogether.creatingRoom' => '正在建立房間…',
+			'watchTogether.joinRoom' => '加入房間',
+			'watchTogether.joiningRoom' => '正在加入房間…',
+			'watchTogether.connecting' => '正在連線…',
+			'watchTogether.relayPublic' => '房間使用公開的 Open Watch Party 中繼伺服器。',
+			'watchTogether.relayCustom' => ({required Object url}) => '房間使用您位於 ${url} 的中繼伺服器。',
 			'watchTogether.recentRooms' => '最近的房間',
+			'watchTogether.roomActions' => '房間操作',
 			'watchTogether.renameRoom' => '重新命名房間',
 			'watchTogether.removeRoom' => '移除',
-			'watchTogether.guestSwitchUnavailable' => '無法切換 — 伺服器無法進行同步',
-			'watchTogether.guestSwitchFailed' => '無法切換 — 在此伺服器上找不到內容',
-			'watchTogether.defaultDisplayName' => '使用者',
-			'watchTogether.errors.timedOut' => '中繼伺服器未及時回應',
-			'watchTogether.errors.connectionLost' => '工作階段就緒前連線已中斷',
-			'watchTogether.errors.invalidRelayResponse' => '中繼伺服器傳回了非預期的回應',
-			'watchTogether.errors.sessionEnded' => '主持人已結束工作階段',
+			'watchTogether.enterRoomCode' => '請輸入主持人提供的 6 字元代碼。',
+			'watchTogether.roomCode' => '房間代碼',
+			'watchTogether.paste' => '貼上',
+			'watchTogether.noCodeInClipboard' => '剪貼簿中沒有房間代碼',
+			'watchTogether.copyCode' => '複製代碼',
+			'watchTogether.codeCopied' => '房間代碼已複製',
+			'watchTogether.shareInvite' => '分享邀請',
+			'watchTogether.inviteCopied' => '已複製邀請。請將其貼到訊息中。',
+			'watchTogether.inviteMessage' => ({required Object code}) => '來 Plezy 加入我的「一起看」房間：開啟「一起看」，選擇「加入房間」，然後輸入 ${code}。',
+			'watchTogether.openSessionControls' => '開啟「一起看」工作階段控制面板',
+			'watchTogether.reconnecting' => '正在重新連線…',
+			'watchTogether.reconnectingDescription' => '連線已中斷。您將自動重新加入房間。',
+			'watchTogether.connected' => '已連線',
+			'watchTogether.disconnected' => '已中斷連線',
+			'watchTogether.youAreHost' => '您是主持人',
+			'watchTogether.hostedBy' => ({required Object name}) => '主持人：${name}',
+			'watchTogether.hostControlsPlayback' => '主持人控制播放',
+			'watchTogether.anyoneCanControl' => '任何人都能控制播放',
+			'watchTogether.roomLocked' => '房間已鎖定',
+			'watchTogether.nowPlaying' => '正在播放',
+			'watchTogether.nothingPlaying' => '目前沒有播放內容',
+			'watchTogether.nothingPlayingHost' => '從任一媒體庫播放內容，即可與房間成員分享。',
+			'watchTogether.nothingPlayingGuest' => '主持人播放內容時，會在這裡開啟。',
+			'watchTogether.notShareable' => '這部影片在目錄中沒有相符項目，因此只有可存取同一台伺服器的人才能播放。',
+			'watchTogether.searching' => '正在您的媒體庫中尋找這部影片…',
+			'watchTogether.yourCopy' => '您的副本',
+			'watchTogether.sharingYourCopy' => '您正在分享您的副本',
+			'watchTogether.playingOtherLength' => ({required Object difference}) => '正在播放您的副本，${difference}',
+			'watchTogether.mismatchTitle' => '您的副本長度不同',
+			'watchTogether.mismatchDescription' => ({required Object difference}) => '您最接近的副本比房間的影片${difference}。可能是不同的剪輯版或版本。',
+			'watchTogether.playAnyway' => '仍要播放',
+			'watchTogether.chooseAnotherCopy' => '選擇其他副本',
+			'watchTogether.dontPlay' => '不要播放',
+			'watchTogether.unavailableTitle' => '您沒有這部影片',
+			'watchTogether.unavailableDescription' => 'Plezy 無法在您的媒體庫中找到這部影片。請自行選擇副本，或重新搜尋。',
+			'watchTogether.chooseCopy' => '選擇副本',
+			'watchTogether.searchAgain' => '重新搜尋',
+			'watchTogether.noCandidates' => '在您的媒體庫中找不到任何副本。',
+			'watchTogether.choiceFailed' => '無法為房間播放此副本',
+			'watchTogether.lengthLonger' => ({required Object duration}) => '長了 ${duration}',
+			'watchTogether.lengthShorter' => ({required Object duration}) => '短了 ${duration}',
+			'watchTogether.lengthSame' => '長度相同',
+			'watchTogether.lengthUnknown' => '長度未知',
+			'watchTogether.joinCurrentPlayback' => '加入目前播放點',
+			'watchTogether.joinCurrentPlaybackDescription' => '同步至主持人目前的觀看進度',
+			'watchTogether.stopMedia' => '為所有人停止影片',
+			'watchTogether.syncOffset' => '同步偏移',
+			'watchTogether.syncOffsetDescription' => '若您的影片比房間超前或落後，可在此調整。',
+			'watchTogether.offsetHint' => ({required Object difference}) => '您的副本比房間的影片${difference}。',
+			'watchTogether.applyDifference' => ({required Object offset}) => '套用 ${offset}',
+			'watchTogether.offsetMinusSecond' => '-1 秒',
+			'watchTogether.offsetMinusTenth' => '-100 毫秒',
+			'watchTogether.offsetPlusTenth' => '+100 毫秒',
+			'watchTogether.offsetPlusSecond' => '+1 秒',
+			'watchTogether.participants' => '參與者',
+			'watchTogether.participantCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(n, other: '${n} 位參與者', ), 
+			'watchTogether.hostBadge' => '主持人',
+			'watchTogether.nameYou' => ({required Object name}) => '${name}（您）',
+			'watchTogether.playerIdle' => '閒置',
+			'watchTogether.playerLoading' => '載入中',
+			'watchTogether.playerReady' => '就緒',
+			'watchTogether.playerBuffering' => '緩衝中',
+			'watchTogether.matchSearching' => '搜尋中',
+			'watchTogether.matchMatched' => '有此影片',
+			'watchTogether.matchMismatched' => '長度不同',
+			'watchTogether.matchUnavailable' => '沒有此影片',
+			'watchTogether.participantOffset' => ({required Object offset}) => '偏移 ${offset}',
+			'watchTogether.makeHost' => '設為主持人',
+			'watchTogether.makeHostQuestion' => '移交主持人？',
+			'watchTogether.makeHostConfirm' => ({required Object name}) => '${name} 將控制播放並主導所有人的工作階段。',
+			'watchTogether.transfer' => '移交',
+			'watchTogether.removeParticipant' => '從房間移除',
+			'watchTogether.removeParticipantQuestion' => ({required Object name}) => '要移除 ${name} 嗎？',
+			'watchTogether.removeParticipantConfirm' => ({required Object name}) => '${name} 將離開房間。除非您鎖定房間，否則對方可以使用代碼再次加入。',
+			'watchTogether.remove' => '移除',
+			'watchTogether.roomSettings' => '房間設定',
+			'watchTogether.letEveryoneControl' => '允許所有人控制播放',
+			'watchTogether.lockRoom' => '鎖定房間',
+			'watchTogether.lockRoomDescription' => '不允許新成員加入',
+			'watchTogether.leaveRoom' => '離開房間',
+			'watchTogether.leaveRoomQuestion' => '要離開房間嗎？',
+			'watchTogether.leaveRoomConfirm' => '您可以使用房間代碼再次加入。',
+			'watchTogether.leave' => '離開',
+			'watchTogether.endRoom' => '結束房間',
+			'watchTogether.endRoomQuestion' => '要結束房間嗎？',
+			'watchTogether.endRoomConfirm' => '這會為所有人結束此房間。',
+			'watchTogether.end' => '結束',
+			'watchTogether.playBlockedTitle' => '播放未開始',
+			'watchTogether.playBlockedDescription' => '按下播放，開始與房間成員一起觀看。',
+			'watchTogether.notices.pressedPlay' => ({required Object name}) => '${name} 按下了播放',
+			'watchTogether.notices.playbackStarted' => '已開始播放',
+			'watchTogether.notices.paused' => ({required Object name}) => '${name} 暫停了播放',
+			'watchTogether.notices.playbackPaused' => '已暫停播放',
+			'watchTogether.notices.jumpedTo' => ({required Object name, required Object position}) => '${name} 跳至 ${position}',
+			'watchTogether.notices.roomJumpedTo' => ({required Object position}) => '已跳至 ${position}',
+			'watchTogether.notices.changedSpeed' => ({required Object name, required Object speed}) => '${name} 將速度設為 ${speed}',
+			'watchTogether.notices.speedChanged' => ({required Object speed}) => '速度已設為 ${speed}',
+			'watchTogether.notices.startedMedia' => ({required Object name, required Object title}) => '${name} 開始播放「${title}」',
+			'watchTogether.notices.mediaStarted' => ({required Object title}) => '正在播放「${title}」',
+			'watchTogether.notices.stoppedMedia' => ({required Object name}) => '${name} 停止了影片',
+			'watchTogether.notices.mediaStopped' => '影片已停止',
+			'watchTogether.notices.waitingFor' => ({required Object name}) => '正在等待 ${name}…',
+			'watchTogether.notices.waitingForSomeone' => '正在等待其他人跟上…',
+			'watchTogether.notices.finished' => '播放完畢',
+			'watchTogether.notices.hostChangedTo' => ({required Object name}) => '${name} 現在是主持人',
+			'watchTogether.notices.youAreNowHost' => '您現在是主持人',
+			'watchTogether.notices.joined' => ({required Object name}) => '${name} 已加入',
+			'watchTogether.notices.left' => ({required Object name}) => '${name} 已離開',
+			'watchTogether.notices.controlRefused' => '只有主持人可以控制播放',
+			'watchTogether.notices.searchFailed' => '部分伺服器無法搜尋房間的影片',
+			'watchTogether.notices.playBlocked' => '按下播放即可開始',
+			'watchTogether.notices.shareFailed' => '無法與房間分享此影片',
+			'watchTogether.notices.downloadNotShared' => '下載內容所屬的伺服器離線時，無法與房間分享',
+			'watchTogether.notices.openFailed' => '無法開啟房間的影片',
+			'watchTogether.ended.ended' => '主持人已結束房間',
+			'watchTogether.ended.kicked' => '您已被移出房間',
+			'watchTogether.ended.expired' => '房間已過期',
+			'watchTogether.ended.replaced' => '您已在其他裝置上加入此房間',
+			'watchTogether.ended.lost' => '與房間的連線已中斷',
+			'watchTogether.errors.invalidCode' => '這不是有效的房間代碼。代碼由 6 個字母與數字組成，不含 0、1、I、L 或 O。',
+			'watchTogether.errors.roomNotFound' => '沒有使用此代碼的房間。房間可能已結束。',
+			'watchTogether.errors.roomFull' => '該房間已滿。',
+			'watchTogether.errors.roomLocked' => '主持人已鎖定該房間。',
+			'watchTogether.errors.relayFull' => '「一起看」目前忙碌中。請稍後再試。',
+			'watchTogether.errors.unreachable' => '無法連線至「一起看」中繼伺服器。請檢查網路連線。',
+			'watchTogether.errors.rateLimited' => '嘗試次數過多。請稍候再試。',
+			'watchTogether.errors.clientBlocked' => '此版本的 Plezy 無法使用中繼伺服器。請更新應用程式。',
+			'watchTogether.errors.forbidden' => '只有主持人可以執行此操作。',
+			'watchTogether.errors.notInRoom' => '您不在房間中。',
+			'watchTogether.errors.alreadyInRoom' => '您已在房間中。',
+			'watchTogether.errors.resumeFailed' => '無法重新加入房間。',
+			'watchTogether.errors.unsupported' => '中繼伺服器不支援此操作。',
+			'watchTogether.errors.generic' => '發生錯誤。請重試。',
+			'watchTogether.untitledEpisode' => ({required Object number}) => '第 ${number} 集',
 			'downloads.title' => '下載',
 			'downloads.manage' => '管理',
 			'downloads.tvShows' => '影集',
@@ -4413,10 +5165,14 @@ extension on TranslationsZhHant {
 			'downloads.downloadQueued' => '下載已排隊',
 			'downloads.downloadResumed' => '下載已繼續',
 			'downloads.serverErrorBitrate' => '伺服器錯誤：檔案位元率可能超過遠端位元率限制',
-			'downloads.storageFull' => '裝置儲存空間已滿，因此下載已停止。請釋出空間後再試一次。',
+			'downloads.storageFull' => '為保護剩餘儲存空間，下載已停止。請釋出空間或選擇其他下載位置，然後再試一次。',
+			'downloads.storageUnavailable' => '無法檢查可用儲存空間，因此下載已停止。請檢查下載位置後再試一次。',
 			'downloads.episodesQueued' => ({required Object count}) => '已將 ${count} 集影片加入下載佇列',
 			'downloads.downloadDeleted' => '下載內容已刪除',
 			'downloads.deleteConfirm' => ({required Object title}) => '確定要從此裝置刪除「${title}」嗎？',
+			'downloads.deleteCollectionDownloads' => '刪除下載內容',
+			'downloads.deleteCollectionDownloadsConfirm' => ({required Object title}) => '確定要從此裝置刪除「${title}」中的所有下載內容嗎？',
+			'downloads.collectionDownloadsDeleted' => '下載內容已刪除',
 			'downloads.cancelledDownloadTitle' => '已取消的下載',
 			'downloads.cancelledDownloadMessage' => '此下載已取消。您想要如何處理？',
 			'downloads.allEpisodesAlreadyDownloaded' => '所有單集都已下載完成',
@@ -4434,6 +5190,8 @@ extension on TranslationsZhHant {
 			'downloads.noDownloadsTree' => '目前沒有下載內容',
 			'downloads.pauseAll' => '全部暫停',
 			'downloads.resumeAll' => '全部繼續',
+			'downloads.retryAll' => '全部重試',
+			'downloads.retryFailed' => '重試失敗的下載',
 			'downloads.deleteAll' => '全部刪除',
 			'downloads.selectVersion' => '選擇版本',
 			'downloads.allEpisodes' => '所有單集',
@@ -4464,14 +5222,13 @@ extension on TranslationsZhHant {
 			'downloads.manageSyncRule' => '管理同步',
 			'downloads.editEpisodeCount' => '單集數量',
 			'downloads.editSyncFilter' => '同步篩選器',
-			_ => null,
-		} ?? switch (path) {
 			'downloads.syncAllItems' => '同步所有項目',
 			'downloads.syncUnwatchedItems' => '同步未觀看項目',
 			'downloads.syncRuleServerContext' => ({required Object server, required Object status}) => '伺服器：${server} • ${status}',
 			'downloads.syncRuleAvailable' => '可用',
 			'downloads.syncRuleOffline' => '離線',
 			'downloads.syncRuleSignInRequired' => '需要登入',
+			'downloads.syncRuleAccessDenied' => '存取遭拒',
 			'downloads.syncRuleNotAvailableForProfile' => '目前使用者設定檔無法使用',
 			'downloads.syncRuleUnknownServer' => '未知伺服器',
 			'downloads.syncRuleListCreated' => '同步規則已建立',
@@ -4501,13 +5258,23 @@ extension on TranslationsZhHant {
 			'downloads.backgroundWarning.statusUnknown' => '尚未檢查',
 			'downloads.backgroundWarning.settingsUnavailable' => '無法在這部裝置上開啟系統設定',
 			'downloads.backgroundWarning.linkUnavailable' => '無法在這部裝置上開啟 dontkillmyapp.com',
+			'downloads.options' => '下載選項',
+			'downloads.groupings.library' => '媒體庫',
+			'downloads.groupings.collections' => '收藏集',
+			'downloads.unknownLibrary' => '未知媒體庫',
 			'downloads.unknownShow' => '未知節目',
 			'downloads.unknownSeason' => '未知季度',
 			'downloads.unknownAlbum' => '未知專輯',
 			'downloads.completedOfTotal' => ({required Object completed, required Object total}) => '已完成 ${completed}/${total}',
 			'downloads.errorFileNotFound' => '找不到檔案（404）',
+			'downloads.errorDownloadNotAllowed' => '伺服器不允許下載（403）',
 			'downloads.errorDownloadFailed' => '下載失敗',
-			'downloads.errorPostProcessing' => ({required Object error}) => '後續處理失敗：${error}',
+			'downloads.errorDownloadFailedWithReason' => ({required Object reason}) => '下載失敗：${reason}',
+			'downloads.errorHttpStatus' => ({required Object status}) => '下載失敗（HTTP ${status}）',
+			'downloads.errorPostProcessing' => ({required Object reason}) => '後續處理失敗：${reason}',
+			'downloads.reasonFileNotSaved' => '無法將檔案儲存到此裝置',
+			'downloads.reasonCannotResume' => '無法繼續未完成的下載',
+			'downloads.reasonDeviceStorageFull' => '此裝置的儲存空間已滿',
 			'downloads.notificationDownloading' => '正在下載…',
 			'downloads.notificationComplete' => '下載完成',
 			'downloads.notificationPaused' => '下載已暫停',
@@ -4615,7 +5382,7 @@ extension on TranslationsZhHant {
 			'videoSettings.audioOutputSpatial' => '空間音訊',
 			'videoSettings.audioOutputStereo' => '立體聲',
 			'videoSettings.audioNormalization' => '音量標準化',
-			'videoSettings.audioDownmix' => '下混為立體聲',
+			'videoSettings.audioNormalizationDisablesPassthrough' => '將音訊解碼為 PCM；開啟時直通關閉',
 			'performanceOverlay.color' => '色彩',
 			'performanceOverlay.performance' => '效能',
 			'performanceOverlay.buffer' => '緩衝',
@@ -4628,6 +5395,13 @@ extension on TranslationsZhHant {
 			'performanceOverlay.rotation' => '旋轉角度',
 			'performanceOverlay.dvSource' => 'DV 來源',
 			'performanceOverlay.dvPath' => 'DV 路徑',
+			'performanceOverlay.dvRouteDecoder' => 'Dolby Vision 解碼器',
+			'performanceOverlay.dvRouteDecoderP81' => 'Dolby Vision 解碼器（P7→8.1）',
+			'performanceOverlay.dvRouteBaseLayer' => '基礎層',
+			'performanceOverlay.dvRouteBaseLayerHdr10' => 'HDR10 基礎層',
+			'performanceOverlay.dvRouteBaseLayerHlg' => 'HLG 基礎層',
+			'performanceOverlay.dvRouteBaseLayerSdr' => 'SDR 基礎層',
+			'performanceOverlay.dvRouteReshaped' => 'RPU 重塑（gpu-next）',
 			'performanceOverlay.p7Conversion' => 'P7 轉換',
 			'performanceOverlay.sampleRate' => '取樣率',
 			'performanceOverlay.pixelFormat' => '像素格式',
@@ -4651,7 +5425,7 @@ extension on TranslationsZhHant {
 			'performanceOverlay.speed' => '速度',
 			'performanceOverlay.player' => '播放器',
 			'performanceOverlay.memory' => '記憶體',
-			'performanceOverlay.uiFps' => 'UI FPS',
+			'performanceOverlay.uiFps' => '介面 FPS',
 			'performanceOverlay.fps' => 'FPS',
 			'performanceOverlay.decoderAndroidHw' => 'Android 硬體',
 			'performanceOverlay.decoderNvidiaHw' => 'NVIDIA 硬體',
@@ -4663,6 +5437,8 @@ extension on TranslationsZhHant {
 			'performanceOverlay.tunnelingActive' => '已啟用',
 			'performanceOverlay.dvRpuFailed' => ({required Object converted, required Object failures}) => '${converted}（${failures} 個失敗）',
 			'externalPlayer.title' => '外部播放器',
+			_ => null,
+		} ?? switch (path) {
 			'externalPlayer.useExternalPlayer' => '使用外部播放器',
 			'externalPlayer.useExternalPlayerDescription' => '在其他應用程式中開啟影片',
 			'externalPlayer.selectPlayer' => '選擇播放器',
@@ -4752,6 +5528,7 @@ extension on TranslationsZhHant {
 			'metadataEdit.country' => '國家/地區',
 			'metadataEdit.collection' => '收藏集',
 			'metadataEdit.label' => '標記',
+			'metadataEdit.quickTag' => '快速標籤…',
 			'matchScreen.match' => '配對…',
 			'matchScreen.fixMatch' => '修正配對…',
 			'matchScreen.unmatch' => '取消配對',
@@ -4798,6 +5575,10 @@ extension on TranslationsZhHant {
 			'seerr.qualityProfile' => '畫質設定檔（Quality Profile）',
 			'seerr.rootFolder' => '根目錄資料夾',
 			'seerr.languageProfile' => '語言設定檔（Language Profile）',
+			'seerr.tags' => '標籤',
+			'seerr.noTags' => '沒有標籤',
+			'seerr.defaultOption' => ({required Object name}) => '${name}（預設）',
+			'seerr.animeNote' => '此影集為動畫。',
 			'seerr.requestSubmitted' => '請求已送出',
 			'seerr.requestFailed' => ({required Object error}) => '請求失敗：${error}',
 			'seerr.requestsLoadFailed' => '無法載入請求選項',
@@ -4809,6 +5590,7 @@ extension on TranslationsZhHant {
 			'seerr.statusBlocklisted' => '已加入封鎖清單',
 			'seerr.couldNotReach' => ({required Object url, required Object error}) => '無法連線至 ${url}：${error}',
 			'seerr.noInstanceAtUrl' => ({required Object url, required Object status}) => '在 ${url} 找不到 Seerr 執行個體（HTTP ${status}）',
+			'seerr.behindAuthProxy' => '回應來自需要驗證的反向代理（SSO 或 HTTP 驗證），而非 Seerr。Plezy 無法透過它登入：請讓 Seerr 的 /api/v1 路徑為此應用程式繞過代理，或使用可直接連線至 Seerr 的位址。',
 			'seerr.invalidUrl' => '請輸入伺服器位址，例如 https://seerr.example.com',
 			'seerr.quickConnectUnsupported' => '此 Seerr 執行個體不支援 Quick Connect。需要 Seerr 3.4 或更新版本。',
 			'seerr.notInitialized' => '此 Seerr 執行個體尚未完成首次執行設定',
@@ -4819,6 +5601,8 @@ extension on TranslationsZhHant {
 			'seerr.freshCookieRejected' => 'Seerr 拒絕了新的工作階段 Cookie',
 			'seerr.noUserInformation' => 'Seerr 未傳回使用者資訊',
 			'seerr.sessionRejectedAfterReauth' => '重新登入後，工作階段遭到拒絕',
+			'seerr.permissionDenied' => 'Seerr 拒絕了此操作：您的帳戶不再具備所需權限',
+			'seerr.permissionRevoked' => '您不再具有請求此內容的權限',
 			'services.title' => '外部服務',
 			'services.hubSubtitle' => '同步觀看進度並請求新內容。',
 			'services.integrations' => '整合',
@@ -4834,6 +5618,8 @@ extension on TranslationsZhHant {
 			'services.names.simkl' => 'Simkl',
 			'services.names.seerr' => 'Seerr',
 			'services.names.mdblist' => 'MDBList',
+			'services.simklReconnect.title' => '重新連線 Simkl',
+			'services.simklReconnect.subtitle' => 'Simkl 即將停用此連線所使用的登入方式。重新連線會開啟 simkl.com 以核准 Plezy — Plezy 絕不會看到您的密碼。您的觀看紀錄仍會保留在 Simkl 上。',
 			'services.deviceCode.title' => ({required Object service}) => '在 ${service} 啟用 Plezy',
 			'services.deviceCode.instructions' => '掃描 QR 碼，或前往下方網址並輸入此代碼：',
 			'services.deviceCode.openToActivate' => ({required Object service}) => '開啟 ${service} 進行啟用',

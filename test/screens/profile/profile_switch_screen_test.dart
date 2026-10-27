@@ -21,9 +21,11 @@ import 'package:plezy/profiles/profile_registry.dart';
 import 'package:plezy/screens/profile/pin_entry_dialog.dart';
 import 'package:plezy/screens/profile/profile_detail_screen.dart';
 import 'package:plezy/screens/profile/profile_switch_screen.dart';
+import 'package:plezy/services/deep_links/deep_link.dart';
 import 'package:plezy/services/storage_service.dart';
 import 'package:plezy/theme/mono_theme.dart';
 import 'package:plezy/utils/platform_detector.dart';
+import 'package:plezy/widgets/deep_link_dialog.dart';
 import 'package:provider/provider.dart';
 
 import '../../test_helpers/prefs.dart';
@@ -37,49 +39,11 @@ void main() {
   });
 
   testWidgets('D-pad can focus profile actions and open the manage menu', (tester) async {
-    final db = AppDatabase.forTesting(NativeDatabase.memory());
-    final profile = Profile.local(id: 'local-owner', displayName: 'Owner', createdAt: DateTime(2026, 1, 1));
-    final profiles = _FakeProfileRegistry(db, [profile]);
-    final connections = _FakeConnectionRegistry(db);
-    final profileConnections = _FakeProfileConnectionRegistry(db);
-    final storage = await StorageService.getInstance();
-    final plexHome = _NoTimerPlexHomeService(
-      connections: connections,
-      profileConnections: profileConnections,
-      storage: storage,
-      plexHomeUserFetcher: (_) async => const [],
+    await _pumpPicker(
+      tester,
+      profiles: [Profile.local(id: 'local-owner', displayName: 'Owner', createdAt: DateTime(2026, 1, 1))],
+      connections: const [],
     );
-    final activeProfile = ActiveProfileProvider(
-      registry: profiles,
-      plexHome: plexHome,
-      connections: connections,
-      profileConnections: profileConnections,
-      storage: storage,
-    );
-    addTearDown(() async {
-      activeProfile.dispose();
-      await plexHome.dispose();
-      await db.close();
-    });
-
-    // Boot initializes the provider before the picker is reachable; mirror that.
-    await activeProfile.initialize();
-    await tester.pumpWidget(
-      TranslationProvider(
-        child: MultiProvider(
-          providers: [
-            Provider<StorageService>.value(value: storage),
-            Provider<ProfileRegistry>.value(value: profiles),
-            Provider<ProfileConnectionRegistry>.value(value: profileConnections),
-            Provider<ConnectionRegistry>.value(value: connections),
-            Provider<PlexHomeService>.value(value: plexHome),
-            ChangeNotifierProvider<ActiveProfileProvider>.value(value: activeProfile),
-          ],
-          child: MaterialApp(theme: monoTheme(dark: true), home: const ProfileSwitchScreen()),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
 
     expect(find.text('Owner'), findsOneWidget);
     expect(FocusManager.instance.primaryFocus?.debugLabel, 'ProfileTile:local-owner');
@@ -99,58 +63,48 @@ void main() {
     await tester.pump();
   });
 
-  testWidgets('orders profiles by recent usage from storage', (tester) async {
-    final db = AppDatabase.forTesting(NativeDatabase.memory());
-    final profiles = _FakeProfileRegistry(db, [
-      Profile.local(id: 'local-owner', displayName: 'Owner', createdAt: DateTime(2026, 1, 1)),
-      Profile.local(id: 'local-kids', displayName: 'Kids', createdAt: DateTime(2026, 1, 2)),
-    ]);
-    final connections = _FakeConnectionRegistry(db);
-    final profileConnections = _FakeProfileConnectionRegistry(db);
-    final storage = await StorageService.getInstance();
-    await storage.markProfileUsed('local-kids', DateTime(2026, 1, 3));
-    final plexHome = _NoTimerPlexHomeService(
-      connections: connections,
-      profileConnections: profileConnections,
-      storage: storage,
-      plexHomeUserFetcher: (_) async => const [],
-    );
-    final activeProfile = ActiveProfileProvider(
-      registry: profiles,
-      plexHome: plexHome,
-      connections: connections,
-      profileConnections: profileConnections,
-      storage: storage,
-    );
-    addTearDown(() async {
-      activeProfile.dispose();
-      await plexHome.dispose();
-      await db.close();
-    });
+  testWidgets('D-pad reaches Show profile link in the tile menu and opens the profile link', (tester) async {
+    final owner = Profile.local(id: 'local-owner', displayName: 'Owner', createdAt: DateTime(2026, 1, 1));
+    await _pumpPicker(tester, profiles: [owner], connections: const []);
 
-    await activeProfile.initialize();
-    await tester.pumpWidget(
-      TranslationProvider(
-        child: MultiProvider(
-          providers: [
-            Provider<StorageService>.value(value: storage),
-            Provider<ProfileRegistry>.value(value: profiles),
-            Provider<ProfileConnectionRegistry>.value(value: profileConnections),
-            Provider<ConnectionRegistry>.value(value: connections),
-            Provider<PlexHomeService>.value(value: plexHome),
-            ChangeNotifierProvider<ActiveProfileProvider>.value(value: activeProfile),
-          ],
-          child: MaterialApp(theme: monoTheme(dark: true), home: const ProfileSwitchScreen()),
-        ),
-      ),
-    );
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pumpAndSettle();
+
+    // The menu opens on Manage; Show profile link is the next entry.
+    expect(find.text(t.deepLinks.showProfileLink), findsOneWidget);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ProfileLinkDialog), findsOneWidget);
+    const link = 'plezy://open?profile=local-owner';
+    expect(find.text(link), findsOneWidget);
+    final parsed = DeepLink.tryParse(link);
+    expect(parsed, isA<OpenLink>());
+    expect(resolveLinkProfile([owner], parsed!.profile!), owner);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
+  testWidgets('orders profiles by recent usage from storage', (tester) async {
+    await _pumpPicker(
+      tester,
+      profiles: [
+        Profile.local(id: 'local-owner', displayName: 'Owner', createdAt: DateTime(2026, 1, 1)),
+        Profile.local(id: 'local-kids', displayName: 'Kids', createdAt: DateTime(2026, 1, 2)),
+      ],
+      connections: const [],
+      lastUsedAt: {'local-kids': DateTime(2026, 1, 3)},
+    );
 
     expect(tester.getTopLeft(find.text('Kids')).dy, lessThan(tester.getTopLeft(find.text('Owner')).dy));
   });
 
   testWidgets('passes derived Jellyfin avatar URLs only to linked profile tiles', (tester) async {
-    final db = AppDatabase.forTesting(NativeDatabase.memory());
     final linkedProfile = Profile.local(id: 'local-linked', displayName: 'Linked', createdAt: DateTime(2026, 1, 1));
     final unlinkedProfile = Profile.local(
       id: 'local-unlinked',
@@ -174,46 +128,12 @@ void main() {
       connectionId: jellyfin.id,
       userIdentifier: jellyfin.userId,
     );
-    final profiles = _FakeProfileRegistry(db, [linkedProfile, unlinkedProfile]);
-    final connections = _FakeConnectionRegistry(db, [jellyfin]);
-    final profileConnections = _FakeProfileConnectionRegistry(db, [link]);
-    final storage = await StorageService.getInstance();
-    final plexHome = _NoTimerPlexHomeService(
-      connections: connections,
-      profileConnections: profileConnections,
-      storage: storage,
-      plexHomeUserFetcher: (_) async => const [],
+    await _pumpPicker(
+      tester,
+      profiles: [linkedProfile, unlinkedProfile],
+      connections: [jellyfin],
+      profileConnections: [link],
     );
-    final activeProfile = ActiveProfileProvider(
-      registry: profiles,
-      plexHome: plexHome,
-      connections: connections,
-      profileConnections: profileConnections,
-      storage: storage,
-    );
-    addTearDown(() async {
-      activeProfile.dispose();
-      await plexHome.dispose();
-      await db.close();
-    });
-
-    await activeProfile.initialize();
-    await tester.pumpWidget(
-      TranslationProvider(
-        child: MultiProvider(
-          providers: [
-            Provider<StorageService>.value(value: storage),
-            Provider<ProfileRegistry>.value(value: profiles),
-            Provider<ProfileConnectionRegistry>.value(value: profileConnections),
-            Provider<ConnectionRegistry>.value(value: connections),
-            Provider<PlexHomeService>.value(value: plexHome),
-            ChangeNotifierProvider<ActiveProfileProvider>.value(value: activeProfile),
-          ],
-          child: MaterialApp(theme: monoTheme(dark: true), home: const ProfileSwitchScreen()),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
 
     final linkedAvatar = tester.widget<ProfileAvatar>(
       find.byWidgetPredicate((widget) => widget is ProfileAvatar && widget.profile?.id == linkedProfile.id),
@@ -233,49 +153,15 @@ void main() {
   });
 
   testWidgets('paints the recency order on the first frame that shows profiles', (tester) async {
-    final db = AppDatabase.forTesting(NativeDatabase.memory());
-    final profiles = _FakeProfileRegistry(db, [
-      Profile.local(id: 'local-owner', displayName: 'Owner', createdAt: DateTime(2026, 1, 1)),
-      Profile.local(id: 'local-kids', displayName: 'Kids', createdAt: DateTime(2026, 1, 2)),
-    ]);
-    final connections = _FakeConnectionRegistry(db);
-    final profileConnections = _FakeProfileConnectionRegistry(db);
-    final storage = await StorageService.getInstance();
-    await storage.markProfileUsed('local-kids', DateTime(2026, 1, 3));
-    final plexHome = _NoTimerPlexHomeService(
-      connections: connections,
-      profileConnections: profileConnections,
-      storage: storage,
-      plexHomeUserFetcher: (_) async => const [],
-    );
-    final activeProfile = ActiveProfileProvider(
-      registry: profiles,
-      plexHome: plexHome,
-      connections: connections,
-      profileConnections: profileConnections,
-      storage: storage,
-    );
-    addTearDown(() async {
-      activeProfile.dispose();
-      await plexHome.dispose();
-      await db.close();
-    });
-
-    await activeProfile.initialize();
-    await tester.pumpWidget(
-      TranslationProvider(
-        child: MultiProvider(
-          providers: [
-            Provider<StorageService>.value(value: storage),
-            Provider<ProfileRegistry>.value(value: profiles),
-            Provider<ProfileConnectionRegistry>.value(value: profileConnections),
-            Provider<ConnectionRegistry>.value(value: connections),
-            Provider<PlexHomeService>.value(value: plexHome),
-            ChangeNotifierProvider<ActiveProfileProvider>.value(value: activeProfile),
-          ],
-          child: MaterialApp(theme: monoTheme(dark: true), home: const ProfileSwitchScreen()),
-        ),
-      ),
+    await _pumpPicker(
+      tester,
+      profiles: [
+        Profile.local(id: 'local-owner', displayName: 'Owner', createdAt: DateTime(2026, 1, 1)),
+        Profile.local(id: 'local-kids', displayName: 'Kids', createdAt: DateTime(2026, 1, 2)),
+      ],
+      connections: const [],
+      lastUsedAt: {'local-kids': DateTime(2026, 1, 3)},
+      settle: false,
     );
 
     // Frame-by-frame, not pumpAndSettle: the regression was an intermediate
@@ -344,7 +230,7 @@ void main() {
               Provider<PlexHomeService>.value(value: plexHome),
               ChangeNotifierProvider<ActiveProfileProvider>.value(value: activeProfile),
             ],
-            child: MaterialApp(theme: monoTheme(dark: true), home: const ProfileSwitchScreen()),
+            child: MaterialApp(theme: monoTheme(MonoPalette.dark), home: const ProfileSwitchScreen()),
           ),
         ),
       ),
@@ -379,6 +265,8 @@ void main() {
   });
 
   testWidgets('names the Plex Home user and the account together, not the account alone', (tester) async {
+    // The account half only tells profiles apart once a second account is
+    // signed in; see the single-account tests below.
     await _pumpPicker(
       tester,
       profiles: [
@@ -390,7 +278,10 @@ void main() {
           createdAt: DateTime(2026, 1, 1),
         ),
       ],
-      connections: [_plexAccount('Bob')],
+      connections: [
+        _plexAccount('Bob'),
+        _plexAccount('Dana', id: 'plex-account-2'),
+      ],
     );
 
     expect(find.text('Alice'), findsOneWidget);
@@ -408,7 +299,10 @@ void main() {
     await _pumpPicker(
       tester,
       profiles: [Profile.local(id: 'local-alice', displayName: 'Alice', createdAt: DateTime(2026, 1, 1))],
-      connections: [_plexAccount('Bob')],
+      connections: [
+        _plexAccount('Bob'),
+        _plexAccount('Dana', id: 'plex-account-2'),
+      ],
       profileConnections: const [
         ProfileConnection(
           profileId: 'local-alice',
@@ -424,6 +318,51 @@ void main() {
       _relationChip(tester, tile: _tileFor('Alice'), first: 'Charlie', second: 'Bob'),
       t.profiles.plexAccountUserChip(user: 'Charlie', account: 'Bob'),
     );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
+  testWidgets('with one Plex account, a Plex Home tile shows only its own name', (tester) async {
+    await _pumpPicker(
+      tester,
+      profiles: [
+        Profile.plexHome(
+          id: 'home-alice',
+          displayName: 'Alice',
+          parentConnectionId: 'plex-account',
+          plexHomeUserUuid: 'alice-uuid',
+          createdAt: DateTime(2026, 1, 1),
+        ),
+      ],
+      connections: [_plexAccount('Bob')],
+    );
+
+    expect(find.textContaining('Bob'), findsNothing, reason: '"Alice via Bob" would repeat under every tile');
+    expect(find.text(t.profiles.noConnections), findsNothing, reason: 'the profile does have a connection');
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
+  testWidgets('with one Plex account, a borrowed Home user is named without the account', (tester) async {
+    await _pumpPicker(
+      tester,
+      profiles: [Profile.local(id: 'local-alice', displayName: 'Alice', createdAt: DateTime(2026, 1, 1))],
+      connections: [_plexAccount('Bob')],
+      profileConnections: const [
+        ProfileConnection(
+          profileId: 'local-alice',
+          connectionId: 'plex-account',
+          userToken: 'borrowed-token',
+          userIdentifier: 'charlie-uuid',
+        ),
+      ],
+      homeUsers: [_homeUser('charlie-uuid', 'Charlie')],
+    );
+
+    expect(find.descendant(of: _tileFor('Alice'), matching: find.text('Charlie')), findsOneWidget);
+    expect(find.textContaining('Bob'), findsNothing);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
@@ -471,7 +410,10 @@ void main() {
           createdAt: DateTime(2026, 1, 1),
         ),
       ],
-      connections: [_plexAccount('Bob')],
+      connections: [
+        _plexAccount('Bob'),
+        _plexAccount('Dana', id: 'plex-account-2'),
+      ],
     );
 
     final label = _relationChip(tester, tile: _tileFor('Alice'), first: 'Alice', second: 'Bob');
@@ -640,6 +582,8 @@ Future<void> _pumpPicker(
   List<ProfileConnection> profileConnections = const [],
   List<PlexHomeUser> homeUsers = const [],
   String? activeProfileId,
+  Map<String, DateTime> lastUsedAt = const {},
+  bool settle = true,
 }) async {
   final db = AppDatabase.forTesting(NativeDatabase.memory());
   final profileRegistry = _FakeProfileRegistry(db, profiles);
@@ -648,6 +592,9 @@ Future<void> _pumpPicker(
   final storage = await StorageService.getInstance();
   if (activeProfileId != null) {
     await storage.setActiveProfileId(activeProfileId);
+  }
+  for (final entry in lastUsedAt.entries) {
+    await storage.markProfileUsed(entry.key, entry.value);
   }
   final plexHome = _NoTimerPlexHomeService(
     connections: connectionRegistry,
@@ -686,16 +633,16 @@ Future<void> _pumpPicker(
           Provider<PlexHomeService>.value(value: plexHome),
           ChangeNotifierProvider<ActiveProfileProvider>.value(value: activeProfile),
         ],
-        child: MaterialApp(theme: monoTheme(dark: true), home: const ProfileSwitchScreen()),
+        child: MaterialApp(theme: monoTheme(MonoPalette.dark), home: const ProfileSwitchScreen()),
       ),
     ),
   );
-  await tester.pumpAndSettle();
+  if (settle) await tester.pumpAndSettle();
 }
 
-PlexAccountConnection _plexAccount(String accountLabel) {
+PlexAccountConnection _plexAccount(String accountLabel, {String id = 'plex-account'}) {
   return PlexAccountConnection(
-    id: 'plex-account',
+    id: id,
     accountToken: 'token',
     clientIdentifier: 'client',
     accountLabel: accountLabel,

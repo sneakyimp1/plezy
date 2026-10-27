@@ -58,10 +58,13 @@ import '../services/companion_remote/companion_remote_receiver.dart';
 import '../services/fullscreen_state_manager.dart';
 import '../providers/companion_remote_provider.dart';
 import '../utils/desktop_window_padding.dart';
+import '../services/deep_links/deep_link_launcher.dart';
+import '../services/deep_links/deep_link_service.dart';
 import '../widgets/music/mini_player.dart';
 import '../widgets/navigation_label_fit.dart';
 import '../widgets/mobile_navigation_rail.dart';
 import '../widgets/side_navigation_rail.dart';
+import '../focus/covered_route_focus_boundary.dart';
 import '../focus/dpad_navigator.dart';
 import '../focus/key_event_utils.dart';
 import 'discover_screen.dart';
@@ -75,7 +78,6 @@ import 'settings/settings_screen.dart';
 import 'profile/profile_switch_screen.dart';
 import 'video_player_screen.dart';
 import 'profile/profile_teardown.dart';
-import '../services/system_shelf_service.dart';
 import '../watch_together/watch_together.dart';
 
 /// Provides access to the main screen's focus control.
@@ -83,15 +85,25 @@ import '../watch_together/watch_together.dart';
 // navigation/main_screen_scope.dart (re-exported above) so widgets like the
 // browse rail can import the scope without an import cycle through this file.
 
+/// Desktop embedders report every hardware key as a keyboard key, so a remote
+/// (HDMI-CEC, IR receiver) Escape cannot be told apart from a keyboard Escape.
+/// TV mode is the signal that the machine is remote-driven: there Escape stays
+/// Back and keeps the press-back-again exit (#2490).
 @visibleForTesting
 bool shouldHandleDesktopRootEscape({
   required bool isDesktop,
+  required bool isTV,
   required bool isPhysicalKeyboardEvent,
   required LogicalKeyboardKey logicalKey,
   required bool isCurrentRoute,
   required bool isHomeTab,
 }) {
-  return isDesktop && isPhysicalKeyboardEvent && logicalKey == LogicalKeyboardKey.escape && isCurrentRoute && isHomeTab;
+  return isDesktop &&
+      !isTV &&
+      isPhysicalKeyboardEvent &&
+      logicalKey == LogicalKeyboardKey.escape &&
+      isCurrentRoute &&
+      isHomeTab;
 }
 
 /// Whether a lifecycle resume should raise the "ask for a profile on open"
@@ -373,7 +385,7 @@ class _MainScreenState extends State<MainScreen>
     with RouteAware, WindowListener, WidgetsBindingObserver, MountedSetStateMixin {
   NavigationTabId _currentTab = NavigationTabId.discover;
   String? _selectedLibraryGlobalKey;
-  Future<void>? _windowCloseFuture;
+  Future<void>? _desktopExitFuture;
 
   /// Whether the app is in offline mode (no server connection)
   bool _isOffline = false;
@@ -389,9 +401,10 @@ class _MainScreenState extends State<MainScreen>
   /// Last selected online tab (restored when coming back online after an offline fallback)
   NavigationTabId? _lastOnlineTabId;
 
-  /// A preferred startup section (e.g. Live TV) that wasn't visible yet at cold
-  /// start because servers bind asynchronously. Applied once it becomes
-  /// available (see [_handleLiveTvChanged]); cleared on any explicit selection.
+  /// A preferred startup section (Live TV or Explore) that wasn't visible yet
+  /// at cold start because servers bind and catalog sources hydrate
+  /// asynchronously. Applied once it becomes available (see
+  /// [_applyPendingStartupTab]); cleared on any explicit selection.
   NavigationTabId? _pendingStartupTab;
 
   /// Whether we auto-switched to Downloads because the previous tab was unavailable offline
@@ -450,8 +463,9 @@ class _MainScreenState extends State<MainScreen>
   bool _isSidebarFocused = false;
   // Hover/touch rail expansion is an M3E modal overlay: the rail draws over
   // the content, so this only drives the scrim behind it — never the
-  // content offset.
-  bool _isSidebarInteractionExpanded = false;
+  // content offset. Docked expansion (always-open, D-pad focus) displaces
+  // content instead and reports no floating panel.
+  bool _isSidebarFloatingPanel = false;
   bool _isOverlaySheetOpen = false;
 
   /// The binder is now owned by a top-level [Provider] (see main.dart) so
@@ -492,12 +506,12 @@ class _MainScreenState extends State<MainScreen>
   Timer? _startupSettleTimeout;
 
   /// Hard ceiling on how long we wait for [ActiveProfileBinder] to settle
-  /// before priming the UI anyway. The binder always calls
-  /// `markBindingFinished` in its `finally`, but this is a defence in depth:
-  /// if a transient bug or hung HTTP path keeps `isBinding` true, the user
-  /// would otherwise see an empty Discover screen forever. After the
-  /// fallback fires the screens render their normal "no servers" state and
-  /// the user can pull-to-refresh / open settings.
+  /// before priming libraries, watch sync, and downloads anyway. The binder
+  /// always calls `markBindingFinished` in its `finally`, but this is a
+  /// defence in depth against a transient bug or hung HTTP path keeping
+  /// `isBinding` true. Discover never fetches while the binder runs (the
+  /// clients may still carry the previous profile's token, #2599), so a
+  /// fallback prime that fires mid-bind leaves the settle prime armed.
   static const _startupSettleFallback = Duration(seconds: 15);
   static const _backExitWindow = Duration(seconds: 3);
   DateTime? _lastBackPressAt;
@@ -558,7 +572,6 @@ class _MainScreenState extends State<MainScreen>
     // Set up Watch Together callbacks immediately (must be synchronous to catch early messages)
     if (!_isOffline) {
       _setupWatchTogetherCallback();
-      _setupSystemShelfDeepLink();
     }
 
     // Wire profile binder + tracker bootstrap (skip in offline mode)
@@ -576,17 +589,18 @@ class _MainScreenState extends State<MainScreen>
       activeProfile.addListener(_onActiveProfileChanged);
       _plexHomeService = context.read<PlexHomeService>();
       // `start()` is the live/network entry point: it installs the connection
-      // watch, the refresh timer and an initial `_refreshAll()`. Hydration
-      // already happened from the provider's `create:`, so an offline launch
+      // watch, the refresh timer and an initial `_refreshAll()`. The root app
+      // state already hydrated it when it created the service, so an offline launch
       // keeps its cached Plex Home users without reaching the network.
       // `_handleOfflineStatusChanged` starts it if we come online later.
       if (!_isOffline) unawaited(_plexHomeService!.start());
       final manager = context.read<MultiServerProvider>().serverManager;
-      // Read the binder so the Provider's `lazy: false` create has fired
-      // for sure; start only in online mode so explicit startup offline does
-      // not immediately kick off the same connection attempts it skipped.
+      // Read the binder so the Provider's `lazy: false` create has fired for
+      // sure. `start()` is idempotent; SetupScreen normally started it already,
+      // and the offline shell needs it running too so a server that connects
+      // later brings the app online.
       final binder = context.read<ActiveProfileBinder>();
-      if (!_isOffline) binder.start();
+      binder.start();
       _runStartupOnFirstOnlineServer(manager);
 
       if (!_isOffline) {
@@ -605,10 +619,15 @@ class _MainScreenState extends State<MainScreen>
         }
       }
 
+      // Links act once the profile is settled and its preferences are loaded.
+      _attachDeepLinks();
+
       // Focus content initially (replaces autofocus which caused focus stealing issues)
-      // Skip if profile selection is on top — it manages its own focus.
+      // Skip if profile selection is on top — it manages its own focus. A
+      // session remounted under the root picker (another profile chosen)
+      // gets this claim when the picker pops instead of losing it (#2817).
       if (!_isSidebarFocused && !_isShowingProfileSelection) {
-        _contentFocusScope.requestFocus();
+        CoveredRouteFocusBoundary.requestInitialFocus(context, _contentFocusScope);
       }
 
       _updateTvosMenuPassthrough();
@@ -650,12 +669,14 @@ class _MainScreenState extends State<MainScreen>
       if (fromTimeout) {
         appLogger.w(
           'ActiveProfileBinder still binding after ${_startupSettleFallback.inSeconds}s '
-          '— priming UI anyway so the user is not stuck on an empty screen.',
+          '— priming services anyway; the settle will prime again.',
         );
       }
       // Set the guard before the await so re-entrant listener fires can't
-      // race a second prime.
-      _startupServicesPrimed = true;
+      // race a second prime. A fallback prime while the binder still runs is
+      // provisional: the real settle must prime again with the rebound
+      // clients.
+      _startupServicesPrimed = !activeProfile.isBinding;
       _startupSettleTimeout?.cancel();
       _startupSettleTimeout = null;
 
@@ -676,8 +697,8 @@ class _MainScreenState extends State<MainScreen>
     _bindingSettleListener = () => primeServicesOnBindingSettle();
     activeProfile.addListener(_bindingSettleListener!);
 
-    // Defence in depth: bypass the binder gate after a hard ceiling so a
-    // hung bind path can't strand the user on an empty screen.
+    // Defence in depth: prime libraries, watch sync, and downloads after a
+    // hard ceiling so a hung bind path can't hold them back indefinitely.
     _startupSettleTimeout?.cancel();
     _startupSettleTimeout = Timer(_startupSettleFallback, () {
       primeServicesOnBindingSettle(fromTimeout: true);
@@ -727,6 +748,8 @@ class _MainScreenState extends State<MainScreen>
   /// means a disconnected server drops out and its reconnect counts as newly
   /// online again. No-op while nothing new is online or no client resolves;
   /// per-item client resolution inside the drain picks the right server.
+  /// The newly online servers also refresh their downloads' collection
+  /// membership.
   void _resumeQueuedDownloadsForServers(Set<String> onlineServerIds, MediaServerClient? onlineClient) {
     final newlyOnline = onlineServerIds.difference(_resumeCoveredServerIds);
     if (!mounted || newlyOnline.isEmpty || onlineClient == null) {
@@ -740,10 +763,12 @@ class _MainScreenState extends State<MainScreen>
       ..clear()
       ..addAll(onlineServerIds);
     final downloadProvider = context.read<DownloadProvider>();
+    final serverManager = context.read<MultiServerProvider>().serverManager;
     unawaited(
       downloadProvider.ensureInitialized().then((_) {
         if (!mounted) return;
         downloadProvider.resumeQueuedDownloads(onlineClient);
+        unawaited(downloadProvider.syncDownloadCollections(serverManager, newlyOnline));
       }),
     );
   }
@@ -808,6 +833,9 @@ class _MainScreenState extends State<MainScreen>
   Future<void> _pushProfileSelection() async {
     _isShowingProfileSelection = true;
     _setTvosMenuPassthrough(false);
+    // A link waits for the viewer's choice; a different profile acts on it
+    // in its own session.
+    _detachDeepLinks();
     await Navigator.of(
       context,
       rootNavigator: true,
@@ -815,6 +843,25 @@ class _MainScreenState extends State<MainScreen>
     if (!mounted) return;
     _isShowingProfileSelection = false;
     _updateTvosMenuPassthrough();
+    _attachDeepLinks();
+  }
+
+  DeepLinkSession? _deepLinkSession;
+
+  /// Acts on `plezy://` links for this profile session ([DeepLinkService]).
+  void _attachDeepLinks() {
+    if (!mounted || _isShowingProfileSelection) return;
+    final session = _deepLinkSession ??= DeepLinkSession(
+      profileId: context.read<ActiveProfileProvider>().activeId,
+      launch: (link) async {
+        if (mounted) await launchDeepLink(context, link, isOffline: _isOffline);
+      },
+    );
+    DeepLinkService.instance.attach(session);
+  }
+
+  void _detachDeepLinks() {
+    if (_deepLinkSession case final session?) DeepLinkService.instance.detach(session);
   }
 
   Future<void> _checkForUpdatesOnStartup() async {
@@ -848,98 +895,23 @@ class _MainScreenState extends State<MainScreen>
     showSkipVersion: true,
   );
 
-  /// Set up the Watch Together navigation callback for guests
+  /// Lets the Watch Together room open its file when no player is open.
   void _setupWatchTogetherCallback() {
     try {
       final watchTogether = context.read<WatchTogetherProvider>();
-      watchTogether.onMediaSwitched = (ratingKey, serverId, mediaTitle) {
-        appLogger.d('WatchTogether: Media switch received - navigating to $mediaTitle');
-        return _navigateToWatchTogetherMedia(ratingKey, serverId);
-      };
-      watchTogether.onHostExitedPlayer = () {
-        appLogger.d('WatchTogether: Host exited player - exiting player for guest');
-        // Watch Together playback lives in the profile navigator; root-level
-        // dialogs/profile picker must not be affected.
-        if (!mounted) return;
-        final navigator = Navigator.of(context);
-        bool isVideoPlayerOnTop = false;
-        navigator.popUntil((route) {
-          if (route.isCurrent) {
-            isVideoPlayerOnTop = route.settings.name == kVideoPlayerRouteName;
-          }
-          return true;
-        });
-        if (isVideoPlayerOnTop && navigator.canPop()) {
-          navigator.pop();
-        }
-      };
+      _watchTogether = watchTogether;
+      watchTogether.navigatorOpener = _navigateToWatchTogetherMedia;
     } catch (e) {
       appLogger.w('Could not set up Watch Together callback', error: e);
     }
   }
 
-  /// Set up launcher shelf deep link handling for Android TV and tvOS taps.
-  void _setupSystemShelfDeepLink() {
-    if (!Platform.isAndroid && !PlatformDetector.isAppleTV()) return;
-
-    final systemShelf = SystemShelfService();
-
-    // Listen for deep links when app is already running (warm start)
-    systemShelf.onShelfItemTap = (contentId) {
-      appLogger.d('System shelf tap: $contentId');
-      _handleShelfContentId(contentId);
-    };
-    _systemShelfTapCallback = systemShelf.onShelfItemTap;
-
-    // Check for pending deep link from cold start
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final contentId = await systemShelf.getInitialDeepLink();
-      if (contentId != null && mounted) {
-        appLogger.d('System shelf initial deep link: $contentId');
-        unawaited(_handleShelfContentId(contentId));
-      }
-    });
-  }
-
-  /// Handle a launcher shelf content ID by fetching metadata and starting playback.
-  Future<void> _handleShelfContentId(String contentId) async {
-    if (!mounted) return;
-
-    final parsed = SystemShelfService.parseContentId(contentId);
-    if (parsed == null) {
-      appLogger.w('System shelf: invalid content ID: $contentId');
-      return;
-    }
-
-    final (serverId, ratingKey) = parsed;
-
+  /// Opens the Watch Together room's file in a new player. Returns whether
+  /// navigation started.
+  Future<bool> _navigateToWatchTogetherMedia(WatchCopy copy) async {
+    if (!mounted) return false;
     try {
-      final multiServer = context.read<MultiServerProvider>();
-      final client = multiServer.getClientForServer(serverId);
-
-      if (client == null) {
-        appLogger.w('System shelf: server $serverId not available');
-        return;
-      }
-
-      final metadata = await client.fetchItem(ratingKey);
-
-      if (metadata == null || !mounted) return;
-
-      unawaited(navigateToVideoPlayer(context, metadata: metadata));
-    } catch (e) {
-      appLogger.e('System shelf: failed to navigate to media', error: e);
-    }
-  }
-
-  /// Navigate to media when host switches content in Watch Together session.
-  /// Returns whether navigation was initiated; failures are re-dispatched on
-  /// the host's next state heartbeat.
-  Future<bool> _navigateToWatchTogetherMedia(String ratingKey, ServerId serverId) async {
-    if (!mounted) return false; // Check before any context usage
-
-    try {
-      return await navigateToWatchTogetherPlayback(context, ratingKey: ratingKey, serverId: serverId);
+      return await navigateToWatchTogetherPlayback(context, copy);
     } catch (e) {
       appLogger.e('WatchTogether: Failed to navigate to media', error: e);
       return false;
@@ -947,7 +919,7 @@ class _MainScreenState extends State<MainScreen>
   }
 
   bool _companionRemoteSetup = false;
-  ValueChanged<String>? _systemShelfTapCallback;
+  WatchTogetherProvider? _watchTogether;
 
   @override
   void didChangeDependencies() {
@@ -1064,6 +1036,7 @@ class _MainScreenState extends State<MainScreen>
 
   @override
   void dispose() {
+    if (_watchTogether?.navigatorOpener == _navigateToWatchTogetherMedia) _watchTogether?.navigatorOpener = null;
     WidgetsBinding.instance.removeObserver(this);
     _profileRouteObserver?.unsubscribe(this);
     if (PlatformDetector.isDesktopOS()) {
@@ -1103,27 +1076,29 @@ class _MainScreenState extends State<MainScreen>
         receiver.navigationOwner = null;
       }
     }
-    final shelfCallback = _systemShelfTapCallback;
-    final systemShelf = SystemShelfService();
-    if (shelfCallback != null && identical(systemShelf.onShelfItemTap, shelfCallback)) {
-      systemShelf.onShelfItemTap = null;
-    }
+    // A replacement MainScreen may already have attached its session.
+    _detachDeepLinks();
 
     super.dispose();
   }
 
   @override
-  void onWindowClose() {
+  void onWindowClose() => _requestDesktopExit();
+
+  /// Quits through the root exit observer so exit teardown runs. Shared by the
+  /// window close button and the root press-back-again exit; overlapping
+  /// requests join the one in flight.
+  void _requestDesktopExit() {
     unawaited(
-      _windowCloseFuture ??= _exitOnWindowClose().whenComplete(() {
-        _windowCloseFuture = null;
+      _desktopExitFuture ??= _exitDesktopGracefully().whenComplete(() {
+        _desktopExitFuture = null;
       }),
     );
   }
 
   /// The root exit observer owns the shutdown deadline. Do not time out its
   /// dispatch here or interpret a canceled close as permission to force exit.
-  Future<void> _exitOnWindowClose() async {
+  Future<void> _exitDesktopGracefully() async {
     try {
       await AppExitService.requestGracefulExit();
     } catch (e, st) {
@@ -1192,6 +1167,8 @@ class _MainScreenState extends State<MainScreen>
     if (!mounted) return;
 
     if (!context.read<ActiveProfileProvider>().requiresSelectionOnOpen(settingsService)) return;
+    // The link that brought the app forward names the profile to open.
+    if (DeepLinkService.instance.selectsProfile) return;
 
     await _pushProfileSelection();
   }
@@ -1280,6 +1257,9 @@ class _MainScreenState extends State<MainScreen>
         if (multiServerProvider.hasConnectedServers) {
           _offlineUntilConnected = false;
           _handleOfflineStatusChanged();
+        } else {
+          // Without this a failed press looks ignored (#2616).
+          showMainSnackBar(t.errors.connectionFailed);
         }
       } finally {
         setStateIfMounted(() => _isReconnecting = false);
@@ -1314,10 +1294,13 @@ class _MainScreenState extends State<MainScreen>
     _lastHasLiveTv = hasLiveTv;
 
     _handleTabAvailabilityChanged();
+    _applyPendingStartupTab();
+  }
 
-    // A preferred startup section (only Live TV can be deferred) just became
-    // available — switch to it via _selectTab so it gets the usual visibility
-    // and focus handling. _selectTab clears _pendingStartupTab.
+  /// A deferred startup section just became available — switch to it via
+  /// _selectTab so it gets the usual visibility and focus handling.
+  /// _selectTab clears _pendingStartupTab.
+  void _applyPendingStartupTab() {
     final pending = _pendingStartupTab;
     if (pending != null && _getVisibleTabs(_isOffline).any((t) => t.id == pending)) {
       _selectTab(pending);
@@ -1332,6 +1315,7 @@ class _MainScreenState extends State<MainScreen>
     _lastHasExplore = hasExplore;
 
     _handleTabAvailabilityChanged();
+    _applyPendingStartupTab();
   }
 
   void _handleOfflineStatusChanged() {
@@ -1388,10 +1372,15 @@ class _MainScreenState extends State<MainScreen>
     }
     _updateTvosMenuPassthrough();
 
-    // Refresh sidebar focus after rebuilding navigation
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _sideNavKey.currentState?.focusActiveItem();
-    });
+    // Refresh sidebar focus after rebuilding navigation. Not when the content
+    // held focus: it keeps it (or has it restored above), and pulling it into
+    // the rail would leave _isSidebarFocused false with the rail focused.
+    if (!restoreContentFocus) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _sideNavKey.currentState?.focusActiveItem();
+      });
+    }
 
     // Ensure profile settings are warmed when coming back online
     if (!_isOffline) {
@@ -1525,7 +1514,13 @@ class _MainScreenState extends State<MainScreen>
     final lastBackPressAt = _lastBackPressAt;
     if (lastBackPressAt != null && now.difference(lastBackPressAt) < _backExitWindow) {
       _lastBackPressAt = null;
-      unawaited(AppExitService.requestExit());
+      // AppExitService.requestExit is a required exit on desktop, which skips
+      // the root exit observer's teardown; quit the way the close button does.
+      if (PlatformDetector.isDesktopOS()) {
+        _requestDesktopExit();
+      } else {
+        unawaited(AppExitService.requestExit());
+      }
       return KeyEventResult.handled;
     }
 
@@ -1600,14 +1595,16 @@ class _MainScreenState extends State<MainScreen>
 
   /// Desktop physical-keyboard Escape at root Home is reserved for leaving
   /// window fullscreen; it never arms the press-back-again quit, so an Escape
-  /// aimed at fullscreen can't close the app (#1748). Remotes, gamepad B, and
-  /// system back keep the double-press exit path. On macOS this also keeps
-  /// player Escape away from native fullscreen, which is window state shared
-  /// by every route.
+  /// aimed at fullscreen can't close the app (#1748). In TV mode Escape is the
+  /// remote's Back and keeps the double-press exit path, as do gamepad B,
+  /// companion-remote back, and system back. On macOS this also keeps player
+  /// Escape away from native fullscreen, which is window state shared by
+  /// every route.
   KeyEventResult _handleDesktopRootEscape(KeyEvent event) {
     final tabs = _getVisibleTabs(_isOffline);
     final shouldHandle = shouldHandleDesktopRootEscape(
       isDesktop: PlatformDetector.isDesktopOS(),
+      isTV: PlatformDetector.isTV(),
       isPhysicalKeyboardEvent: event.isPhysicalKeyboardEvent,
       logicalKey: event.logicalKey,
       isCurrentRoute: ModalRoute.of(context)?.isCurrent == true,
@@ -1905,7 +1902,6 @@ class _MainScreenState extends State<MainScreen>
   /// Updated by _handleLiveTvChanged when the provider notifies.
   bool get _hasLiveTv => _lastHasLiveTv;
 
-  /// Get navigation tabs filtered by offline mode
   List<NavigationTab> _getVisibleTabs(bool isOffline) {
     return NavigationTab.getVisibleTabs(isOffline: isOffline, hasLiveTv: _hasLiveTv, hasExplore: _lastHasExplore);
   }
@@ -2120,7 +2116,7 @@ class _MainScreenState extends State<MainScreen>
                           Positioned.fill(
                             child: IgnorePointer(
                               child: AnimatedOpacity(
-                                opacity: _isSidebarInteractionExpanded ? 1.0 : 0.0,
+                                opacity: _isSidebarFloatingPanel ? 1.0 : 0.0,
                                 duration: SideNavigationRailState.expandDuration,
                                 curve: SideNavigationRailState.expandCurve,
                                 child: const ColoredBox(color: Color(0x66000000)),
@@ -2151,9 +2147,9 @@ class _MainScreenState extends State<MainScreen>
                                   _focusContent(restorePreviousFocus: false);
                                 },
                                 onNavigateToContent: _focusContent,
-                                onInteractionExpandedChanged: (expanded) {
-                                  if (_isSidebarInteractionExpanded == expanded) return;
-                                  setState(() => _isSidebarInteractionExpanded = expanded);
+                                onFloatingPanelChanged: (floating) {
+                                  if (_isSidebarFloatingPanel == floating) return;
+                                  setState(() => _isSidebarFloatingPanel = floating);
                                 },
                                 onReconnect: _triggerReconnect,
                               ),

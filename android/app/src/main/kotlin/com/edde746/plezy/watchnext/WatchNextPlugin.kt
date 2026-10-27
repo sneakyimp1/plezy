@@ -1,7 +1,6 @@
 package com.edde746.plezy.watchnext
 
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Handler
 import android.os.Looper
@@ -25,16 +24,6 @@ class WatchNextPlugin() :
     private const val TAG = "WatchNextPlugin"
     private const val METHOD_CHANNEL = "com.plezy/watch_next"
     internal const val SCHEMA_VERSION = 3
-    private var pendingDeepLink: String? = null
-
-    fun handleIntent(intent: Intent?): String? {
-      val data = intent?.data ?: return null
-      return if (data.scheme == "plezy" && data.authority == "play") {
-        data.getQueryParameter("content_id")
-      } else {
-        null
-      }
-    }
   }
 
   private var executorFactory: () -> ExecutorService = { Executors.newSingleThreadExecutor() }
@@ -103,7 +92,6 @@ class WatchNextPlugin() :
       "sync" -> handleSync(call, result)
       "clear" -> handleClear(call, result)
       "remove" -> handleRemove(call, result)
-      "getInitialDeepLink" -> handleGetInitialDeepLink(result)
       else -> result.notImplemented()
     }
   }
@@ -131,11 +119,7 @@ class WatchNextPlugin() :
       return result.error("INVALID_ARGS", "Too many items", null)
     }
     val items = itemsData.mapNotNull(::parseWatchNextItem)
-    executeOnIo(executor, result) {
-      if (!session.isOpen()) return@executeOnIo false
-      val provider = session.provider ?: return@executeOnIo false
-      val ownership = provider.claimOwnership(owner, generation) ?: return@executeOnIo false
-      if (!session.isOpen()) return@executeOnIo false
+    executeOwnedOnIo(session, executor, result, owner, generation) { provider, ownership ->
       provider.syncWatchNextPrograms(owner, generation, items, ownership, session::isOpen)
     }
   }
@@ -145,11 +129,7 @@ class WatchNextPlugin() :
     val executor = ioExecutor ?: return result.error("NOT_INITIALIZED", "Provider unavailable", null)
     val (owner, generation) = ownerArguments(call)
       ?: return result.error("INVALID_ARGS", "Invalid shelf envelope", null)
-    executeOnIo(executor, result) {
-      if (!session.isOpen()) return@executeOnIo false
-      val provider = session.provider ?: return@executeOnIo false
-      val ownership = provider.claimOwnership(owner, generation) ?: return@executeOnIo false
-      if (!session.isOpen()) return@executeOnIo false
+    executeOwnedOnIo(session, executor, result, owner, generation) { provider, ownership ->
       provider.clearAll(owner, generation, ownership, session::isOpen)
     }
   }
@@ -161,12 +141,25 @@ class WatchNextPlugin() :
       ?: return result.error("INVALID_ARGS", "Invalid shelf envelope", null)
     val contentId = call.argument<String>("contentId")
       ?: return result.error("INVALID_ARGS", "Missing contentId", null)
+    executeOwnedOnIo(session, executor, result, owner, generation) { provider, ownership ->
+      provider.removeItem(owner, generation, contentId, ownership, session::isOpen)
+    }
+  }
+
+  private fun executeOwnedOnIo(
+    session: EngineSession,
+    executor: ExecutorService,
+    result: MethodChannel.Result,
+    owner: String,
+    generation: Long,
+    operation: (WatchNextProvider, SystemShelfLifecycle.Ownership) -> Any?
+  ) {
     executeOnIo(executor, result) {
       if (!session.isOpen()) return@executeOnIo false
       val provider = session.provider ?: return@executeOnIo false
       val ownership = provider.claimOwnership(owner, generation) ?: return@executeOnIo false
       if (!session.isOpen()) return@executeOnIo false
-      provider.removeItem(owner, generation, contentId, ownership, session::isOpen)
+      operation(provider, ownership)
     }
   }
 
@@ -184,12 +177,6 @@ class WatchNextPlugin() :
     } catch (_: java.util.concurrent.RejectedExecutionException) {
       result.error("SHUTDOWN", "Plugin is shutting down", null)
     }
-  }
-
-  private fun handleGetInitialDeepLink(result: MethodChannel.Result) {
-    val contentId = pendingDeepLink
-    pendingDeepLink = null
-    result.success(contentId)
   }
 
   private fun parseWatchNextItem(data: Map<String, Any?>): WatchNextProvider.WatchNextItem? {
@@ -213,14 +200,5 @@ class WatchNextPlugin() :
       seasonNumber = (data["seasonNumber"] as? Number)?.toInt(),
       episodeNumber = (data["episodeNumber"] as? Number)?.toInt()
     )
-  }
-
-  fun notifyDeepLink(contentId: String) {
-    pendingDeepLink = contentId
-    try {
-      methodChannel.invokeMethod("onWatchNextTap", mapOf("contentId" to contentId))
-    } catch (_: Exception) {
-      Log.d(TAG, "Method channel not ready; deep link retained")
-    }
   }
 }

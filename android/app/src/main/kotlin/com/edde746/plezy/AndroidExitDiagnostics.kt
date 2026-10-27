@@ -9,7 +9,10 @@ internal data class HistoricalExitRecord(
   val reason: Int,
   val status: Int,
   val importance: Int,
-  val timestamp: Long
+  val timestamp: Long,
+  val description: String? = null,
+  val pssKb: Long = 0,
+  val rssKb: Long = 0
 )
 
 internal object AndroidStartupPhases {
@@ -147,23 +150,30 @@ internal object AndroidRuntimeDiagnostics {
     normalizationEnabled: Boolean? = null,
     uiState: String? = null
   ) {
-    val safeCodecContext = codecContext?.takeIf(allowedCodecContexts::contains)
-    val safeChannelCount = channelCount?.takeIf { it in 1..32 }
-    val safeSampleRate = sampleRate?.takeIf { it in 1..768_000 }
-    val safeDecoder = sanitizeDecoderName(selectedDecoder)
-    val safeUiState = sanitizeUiState(uiState)
+    val sanitized = sanitize(
+      RuntimeDiagnosticSnapshot(
+        codecContext = codecContext,
+        channelCount = channelCount,
+        sampleRate = sampleRate,
+        selectedDecoder = selectedDecoder,
+        passthroughEnabled = passthroughEnabled,
+        downmixEnabled = downmixEnabled,
+        normalizationEnabled = normalizationEnabled,
+        uiState = uiState
+      )
+    )
     val applicationContext = context.applicationContext
     executor.execute {
       runCatching {
         applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE).edit().apply {
-          safeCodecContext?.let { putString(KEY_CODEC_CONTEXT, it) }
-          safeChannelCount?.let { putInt(KEY_CHANNEL_COUNT, it) }
-          safeSampleRate?.let { putInt(KEY_SAMPLE_RATE, it) }
-          safeDecoder?.let { putString(KEY_SELECTED_DECODER, it) }
-          passthroughEnabled?.let { putBoolean(KEY_PASSTHROUGH_ENABLED, it) }
-          downmixEnabled?.let { putBoolean(KEY_DOWNMIX_ENABLED, it) }
-          normalizationEnabled?.let { putBoolean(KEY_NORMALIZATION_ENABLED, it) }
-          safeUiState?.let { putString(KEY_UI_STATE, it) }
+          sanitized.codecContext?.let { putString(KEY_CODEC_CONTEXT, it) }
+          sanitized.channelCount?.let { putInt(KEY_CHANNEL_COUNT, it) }
+          sanitized.sampleRate?.let { putInt(KEY_SAMPLE_RATE, it) }
+          sanitized.selectedDecoder?.let { putString(KEY_SELECTED_DECODER, it) }
+          sanitized.passthroughEnabled?.let { putBoolean(KEY_PASSTHROUGH_ENABLED, it) }
+          sanitized.downmixEnabled?.let { putBoolean(KEY_DOWNMIX_ENABLED, it) }
+          sanitized.normalizationEnabled?.let { putBoolean(KEY_NORMALIZATION_ENABLED, it) }
+          sanitized.uiState?.let { putString(KEY_UI_STATE, it) }
         }.commit()
       }
     }
@@ -189,17 +199,17 @@ internal object AndroidRuntimeDiagnostics {
 
   fun read(context: Context): RuntimeDiagnosticSnapshot {
     val preferences = context.applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
-    return RuntimeDiagnosticSnapshot(
-      codecContext = runCatching { preferences.getString(KEY_CODEC_CONTEXT, null) }
-        .getOrNull()
-        ?.takeIf(allowedCodecContexts::contains),
-      channelCount = runCatching { preferences.getInt(KEY_CHANNEL_COUNT, -1) }.getOrNull()?.takeIf { it in 1..32 },
-      sampleRate = runCatching { preferences.getInt(KEY_SAMPLE_RATE, -1) }.getOrNull()?.takeIf { it in 1..768_000 },
-      selectedDecoder = sanitizeDecoderName(runCatching { preferences.getString(KEY_SELECTED_DECODER, null) }.getOrNull()),
-      passthroughEnabled = readBoolean(preferences, KEY_PASSTHROUGH_ENABLED),
-      downmixEnabled = readBoolean(preferences, KEY_DOWNMIX_ENABLED),
-      normalizationEnabled = readBoolean(preferences, KEY_NORMALIZATION_ENABLED),
-      uiState = sanitizeUiState(runCatching { preferences.getString(KEY_UI_STATE, null) }.getOrNull())
+    return sanitize(
+      RuntimeDiagnosticSnapshot(
+        codecContext = runCatching { preferences.getString(KEY_CODEC_CONTEXT, null) }.getOrNull(),
+        channelCount = runCatching { preferences.getInt(KEY_CHANNEL_COUNT, -1) }.getOrNull(),
+        sampleRate = runCatching { preferences.getInt(KEY_SAMPLE_RATE, -1) }.getOrNull(),
+        selectedDecoder = runCatching { preferences.getString(KEY_SELECTED_DECODER, null) }.getOrNull(),
+        passthroughEnabled = readBoolean(preferences, KEY_PASSTHROUGH_ENABLED),
+        downmixEnabled = readBoolean(preferences, KEY_DOWNMIX_ENABLED),
+        normalizationEnabled = readBoolean(preferences, KEY_NORMALIZATION_ENABLED),
+        uiState = runCatching { preferences.getString(KEY_UI_STATE, null) }.getOrNull()
+      )
     )
   }
 
@@ -220,6 +230,9 @@ internal data class PreviousExitReport(
   val lowRam: Boolean,
   val startupPhase: String?,
   val runtime: RuntimeDiagnosticSnapshot,
+  val description: String?,
+  val pssKb: Long?,
+  val rssKb: Long?,
   val dedupeKey: String
 ) {
   fun toMap(): Map<String, Any> = buildMap {
@@ -232,6 +245,9 @@ internal data class PreviousExitReport(
     put("abi", abi)
     put("lowRam", lowRam)
     startupPhase?.let { put("startupPhase", it) }
+    description?.let { put("description", it) }
+    pssKb?.let { put("pssKb", it) }
+    rssKb?.let { put("rssKb", it) }
     runtime.codecContext?.let { put("codecContext", it) }
     runtime.channelCount?.let { put("channelCount", it) }
     runtime.sampleRate?.let { put("sampleRate", it) }
@@ -244,14 +260,29 @@ internal data class PreviousExitReport(
 }
 
 internal object AndroidExitReportMapper {
+  private const val REASON_EXIT_SELF = 1
+  private const val REASON_SIGNALED = 2
   private const val REASON_LOW_MEMORY = 3
   private const val REASON_CRASH = 4
   private const val REASON_CRASH_NATIVE = 5
   private const val REASON_ANR = 6
+  private const val REASON_INITIALIZATION_FAILURE = 7
+  private const val REASON_PERMISSION_CHANGE = 8
+  private const val REASON_EXCESSIVE_RESOURCE_USAGE = 9
   private const val REASON_USER_REQUESTED = 10
   private const val REASON_USER_STOPPED = 11
+  private const val REASON_DEPENDENCY_DIED = 12
+  private const val REASON_FREEZER = 14
+  private const val REASON_PACKAGE_STATE_CHANGE = 15
+  private const val REASON_PACKAGE_UPDATED = 16
   private const val MAX_DEVICE_MODEL_LENGTH = 80
+  private const val MAX_DESCRIPTION_LENGTH = 120
+  private const val MAX_MEMORY_KB = 64L * 1024 * 1024
   private val supportedAbis = setOf("arm64-v8a", "armeabi-v7a", "x86_64", "x86")
+  private val dottedNamePattern = Regex("[A-Za-z][A-Za-z0-9_]*(?:\\.[A-Za-z0-9_]+)+")
+  private val numberPattern = Regex("[0-9]+")
+  private val disallowedDescriptionCharacters = Regex("[^A-Za-z0-9 _.:,()\\[\\]#<>/=-]+")
+  private val whitespacePattern = Regex("\\s+")
 
   fun map(
     record: HistoricalExitRecord,
@@ -281,17 +312,49 @@ internal object AndroidExitReportMapper {
       lowRam = lowRam,
       startupPhase = AndroidStartupPhases.sanitize(startupPhase),
       runtime = AndroidRuntimeDiagnostics.sanitize(runtime),
+      description = sanitizeDescription(record.description),
+      pssKb = record.pssKb.takeIf { it in 1..MAX_MEMORY_KB },
+      rssKb = record.rssKb.takeIf { it in 1..MAX_MEMORY_KB },
       dedupeKey = dedupeKey
     )
   }
 
   fun mapReason(reason: Int): String = when (reason) {
+    REASON_EXIT_SELF -> "exit_self"
+    REASON_SIGNALED -> "signaled"
+    REASON_LOW_MEMORY -> "low_memory"
     REASON_CRASH -> "crash"
     REASON_CRASH_NATIVE -> "native_crash"
     REASON_ANR -> "anr"
-    REASON_LOW_MEMORY -> "low_memory"
+    REASON_INITIALIZATION_FAILURE -> "initialization_failure"
+    REASON_PERMISSION_CHANGE -> "permission_change"
+    REASON_EXCESSIVE_RESOURCE_USAGE -> "excessive_resource_usage"
     REASON_USER_REQUESTED, REASON_USER_STOPPED -> "user_requested"
+    REASON_DEPENDENCY_DIED -> "dependency_died"
+    REASON_FREEZER -> "freezer"
+    REASON_PACKAGE_STATE_CHANGE -> "package_state_change"
+    REASON_PACKAGE_UPDATED -> "package_updated"
     else -> "other"
+  }
+
+  /**
+   * The system's free-text exit description (`"[FORCE STOP] stop <pkg> due to
+   * from pid #"`, `"excessive cpu # during # dur=# limit=#"`) names the kill path that
+   * [mapReason]'s codes collapse. Dotted names - other apps' packages, a
+   * server's host name - and every number are masked, and only a fixed ASCII
+   * set survives, so the text can identify neither the device nor its owner.
+   */
+  fun sanitizeDescription(raw: String?): String? {
+    if (raw == null) return null
+    return raw
+      .replace(dottedNamePattern, "<pkg>")
+      .replace(numberPattern, "#")
+      .replace(disallowedDescriptionCharacters, " ")
+      .replace(whitespacePattern, " ")
+      .trim()
+      .take(MAX_DESCRIPTION_LENGTH)
+      .trim()
+      .ifEmpty { null }
   }
 
   fun sanitizeDeviceModel(raw: String): String {

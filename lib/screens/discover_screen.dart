@@ -21,6 +21,7 @@ import '../media/media_hub.dart';
 import '../utils/media_image_helper.dart';
 import '../utils/content_utils.dart';
 import '../widgets/cycling_media_backdrop.dart';
+import '../widgets/hero_carousel_backdrop.dart';
 import '../widgets/optimized_media_image.dart' show ClearLogoImage, blurArtwork;
 import '../widgets/toolbar_scrim.dart';
 import '../widgets/system_clock.dart';
@@ -95,7 +96,6 @@ class _DiscoverScreenState extends State<DiscoverScreen>
   bool _switchingProfile = false;
   final PageController _heroController = PageController();
   final ScrollController _scrollController = ScrollController();
-  int _currentHeroIndex = 0;
   final ValueNotifier<int> _heroIndex = ValueNotifier<int>(0);
   Timer? _autoScrollTimer;
   Timer? _indicatorTimer;
@@ -107,6 +107,11 @@ class _DiscoverScreenState extends State<DiscoverScreen>
 
   bool _initialLoadComplete = false;
   bool _pendingTvBrowseRailFocus = false;
+
+  /// The armed rail claim is the screen's first focus (its initial load),
+  /// which a root route covering the session holds for the uncover instead of
+  /// dropping; see [TvBrowseRailState.requestInitialFocus].
+  bool _pendingTvBrowseRailFocusIsInitial = false;
 
   /// Primary focus when the rail claim was armed; see [_railClaimAbandoned].
   FocusNode? _railClaimFocusOrigin;
@@ -250,7 +255,7 @@ class _DiscoverScreenState extends State<DiscoverScreen>
     }
   }
 
-  void _focusTvBrowseRailWhenReady({bool immediate = false}) {
+  void _focusTvBrowseRailWhenReady({bool immediate = false, bool initial = false}) {
     if (!PlatformDetector.isTV()) return;
     if (!_isTabVisible || !(ModalRoute.of(context)?.isCurrent ?? false)) {
       _pendingTvBrowseRailFocus = false;
@@ -258,12 +263,12 @@ class _DiscoverScreenState extends State<DiscoverScreen>
     }
 
     _pendingTvBrowseRailFocus = true;
+    _pendingTvBrowseRailFocusIsInitial = initial;
     _railClaimFocusOrigin = FocusManager.instance.primaryFocus;
     if (immediate && _tvBrowseHubs.isNotEmpty) {
       final rail = _tvBrowseRailKey.currentState;
       if (rail != null) {
-        _pendingTvBrowseRailFocus = false;
-        rail.requestFocus();
+        _claimTvBrowseRail(rail);
         return;
       }
     }
@@ -277,9 +282,17 @@ class _DiscoverScreenState extends State<DiscoverScreen>
       if (_tvBrowseHubs.isEmpty) return;
       final rail = _tvBrowseRailKey.currentState;
       if (rail == null) return;
-      _pendingTvBrowseRailFocus = false;
-      rail.requestFocus();
+      _claimTvBrowseRail(rail);
     });
+  }
+
+  void _claimTvBrowseRail(TvBrowseRailState rail) {
+    _pendingTvBrowseRailFocus = false;
+    if (_pendingTvBrowseRailFocusIsInitial) {
+      rail.requestInitialFocus();
+    } else {
+      rail.requestFocus();
+    }
   }
 
   /// A rail-focus request stays armed while the rail has no hubs to focus
@@ -307,7 +320,7 @@ class _DiscoverScreenState extends State<DiscoverScreen>
       _pendingTvBrowseRailFocus = false;
       return;
     }
-    _focusTvBrowseRailWhenReady();
+    _focusTvBrowseRailWhenReady(initial: _pendingTvBrowseRailFocusIsInitial);
   }
 
   /// Handle vertical navigation between hubs
@@ -325,7 +338,6 @@ class _DiscoverScreenState extends State<DiscoverScreen>
     );
   }
 
-  /// Navigate focus to the sidebar
   void _navigateToSidebar() {
     MainScreenFocusScope.focusSidebarOf(context);
   }
@@ -363,17 +375,14 @@ class _DiscoverScreenState extends State<DiscoverScreen>
     final generation = _discover.loadGeneration;
     final isNewLoad = generation != _seenLoadGeneration;
     _seenLoadGeneration = generation;
-    final heroOutOfBounds = _currentHeroIndex >= _onDeck.length;
+    final heroOutOfBounds = _heroIndex.value >= _onDeck.length;
     final signature = _renderSignature;
     final renderChanged = isNewLoad || heroOutOfBounds || signature != _seenRenderSignature;
     _seenRenderSignature = signature;
 
     if (renderChanged) {
       setState(() {
-        if (isNewLoad || heroOutOfBounds) {
-          _currentHeroIndex = 0;
-          _heroIndex.value = 0;
-        }
+        if (isNewLoad || heroOutOfBounds) _heroIndex.value = 0;
         _updateHubKeys();
       });
     }
@@ -391,7 +400,7 @@ class _DiscoverScreenState extends State<DiscoverScreen>
     if (!_initialLoadComplete) {
       if (PlatformDetector.isTV() && (_onDeck.isNotEmpty || _hubs.isNotEmpty)) {
         _initialLoadComplete = true;
-        _focusTvBrowseRailWhenReady();
+        _focusTvBrowseRailWhenReady(initial: true);
       } else if (!PlatformDetector.isTV() && _onDeck.isNotEmpty) {
         _initialLoadComplete = true;
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -432,20 +441,21 @@ class _DiscoverScreenState extends State<DiscoverScreen>
       },
       onUp: _focusTopActions,
       onLeft: () {
-        if (_currentHeroIndex > 0) {
+        if (_heroIndex.value > 0) {
           _heroController.previousPage(duration: tokens(context).slow, curve: Curves.easeInOut);
         } else {
           _navigateToSidebar();
         }
       },
       onRight: () {
-        if (_currentHeroIndex < _onDeck.length - 1) {
+        if (_heroIndex.value < _onDeck.length - 1) {
           _heroController.nextPage(duration: tokens(context).slow, curve: Curves.easeInOut);
         }
       },
       onSelect: () {
-        if (_onDeck.isNotEmpty && _currentHeroIndex < _onDeck.length) {
-          navigateToMediaItem(context, _onDeck[_currentHeroIndex], playDirectly: true);
+        final heroIndex = _heroIndex.value;
+        if (_onDeck.isNotEmpty && heroIndex < _onDeck.length) {
+          navigateToMediaItem(context, _onDeck[heroIndex], playDirectly: true);
         }
       },
     )(node, event);
@@ -499,12 +509,9 @@ class _DiscoverScreenState extends State<DiscoverScreen>
       }
 
       // Validate current index is within bounds before calculating next page
-      if (_currentHeroIndex >= _onDeck.length) {
-        _currentHeroIndex = 0;
-        _heroIndex.value = 0;
-      }
+      if (_heroIndex.value >= _onDeck.length) _heroIndex.value = 0;
 
-      final nextPage = (_currentHeroIndex + 1) % _onDeck.length;
+      final nextPage = (_heroIndex.value + 1) % _onDeck.length;
       _heroController.animateToPage(nextPage, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
       // Wait for page transition to complete before resetting progress
       Future.delayed(const Duration(milliseconds: 500), () {
@@ -592,7 +599,7 @@ class _DiscoverScreenState extends State<DiscoverScreen>
     }
 
     // Center the active dot when possible
-    final center = _currentHeroIndex;
+    final center = _heroIndex.value;
     final int start = (center - 2).clamp(0, totalDots - 5);
     final int end = start + 4; // 5 dots total (0-4 inclusive)
 
@@ -657,8 +664,9 @@ class _DiscoverScreenState extends State<DiscoverScreen>
     // `initState` already fired `load()`. On cold start that pass is still
     // running when the online-entry hook primes the tab, and asking again only
     // queues an identical trailing pass — the whole home fan-out twice (#1784).
-    // When nothing is in flight (reconnect-from-offline, or a first pass that
-    // gave up because no server was online yet) a real refresh is still owed.
+    // When nothing is in flight (reconnect-from-offline, a first pass that
+    // gave up because no server was online yet, or one skipped because the
+    // profile was still binding) a real refresh is still owed.
     if (_discover.isLoadInFlight) return;
     fullRefresh();
   }
@@ -811,6 +819,15 @@ class _DiscoverScreenState extends State<DiscoverScreen>
           Consumer2<WatchTogetherProvider, CompanionRemoteProvider>(
             builder: (context, watchTogether, companionRemote, _) {
               final isDesktop = PlatformDetector.shouldActAsRemoteHost(context);
+              void openWatchTogether() =>
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const WatchTogetherScreen()));
+              void openCompanionRemote() {
+                if (isDesktop) {
+                  RemoteSessionDialog.show(context);
+                } else {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const MobileRemoteScreen()));
+                }
+              }
 
               return FocusableActionBar(
                 key: _actionBarKey,
@@ -820,8 +837,7 @@ class _DiscoverScreenState extends State<DiscoverScreen>
                   FocusableAction(icon: Symbols.refresh_rounded, iconColor: foregroundColor, onPressed: manualRefresh),
                   // Watch Together
                   FocusableAction(
-                    onPressed: () =>
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => const WatchTogetherScreen())),
+                    onPressed: openWatchTogether,
                     child: Stack(
                       children: [
                         IconButton(
@@ -830,8 +846,7 @@ class _DiscoverScreenState extends State<DiscoverScreen>
                             fill: watchTogether.isInSession ? 1 : 0,
                             color: watchTogether.isInSession ? colorScheme.primary : foregroundColor,
                           ),
-                          onPressed: () =>
-                              Navigator.push(context, MaterialPageRoute(builder: (_) => const WatchTogetherScreen())),
+                          onPressed: openWatchTogether,
                           tooltip: t.watchTogether.title,
                         ),
                         if (watchTogether.isInSession && watchTogether.participantCount > 1)
@@ -855,13 +870,7 @@ class _DiscoverScreenState extends State<DiscoverScreen>
                   ),
                   // Companion Remote
                   FocusableAction(
-                    onPressed: () {
-                      if (isDesktop) {
-                        RemoteSessionDialog.show(context);
-                      } else {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const MobileRemoteScreen()));
-                      }
-                    },
+                    onPressed: openCompanionRemote,
                     child: Stack(
                       children: [
                         IconButton(
@@ -870,16 +879,7 @@ class _DiscoverScreenState extends State<DiscoverScreen>
                             fill: companionRemote.isConnected ? 1 : 0,
                             color: companionRemote.isConnected ? colorScheme.primary : foregroundColor,
                           ),
-                          onPressed: () {
-                            if (isDesktop) {
-                              RemoteSessionDialog.show(context);
-                            } else {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const MobileRemoteScreen()),
-                              );
-                            }
-                          },
+                          onPressed: openCompanionRemote,
                           tooltip: t.companionRemote.title,
                         ),
                         if (companionRemote.isConnected)
@@ -1087,12 +1087,29 @@ class _DiscoverScreenState extends State<DiscoverScreen>
       onRemoveFromContinueWatching: _discover.refreshContinueWatching,
       isContinueWatchingHub: (hub) => hub.isContinueWatchingHub,
       usesContinueWatchingAction: (hub) => hub.usesContinueWatchingAction,
-      loadMoreItems: (hub) =>
-          hub.id == 'continue_watching' ? _discover.loadAllContinueWatching() : Future.value(hub.items),
+      // Every other hub pages from its server in View All, as on phones; handing
+      // it the preview items only showed that preview again.
+      loadMoreItems: (hub) => hub.id == 'continue_watching' ? _discover.loadAllContinueWatching : null,
       onNavigateUp: _focusTopActions,
       onNavigateToSidebar: _navigateToSidebar,
       tallPosterScale: TvBrowseRailLayout.compactTallPosterScale,
+      widePosterScale: TvBrowseRailLayout.compactEpisodeThumbnailScale,
     );
+  }
+
+  // Cached for the same reason: every provider notification (Continue
+  // Watching refreshes on return from Detail or the player) rebuilds this
+  // screen, and the toolbar was most of that rebuild. Its own content reads
+  // only the theme, translations and _switchingProfile; the providers and
+  // clock inside it rebuild themselves.
+  Widget? _tvToolbarOverlayWidget;
+  (ThemeData, Translations, bool)? _tvToolbarOverlayWidgetKey;
+
+  Widget _cachedTvToolbarOverlay() {
+    final key = (Theme.of(context), t, _switchingProfile);
+    if (_tvToolbarOverlayWidget != null && key == _tvToolbarOverlayWidgetKey) return _tvToolbarOverlayWidget!;
+    _tvToolbarOverlayWidgetKey = key;
+    return _tvToolbarOverlayWidget = TvToolbarOverlay(child: _buildOverlaidAppBar());
   }
 
   Widget _buildTvContent(BuildContext context) {
@@ -1134,7 +1151,7 @@ class _DiscoverScreenState extends State<DiscoverScreen>
               bottom: 0,
               child: _cachedTvBrowseRail(browseHubs, showServerName: showServerNameOnHubs || hubsSpanMultipleServers),
             ),
-          TvToolbarOverlay(child: _buildOverlaidAppBar()),
+          _cachedTvToolbarOverlay(),
           if (_switchingProfile) const ProfileSwitchingOverlay(),
         ],
       ),
@@ -1147,15 +1164,17 @@ class _DiscoverScreenState extends State<DiscoverScreen>
     final isTv = PlatformDetector.isTV();
     final viewportHeight = MediaQuery.sizeOf(context).height;
     final isLandscape = MediaQuery.orientationOf(context) == Orientation.landscape;
-    // Mobile keeps its fixed hero, except that a landscape phone is shorter
-    // than the hero itself; fill the viewport there and let the item compact.
+    // Mobile keeps its fixed hero, except where that would swamp the screen.
+    // A landscape phone is shorter than the hero itself: fill the viewport
+    // and let the item compact. A short portrait viewport (iPhone Duo, compact
+    // phones) caps it at about two thirds so the first hub row still shows.
     final heroHeight = isTv
         ? viewportHeight * 0.82
         : useSideNav
         ? viewportHeight * 0.75
         : isLandscape
         ? math.min(500 + statusBarHeight, viewportHeight)
-        : 500 + statusBarHeight;
+        : math.min(500 + statusBarHeight, viewportHeight * 0.65);
     return SliverToBoxAdapter(
       child: Focus(
         focusNode: _heroFocusNode,
@@ -1165,12 +1184,12 @@ class _DiscoverScreenState extends State<DiscoverScreen>
           child: Stack(
             clipBehavior: Clip.none,
             children: [
+              Positioned.fill(child: _buildHeroBackdrop(heroHeight)),
               PageView.builder(
                 controller: _heroController,
                 itemCount: _onDeck.length,
                 onPageChanged: (index) {
                   if (index >= 0 && index < _onDeck.length) {
-                    _currentHeroIndex = index;
                     _heroIndex.value = index;
                     _resetAutoScrollTimer();
                   }
@@ -1188,87 +1207,92 @@ class _DiscoverScreenState extends State<DiscoverScreen>
                   bottom: 16,
                   left: -26,
                   right: 0,
-                  child: Row(
-                    mainAxisAlignment: .center,
-                    children: [
-                      // Pause/Play button
-                      ClickableCursor(
-                        child: GestureDetector(
-                          onTap: () {
-                            if (_isAutoScrollPaused) {
-                              _resumeAutoScroll();
-                            } else {
-                              _pauseAutoScroll();
-                            }
-                          },
-                          child: AppIcon(
-                            _isAutoScrollPaused ? Symbols.play_arrow_rounded : Symbols.pause_rounded,
-                            fill: 1,
-                            color: Theme.of(context).colorScheme.onSurface,
-                            size: 18,
-                            semanticLabel: _isAutoScrollPaused
-                                ? t.accessibility.autoScrollPlay
-                                : t.accessibility.autoScrollPause,
+                  // Centered on the same safe width as the hero item above it.
+                  child: SafeArea(
+                    top: false,
+                    bottom: false,
+                    child: Row(
+                      mainAxisAlignment: .center,
+                      children: [
+                        // Pause/Play button
+                        ClickableCursor(
+                          child: GestureDetector(
+                            onTap: () {
+                              if (_isAutoScrollPaused) {
+                                _resumeAutoScroll();
+                              } else {
+                                _pauseAutoScroll();
+                              }
+                            },
+                            child: AppIcon(
+                              _isAutoScrollPaused ? Symbols.play_arrow_rounded : Symbols.pause_rounded,
+                              fill: 1,
+                              color: Theme.of(context).colorScheme.onSurface,
+                              size: 18,
+                              semanticLabel: _isAutoScrollPaused
+                                  ? t.accessibility.autoScrollPlay
+                                  : t.accessibility.autoScrollPause,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      ValueListenableBuilder<int>(
-                        valueListenable: _heroIndex,
-                        builder: (context, _, _) {
-                          final range = _getVisibleDotRange();
-                          return Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: List.generate(range.end - range.start + 1, (i) {
-                              final index = range.start + i;
-                              final isActive = _currentHeroIndex == index;
-                              final dotSize = _getDotSize(index, range.start, range.end);
+                        const SizedBox(width: 8),
+                        ValueListenableBuilder<int>(
+                          valueListenable: _heroIndex,
+                          builder: (context, heroIndex, _) {
+                            final range = _getVisibleDotRange();
+                            return Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: List.generate(range.end - range.start + 1, (i) {
+                                final index = range.start + i;
+                                final isActive = heroIndex == index;
+                                final dotSize = _getDotSize(index, range.start, range.end);
 
-                              return isActive
-                                  ? ValueListenableBuilder<double>(
-                                      valueListenable: _indicatorProgress,
-                                      builder: (context, progress, child) {
-                                        final maxWidth = dotSize * 3;
-                                        final fillWidth = dotSize + ((maxWidth - dotSize) * progress);
-                                        final onSurface = Theme.of(context).colorScheme.onSurface;
-                                        return Container(
-                                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                                          width: maxWidth,
-                                          height: dotSize,
-                                          decoration: BoxDecoration(
-                                            color: onSurface.withValues(alpha: 0.4),
-                                            borderRadius: BorderRadius.circular(dotSize / 2),
-                                          ),
-                                          child: Align(
-                                            alignment: .centerLeft,
-                                            child: Container(
-                                              width: fillWidth,
-                                              height: dotSize,
-                                              decoration: BoxDecoration(
-                                                color: onSurface,
-                                                borderRadius: BorderRadius.circular(dotSize / 2),
+                                return isActive
+                                    ? ValueListenableBuilder<double>(
+                                        valueListenable: _indicatorProgress,
+                                        builder: (context, progress, child) {
+                                          final maxWidth = dotSize * 3;
+                                          final fillWidth = dotSize + ((maxWidth - dotSize) * progress);
+                                          final onSurface = Theme.of(context).colorScheme.onSurface;
+                                          return Container(
+                                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                                            width: maxWidth,
+                                            height: dotSize,
+                                            decoration: BoxDecoration(
+                                              color: onSurface.withValues(alpha: 0.4),
+                                              borderRadius: BorderRadius.circular(dotSize / 2),
+                                            ),
+                                            child: Align(
+                                              alignment: .centerLeft,
+                                              child: Container(
+                                                width: fillWidth,
+                                                height: dotSize,
+                                                decoration: BoxDecoration(
+                                                  color: onSurface,
+                                                  borderRadius: BorderRadius.circular(dotSize / 2),
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                        );
-                                      },
-                                    )
-                                  : AnimatedContainer(
-                                      duration: tokens(context).slow,
-                                      curve: Curves.easeInOut,
-                                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                                      width: dotSize,
-                                      height: dotSize,
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
-                                        borderRadius: BorderRadius.circular(dotSize / 2),
-                                      ),
-                                    );
-                            }),
-                          );
-                        },
-                      ),
-                    ],
+                                          );
+                                        },
+                                      )
+                                    : AnimatedContainer(
+                                        duration: tokens(context).slow,
+                                        curve: Curves.easeInOut,
+                                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                                        width: dotSize,
+                                        height: dotSize,
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                                          borderRadius: BorderRadius.circular(dotSize / 2),
+                                        ),
+                                      );
+                              }),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
             ],
@@ -1278,20 +1302,113 @@ class _DiscoverScreenState extends State<DiscoverScreen>
     );
   }
 
+  /// Artwork and scrim behind the hero pages. One shared layer instead of
+  /// per-page artwork, so a swipe crossfades between backdrops rather than
+  /// sliding two images past each other with a hard seam (#2660).
+  Widget _buildHeroBackdrop(double heroHeight) {
+    final isTv = PlatformDetector.isTV();
+    return IgnorePointer(
+      child: Stack(
+        fit: StackFit.expand,
+        clipBehavior: Clip.none,
+        children: [
+          // Vertical-scroll parallax plus a fade/zoom when the hero first shows.
+          ClipRect(
+            child: AnimatedBuilder(
+              animation: _scrollController,
+              builder: (context, child) {
+                final scrollOffset = _scrollController.hasClients ? _scrollController.offset : 0.0;
+                return Transform.translate(offset: Offset(0, scrollOffset * 0.3), child: child);
+              },
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.0, end: 1.0),
+                duration: const Duration(milliseconds: 800),
+                curve: Curves.easeOut,
+                builder: (context, value, child) {
+                  return Transform.scale(
+                    scale: 1.0 + (0.1 * (1 - value)),
+                    child: Opacity(opacity: value, child: child),
+                  );
+                },
+                child: ValueListenableBuilder<int>(
+                  valueListenable: _heroIndex,
+                  builder: (context, heroIndex, _) => HeroCarouselBackdrop(
+                    controller: _heroController,
+                    currentIndex: heroIndex,
+                    itemCount: _onDeck.length,
+                    backdropBuilder: (context, index, active, artSize) =>
+                        _buildHeroArtwork(_onDeck[index], heroHeight, artSize: artSize, active: active),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Gradient Overlay - blends into scaffold background
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: -4, // Extend past stack bounds to ensure coverage
+            child: Builder(
+              builder: (context) {
+                final bgColor = Theme.of(context).scaffoldBackgroundColor;
+                return Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      // Reach full bg before the bottom edge so the hero
+                      // blends seamlessly into the content below and the
+                      // page dots sit on a solid band.
+                      colors: [Colors.transparent, bgColor.withValues(alpha: 0.9), bgColor, bgColor],
+                      stops: isTv ? const [0.25, 0.78, 0.94, 1.0] : const [0.5, 0.85, 0.94, 1.0],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeroArtwork(MediaItem heroItem, double heroHeight, {required Size artSize, required bool active}) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final heroAspectRatio = screenWidth / heroHeight;
+    final heroArtPaths = heroItem.heroArtCandidates(containerAspectRatio: heroAspectRatio);
+    final fallbackColor = Theme.of(context).colorScheme.surfaceContainerHighest;
+    if (heroArtPaths.isEmpty) return ColoredBox(color: fallbackColor);
+    // heroClient resolves to the actual server's client (Plex or Jellyfin) so
+    // each backend's transcoder builds sized URLs. Size the request to the
+    // drift box, which is wider than the hero, so the art stays sharp.
+    return blurArtwork(
+      CyclingMediaBackdrop(
+        mediaKey: heroItem.globalKey,
+        imagePaths: heroItem.heroRotationPaths(containerAspectRatio: heroAspectRatio),
+        fallbackImagePaths: heroArtPaths,
+        client: _getMediaClientForItem(heroItem),
+        active: active && _isTabVisible,
+        width: artSize.width,
+        height: artSize.height,
+        fallbackColor: fallbackColor,
+      ),
+    );
+  }
+
   Widget _buildHeroItem(MediaItem heroItem, double heroHeight) {
     final heroClient = _getMediaClientForItem(heroItem);
     final isEpisode = heroItem.isEpisode;
     final showName = heroItem.grandparentTitle ?? heroItem.displayTitle;
     final screenWidth = MediaQuery.sizeOf(context).width;
-    final heroAspectRatio = screenWidth / heroHeight;
-    final heroArtPaths = heroItem.heroArtCandidates(containerAspectRatio: heroAspectRatio);
     final isLargeScreen = ScreenBreakpoints.isWideTabletOrLarger(screenWidth);
     final isTv = PlatformDetector.isTV();
     final alignLeft = isTv || isLargeScreen;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    // A landscape phone hands the hero the whole ~400dp viewport; the usual
-    // logo and bottom offset would push the content up into the top bar.
+    // A landscape phone hands the hero its whole ~400dp viewport, and a short
+    // portrait one its capped height; the usual logo and bottom offset would
+    // push the content up into the top bar.
     final compact = !isTv && heroHeight < 450;
     final heroLogoWidth = isTv ? TvLayoutConstants.heroLogoWidth : 400.0;
     final heroLogoHeight = isTv
@@ -1319,6 +1436,9 @@ class _DiscoverScreenState extends State<DiscoverScreen>
       hint: t.accessibility.tapToPlay,
       child: ClickableCursor(
         child: GestureDetector(
+          // The artwork lives in the shared backdrop below the PageView, so
+          // the page itself must claim taps on its empty area.
+          behavior: HitTestBehavior.opaque,
           onTap: () {
             appLogger.d('Activating hero item: ${heroItem.title}');
             navigateToMediaItem(context, heroItem, playDirectly: true);
@@ -1327,84 +1447,14 @@ class _DiscoverScreenState extends State<DiscoverScreen>
             fit: StackFit.expand,
             clipBehavior: Clip.none,
             children: [
-              // Background Image with fade/zoom animation and parallax
-              if (heroArtPaths.isNotEmpty)
-                ClipRect(
-                  child: AnimatedBuilder(
-                    animation: _scrollController,
-                    builder: (context, child) {
-                      final scrollOffset = _scrollController.hasClients ? _scrollController.offset : 0.0;
-                      return Transform.translate(offset: Offset(0, scrollOffset * 0.3), child: child);
-                    },
-                    child: TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0.0, end: 1.0),
-                      duration: const Duration(milliseconds: 800),
-                      curve: Curves.easeOut,
-                      builder: (context, value, child) {
-                        return Transform.scale(
-                          scale: 1.0 + (0.1 * (1 - value)),
-                          child: Opacity(opacity: value, child: child),
-                        );
-                      },
-                      child: Builder(
-                        builder: (context) {
-                          // heroClient resolves to the actual server's client
-                          // (Plex or Jellyfin) so each backend's transcoder
-                          // builds sized URLs.
-                          return blurArtwork(
-                            CyclingMediaBackdrop(
-                              mediaKey: heroItem.globalKey,
-                              imagePaths: heroItem.heroRotationPaths(containerAspectRatio: heroAspectRatio),
-                              fallbackImagePaths: heroArtPaths,
-                              client: heroClient,
-                              active: _isTabVisible,
-                              width: screenWidth,
-                              height: heroHeight,
-                              fallbackColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                )
-              else
-                ColoredBox(color: colorScheme.surfaceContainerHighest),
-
-              // Gradient Overlay - blends into scaffold background
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: -4, // Extend past stack bounds to ensure coverage
-                child: IgnorePointer(
-                  child: Builder(
-                    builder: (context) {
-                      final bgColor = Theme.of(context).scaffoldBackgroundColor;
-                      return Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            // Reach full bg before the bottom edge so the hero
-                            // blends seamlessly into the content below and the
-                            // page dots sit on a solid band.
-                            colors: [Colors.transparent, bgColor.withValues(alpha: 0.9), bgColor, bgColor],
-                            stops: isTv ? const [0.25, 0.78, 0.94, 1.0] : const [0.5, 0.85, 0.94, 1.0],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-
-              // Content with responsive alignment
+              // Content with responsive alignment. Compact trims the offset
+              // but still clears the page indicator row (bottom 16, ~18 tall)
+              // that sits over every handheld hero.
               Positioned(
                 bottom: isTv
                     ? 88
                     : compact
-                    ? 24
+                    ? 44
                     : isLargeScreen
                     ? 80
                     : 50,
@@ -1438,24 +1488,31 @@ class _DiscoverScreenState extends State<DiscoverScreen>
                           crossAxisAlignment: alignLeft ? CrossAxisAlignment.start : CrossAxisAlignment.center,
                           mainAxisSize: .min,
                           children: [
-                            // Show logo, falling back to the name/title
-                            ClearLogoImage(
-                              client: heroClient,
-                              logoPath: heroItem.clearLogoPath,
-                              width: heroLogoWidth,
-                              height: heroLogoHeight,
-                              alignment: alignLeft ? Alignment.bottomLeft : Alignment.bottomCenter,
-                              // The hero scrim washes artwork toward the scaffold
-                              // background; light themes recolor light-toned logos.
-                              logoToneTarget: logoToneTargetFor(
-                                surface: theme.scaffoldBackgroundColor,
-                                foreground: colorScheme.onSurface,
-                              ),
-                              fallbackBuilder: (context) => FittingTitleText(
-                                showName,
-                                style: heroTitleStyle,
-                                textAlign: alignLeft ? TextAlign.left : TextAlign.center,
-                                alignment: alignLeft ? Alignment.centerLeft : Alignment.center,
+                            // Show logo, falling back to the name/title. The
+                            // logo keeps its slot; the title gets a wider one.
+                            LayoutBuilder(
+                              builder: (context, constraints) => ClearLogoImage(
+                                client: heroClient,
+                                logoPath: heroItem.clearLogoPath,
+                                width: math.min(heroLogoWidth, constraints.maxWidth),
+                                height: heroLogoHeight,
+                                fallbackWidth: ClearLogoImage.fallbackWidthFor(
+                                  logoWidth: heroLogoWidth,
+                                  available: constraints.maxWidth,
+                                ),
+                                alignment: alignLeft ? Alignment.bottomLeft : Alignment.bottomCenter,
+                                // The hero scrim washes artwork toward the scaffold
+                                // background; light themes recolor light-toned logos.
+                                logoToneTarget: logoToneTargetFor(
+                                  surface: theme.scaffoldBackgroundColor,
+                                  foreground: colorScheme.onSurface,
+                                ),
+                                fallbackBuilder: (context) => FittingTitleText(
+                                  showName,
+                                  style: heroTitleStyle,
+                                  textAlign: alignLeft ? TextAlign.left : TextAlign.center,
+                                  alignment: alignLeft ? Alignment.centerLeft : Alignment.center,
+                                ),
                               ),
                             ),
 

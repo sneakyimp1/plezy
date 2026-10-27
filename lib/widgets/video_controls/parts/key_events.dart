@@ -5,8 +5,16 @@ extension _PlexVideoControlsKeyEventMethods on _PlexVideoControlsState {
     _keyboardService = await KeyboardShortcutsService.getInstance();
   }
 
+  // Both answer mpv's reply to the screenshot shortcut, which can land after
+  // the player has closed.
   void _showScreenshotToast() {
+    if (!mounted) return;
     widget.toastController.show(Symbols.photo_camera_rounded, t.videoControls.screenshotSaved);
+  }
+
+  void _showScreenshotFailed() {
+    if (!mounted) return;
+    showErrorSnackBar(context, t.videoControls.screenshotFailed);
   }
 
   /// Resolve the transport intent for a key event, or null when the key is not
@@ -39,18 +47,24 @@ extension _PlexVideoControlsKeyEventMethods on _PlexVideoControlsState {
 
   /// The player surface's Select action.
   ///
-  /// [requestFocus] is the caller's `eventRequestsFocusNavigation` answer, so a
-  /// remote OK lands on Play/Pause while a physical-keyboard Enter leaves focus
-  /// where it is — activation is not a request to start navigating.
-  void _activatePlayerSurfaceSelect({required bool requestFocus}) {
+  /// Whether the raised chrome also takes focus is [event]'s
+  /// `eventRequestsFocusNavigation` answer, so a remote OK lands on Play/Pause
+  /// while a physical-keyboard Enter leaves focus where it is — activation is
+  /// not a request to start navigating.
+  void _activatePlayerSurfaceSelect(KeyEvent event) {
+    final requestFocus = eventRequestsFocusNavigation(event, focused: _focusNode);
     if (!widget.canControl) {
       _showControlsWithFocus(requestFocus: requestFocus);
       return;
     }
     // Skip-Intro is the primary action only while the chrome is down and the
     // button is the sole affordance on screen; with the OSD up it is a real
-    // focusable control and Select must stay "toggle playback".
-    if (!_showControls && _isSkipMarkerButtonVisible) {
+    // focusable control and Select must stay "toggle playback". The skip
+    // binding is the exception: Enter is its default, and on desktop merely
+    // moving the mouse raises the OSD, so otherwise the binding would never
+    // fire over a prompt the viewer can see (#2577).
+    if (_isSkipMarkerButtonVisible &&
+        (!_showControls || (_keyboardService?.isBoundTo(event, ShortcutAction.skipMarker) ?? false))) {
       _activateSkipMarker();
       return;
     }
@@ -123,7 +137,7 @@ extension _PlexVideoControlsKeyEventMethods on _PlexVideoControlsState {
     return KeyEventResult.ignored;
   }
 
-  KeyEventResult _dispatchShortcut(KeyEvent event, {VoidCallback? onSkipMarker}) {
+  KeyEventResult _dispatchShortcut(KeyEvent event, {required VoidCallback onSkipMarker}) {
     return _keyboardService!.handleVideoPlayerKeyEvent(
       event,
       widget.player,
@@ -141,13 +155,13 @@ extension _PlexVideoControlsKeyEventMethods on _PlexVideoControlsState {
       onNextEpisode: _abandoningBurst(widget.onNext),
       onPreviousEpisode: _abandoningBurst(widget.onPrevious),
       onScreenshot: _showScreenshotToast,
+      onScreenshotFailed: _showScreenshotFailed,
       onZoomIn: widget.onZoomIn,
       onZoomOut: widget.onZoomOut,
       onZoomReset: widget.onResetVideoZoom,
       onVolumeUp: () => widget.volumeController.adjust(10),
       onVolumeDown: () => widget.volumeController.adjust(-10),
       onToggleMute: widget.volumeController.toggleMute,
-      onLiveSeekBy: widget.onLiveSeekBy,
       onSpeedPersist: (rate) =>
           unawaited(ScopedPlayerPrefs.write(ScopedPlayerPrefs.playbackSpeed, widget.metadata, rate)),
       onSeekRequested: widget.onSeekRequested,
@@ -198,7 +212,15 @@ extension _PlexVideoControlsKeyEventMethods on _PlexVideoControlsState {
     // (e.g. after controls auto-hide). The !hasFocus guard prevents
     // double-handling when the Focus onKeyEvent already processes the event.
     if (!_focusNode.hasFocus && _keyboardService != null) {
-      final result = _dispatchShortcut(event);
+      // Drift means focus fell back to a scope or to an ancestor of the
+      // controls. A prompt holding focus (Play Next, Still Watching) moves
+      // between its buttons with the arrows, so those stay with it.
+      if (event.logicalKey.isDpadDirection && _focusRestsOnAnotherControl()) return false;
+      // A visible prompt only: the surface's Select stage keeps Enter, the
+      // default binding, from reaching a dismissed marker, and this path has
+      // no such stage — an Enter meant as "pause" must not skip unseen
+      // credits into the next episode.
+      final result = _dispatchShortcut(event, onSkipMarker: _activateSkipMarker);
       if (result == KeyEventResult.handled) {
         _focusNode.requestFocus(); // self-heal focus
         return true;
@@ -206,6 +228,14 @@ extension _PlexVideoControlsKeyEventMethods on _PlexVideoControlsState {
     }
 
     return false;
+  }
+
+  /// Whether primary focus sits on a control outside this one rather than
+  /// having drifted to a scope or up to an ancestor of [_focusNode].
+  bool _focusRestsOnAnotherControl() {
+    final primary = FocusManager.instance.primaryFocus;
+    if (primary == null || primary is FocusScopeNode) return false;
+    return !_focusNode.ancestors.contains(primary);
   }
 
   KeyEventResult _handleControlsKeyEvent(KeyEvent event, bool isMobile) {
@@ -283,10 +313,7 @@ extension _PlexVideoControlsKeyEventMethods on _PlexVideoControlsState {
     // mode and focus can never disagree: a remote OK starts a focus session, a
     // physical-keyboard Enter just shows the controls and toggles playback.
     if (key.isSelectKey && _focusNode.hasPrimaryFocus) {
-      return handleOneShotSelect(
-        event,
-        () => _activatePlayerSurfaceSelect(requestFocus: eventRequestsFocusNavigation(event, focused: _focusNode)),
-      );
+      return handleOneShotSelect(event, () => _activatePlayerSurfaceSelect(event));
     }
 
     // Tab is the deliberate way into the OSD (#1797). With the chrome down,

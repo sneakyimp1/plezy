@@ -608,6 +608,15 @@ bool MpvPlayer::Initialize(HWND view) {
     // Let mpv use display/context detection instead of forcing HDR signaling.
     mpv_set_option_string(mpv_, "target-colorspace-hint", plezy::mpv_common::TargetColorspaceHint(hdr_enabled_));
 
+    // Keep the display black point at absolute black. Under target-contrast=auto
+    // mpv's d3d11 context takes the black level Windows reports for the display
+    // (DXGI MinLuminance) as the target's, and libplacebo master (b915882d)
+    // now honors that for PQ output instead of forcing zero nits. TVs whose
+    // reported floor sits above what they render then show every video with
+    // lifted blacks (#2803). HDR10 sinks map PQ themselves, so send it absolute
+    // as released libplacebo does. A user mpv.conf line still overrides this.
+    mpv_set_option_string(mpv_, "target-contrast", "inf");
+
     // Fallback tone mapping when display doesn't support HDR. On Adreno,
     // per-frame tone-map LUT regeneration is pathological — see
     // SystemHasQualcommGpu — so both dynamic inputs to the LUT key are
@@ -772,6 +781,12 @@ void MpvPlayer::NotifyPowerSuspend() { LogRecovery("system suspending"); }
 
 void MpvPlayer::NotifyPowerResume() { audio_recovery_.RequestResume(); }
 
+void MpvPlayer::NotifyDisplayChange(WPARAM wparam, LPARAM lparam) {
+  if (!hwnd_) return;
+  HWND inner = ::FindWindowExW(hwnd_, nullptr, nullptr, nullptr);
+  if (inner) ::PostMessageW(inner, WM_DISPLAYCHANGE, wparam, lparam);
+}
+
 void MpvPlayer::LogRecovery(const std::string& text) {
   char log_msg[512];
   snprintf(log_msg, sizeof(log_msg), "MPV [warn] audio-recovery: %s", text.c_str());
@@ -853,7 +868,29 @@ void MpvPlayer::EventLoop() {
       break;
     }
     if (event->event_id != MPV_EVENT_NONE) {
+      // One event per wait leaves the rest pending, and the lines explaining a
+      // failed open are among the last mpv hands out, so an error END_FILE is
+      // followed here by a drain to MPV_EVENT_NONE, cut off once the hold has
+      // spanned its limit; see ErrorEndFileHold.
+      const bool error_end_file = plezy::mpv_common::IsErrorEndFile(event);
+      if (error_end_file) held_events_.Begin();
       HandleMpvEvent(event);
+      if (error_end_file) {
+        bool draining = true;
+        bool shutdown = false;
+        while (draining && running_) {
+          mpv_event* pending = mpv_wait_event(mpv_, 0);
+          if (pending->event_id == MPV_EVENT_NONE) break;
+          if (pending->event_id == MPV_EVENT_SHUTDOWN) {
+            shutdown = true;
+            break;
+          }
+          HandleMpvEvent(pending);
+          draining = !held_events_.CountDequeued();
+        }
+        ReleaseHeldEvents();
+        if (shutdown) break;
+      }
     }
     // Idle waits are bounded at 100 ms; queued events can wake us sooner.
     // Audio recovery owns its elapsed-time deadlines.
@@ -970,10 +1007,7 @@ void MpvPlayer::SendPropertyChange(const char* name, mpv_node* data) {
     list.push_back(flutter::EncodableValue());
   }
 
-  std::lock_guard<std::mutex> lock(callback_mutex_);
-  if (event_callback_) {
-    event_callback_(flutter::EncodableValue(list));
-  }
+  DeliverEvent(flutter::EncodableValue(std::move(list)), false);
 }
 
 void MpvPlayer::SendActiveSourceEvent(const std::string& name) {
@@ -1003,9 +1037,23 @@ void MpvPlayer::SendEvent(const std::string& name, const flutter::EncodableMap& 
     event[flutter::EncodableValue("data")] = flutter::EncodableValue(data);
   }
 
+  DeliverEvent(flutter::EncodableValue(std::move(event)), name == "log-message");
+}
+
+void MpvPlayer::DeliverEvent(flutter::EncodableValue message, bool is_log_message) {
+  if (held_events_.ShouldHold(is_log_message)) {
+    held_events_.Hold(std::move(message));
+    return;
+  }
   std::lock_guard<std::mutex> lock(callback_mutex_);
   if (event_callback_) {
-    event_callback_(flutter::EncodableValue(event));
+    event_callback_(message);
+  }
+}
+
+void MpvPlayer::ReleaseHeldEvents() {
+  for (auto& message : held_events_.Release()) {
+    DeliverEvent(std::move(message), false);
   }
 }
 

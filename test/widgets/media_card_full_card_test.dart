@@ -1,9 +1,12 @@
 import 'dart:collection';
 import 'dart:ui' as ui;
 
+import 'package:cached_network_image_ce/cached_network_image.dart';
+import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:plezy/database/app_database.dart';
 import 'package:plezy/focus/focus_glow_overlay.dart';
 import 'package:plezy/focus/focus_theme.dart';
 import 'package:plezy/focus/input_mode_tracker.dart';
@@ -14,6 +17,8 @@ import 'package:plezy/media/media_item.dart';
 import 'package:plezy/media/media_kind.dart';
 import 'package:plezy/models/catalog/catalog_item.dart';
 import 'package:plezy/models/catalog/catalog_metadata.dart';
+import 'package:plezy/providers/multi_server_provider.dart';
+import 'package:plezy/services/plex_api_cache.dart';
 import 'package:plezy/services/settings_service.dart';
 import 'package:plezy/theme/mono_theme.dart';
 import 'package:plezy/utils/layout_constants.dart';
@@ -22,9 +27,12 @@ import 'package:plezy/widgets/focusable_media_card.dart';
 import 'package:plezy/widgets/media_card.dart';
 import 'package:plezy/widgets/media_grid_delegate.dart';
 import 'package:plezy/widgets/optimized_media_image.dart';
+import 'package:provider/provider.dart';
 
-import '../test_helpers/prefs.dart';
+import '../test_helpers/backend_client_fixtures.dart';
 import '../test_helpers/media_items.dart';
+import '../test_helpers/multi_server_fixtures.dart';
+import '../test_helpers/prefs.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -41,15 +49,6 @@ void main() {
 
   tearDown(() {
     TvDetectionService.debugSetAppleTVOverride(null);
-  });
-
-  test('full bleed grid delegates use image aspect ratios', () {
-    expect(MediaGridDelegate.aspectRatioFor(fullBleedImage: true), GridLayoutConstants.fullCardPosterAspectRatio);
-    expect(
-      MediaGridDelegate.aspectRatioFor(useWideAspectRatio: true, fullBleedImage: true),
-      GridLayoutConstants.episodeThumbnailAspectRatio,
-    );
-    expect(MediaGridDelegate.aspectRatioFor(useWideAspectRatio: true), GridLayoutConstants.episodeGridCellAspectRatio);
   });
 
   testWidgets('full bleed grid delegates use scaled gutters', (tester) async {
@@ -97,7 +96,7 @@ void main() {
         child: SizedBox(
           width: 200,
           height: 300,
-          child: MediaCard(item: item, forceGridMode: true, fullBleedImage: true, isOffline: true),
+          child: MediaCard(item: item, viewModeOverride: ViewMode.grid, fullBleedImage: true, isOffline: true),
         ),
       ),
     );
@@ -117,7 +116,11 @@ void main() {
 
     await tester.pumpWidget(
       _TestApp(
-        child: SizedBox(width: 200, height: 330, child: MediaCard(item: item, forceGridMode: true, isOffline: true)),
+        child: SizedBox(
+          width: 200,
+          height: 330,
+          child: MediaCard(item: item, viewModeOverride: ViewMode.grid, isOffline: true),
+        ),
       ),
     );
 
@@ -311,6 +314,35 @@ void main() {
     expect(image.imagePath, 'https://example.com/500.jpg');
   });
 
+  testWidgets('catalog artwork loads directly, not through an online Plex server (#2800)', (tester) async {
+    // A Seerr instance with image caching serves artwork from its LAN
+    // address; a Plex server's transcoder cannot be relied on to fetch it.
+    const proxied = 'http://192.168.1.135:5055/imageproxy/tmdb/t/p/w500/poster.jpg';
+    final item = CatalogItem(
+      source: CatalogSourceId.seerr,
+      kind: MediaKind.movie,
+      title: 'LAN Poster',
+      ids: const CatalogItemIds(tmdb: 1),
+      posterUrl: proxied,
+      posterVariants: const {500: proxied},
+    ).toMediaItem();
+    final database = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(database.close);
+    PlexApiCache.initialize(database);
+    final servers = testMultiServer(clients: [testPlexClient()]);
+
+    await tester.pumpWidget(
+      ChangeNotifierProvider<MultiServerProvider>.value(
+        value: servers.provider,
+        child: _catalogGridHarness(item, isOffline: false),
+      ),
+    );
+
+    final image = tester.widget<Image>(find.descendant(of: find.byType(MediaCard), matching: find.byType(Image)));
+    final fetched = (image.image as ResizeImage).imageProvider as CachedNetworkImageProvider;
+    expect(fetched.url, proxied);
+  });
+
   testWidgets('recommendation badge prefers a user count and falls back to viewer percentage', (tester) async {
     final withCount = CatalogItem(
       source: CatalogSourceId.simkl,
@@ -345,7 +377,7 @@ void main() {
         child: SizedBox(
           width: 420,
           height: 160,
-          child: MediaCard(item: item, forceListMode: true, fullBleedImage: true, isOffline: true),
+          child: MediaCard(item: item, viewModeOverride: ViewMode.list, fullBleedImage: true, isOffline: true),
         ),
       ),
     );
@@ -372,7 +404,11 @@ void main() {
 
     await tester.pumpWidget(
       _TestApp(
-        child: SizedBox(width: 420, height: 160, child: MediaCard(item: item, forceListMode: true, isOffline: true)),
+        child: SizedBox(
+          width: 420,
+          height: 160,
+          child: MediaCard(item: item, viewModeOverride: ViewMode.list, isOffline: true),
+        ),
       ),
     );
 
@@ -481,13 +517,14 @@ void main() {
       grandparentTitle: 'Semantic Series',
     );
 
-    for (final forceGridMode in [true, false]) {
+    for (final viewMode in ViewMode.values) {
+      final isGrid = viewMode == ViewMode.grid;
       await tester.pumpWidget(
         _TestApp(
           child: SizedBox(
-            width: forceGridMode ? 200 : 420,
-            height: forceGridMode ? 330 : 180,
-            child: MediaCard(item: item, forceGridMode: forceGridMode, forceListMode: !forceGridMode, isOffline: true),
+            width: isGrid ? 200 : 420,
+            height: isGrid ? 330 : 180,
+            child: MediaCard(item: item, viewModeOverride: viewMode, isOffline: true),
           ),
         ),
       );
@@ -519,7 +556,7 @@ void main() {
           title: 'Linked Movie',
           summary: 'Movie decorative summary',
         ),
-        forceGridMode: true,
+        viewMode: ViewMode.grid,
         detailLabel: 'Linked Movie',
         decorativeLabel: 'Movie decorative summary',
       ),
@@ -532,24 +569,20 @@ void main() {
           parentTitle: 'Linked Series',
           summary: 'Season decorative summary',
         ),
-        forceGridMode: false,
+        viewMode: ViewMode.list,
         detailLabel: 'Linked Series',
         decorativeLabel: 'Season Two',
       ),
     ];
 
     for (final scenario in scenarios) {
+      final isGrid = scenario.viewMode == ViewMode.grid;
       await tester.pumpWidget(
         _TestApp(
           child: SizedBox(
-            width: scenario.forceGridMode ? 200 : 420,
-            height: scenario.forceGridMode ? 330 : 180,
-            child: MediaCard(
-              item: scenario.item,
-              forceGridMode: scenario.forceGridMode,
-              forceListMode: !scenario.forceGridMode,
-              isOffline: true,
-            ),
+            width: isGrid ? 200 : 420,
+            height: isGrid ? 330 : 180,
+            child: MediaCard(item: scenario.item, viewModeOverride: scenario.viewMode, isOffline: true),
           ),
         ),
       );
@@ -631,7 +664,11 @@ void main() {
 
     await tester.pumpWidget(
       _TestApp(
-        child: SizedBox(width: 200, height: 330, child: MediaCard(item: item, forceGridMode: true, isOffline: true)),
+        child: SizedBox(
+          width: 200,
+          height: 330,
+          child: MediaCard(item: item, viewModeOverride: ViewMode.grid, isOffline: true),
+        ),
       ),
     );
 
@@ -652,7 +689,11 @@ void main() {
       _TestApp(
         child: MediaQuery(
           data: const MediaQueryData(accessibleNavigation: true),
-          child: SizedBox(width: 200, height: 330, child: MediaCard(item: item, forceGridMode: true, isOffline: true)),
+          child: SizedBox(
+            width: 200,
+            height: 330,
+            child: MediaCard(item: item, viewModeOverride: ViewMode.grid, isOffline: true),
+          ),
         ),
       ),
     );
@@ -674,19 +715,14 @@ void main() {
     );
     var tapCount = 0;
 
-    for (final forceGridMode in [true, false]) {
+    for (final viewMode in ViewMode.values) {
+      final isGrid = viewMode == ViewMode.grid;
       await tester.pumpWidget(
         _TestApp(
           child: SizedBox(
-            width: forceGridMode ? 200 : 420,
-            height: forceGridMode ? 330 : 180,
-            child: MediaCard(
-              item: item,
-              forceGridMode: forceGridMode,
-              forceListMode: !forceGridMode,
-              isOffline: true,
-              onTap: () => tapCount++,
-            ),
+            width: isGrid ? 200 : 420,
+            height: isGrid ? 330 : 180,
+            child: MediaCard(item: item, viewModeOverride: viewMode, isOffline: true, onTap: () => tapCount++),
           ),
         ),
       );
@@ -697,7 +733,7 @@ void main() {
       expect(find.bySemanticsLabel(RegExp('Decorative movie summary')), findsNothing);
 
       card.owner!.performAction(card.id, ui.SemanticsAction.tap);
-      expect(tapCount, forceGridMode ? 1 : 2);
+      expect(tapCount, isGrid ? 1 : 2);
     }
 
     semantics.dispose();
@@ -718,7 +754,13 @@ void main() {
         child: SizedBox(
           width: 200,
           height: 330,
-          child: MediaCard(key: cardKey, item: item, forceGridMode: true, isOffline: true, onTap: () => tapCount++),
+          child: MediaCard(
+            key: cardKey,
+            item: item,
+            viewModeOverride: ViewMode.grid,
+            isOffline: true,
+            onTap: () => tapCount++,
+          ),
         ),
       ),
     );
@@ -748,7 +790,7 @@ void main() {
           child: MediaCard(
             key: cardKey,
             item: item,
-            forceGridMode: true,
+            viewModeOverride: ViewMode.grid,
             isOffline: true,
             onLongPress: () => longPressCount++,
           ),
@@ -777,7 +819,7 @@ Widget _fullCardHarness({required FocusNode focusNode, required bool fullBleed})
   );
 }
 
-Widget _catalogGridHarness(MediaItem item, {Key? key, double width = 220}) {
+Widget _catalogGridHarness(MediaItem item, {Key? key, double width = 220, bool isOffline = true}) {
   return _TestApp(
     child: SizedBox(
       width: width,
@@ -787,8 +829,8 @@ Widget _catalogGridHarness(MediaItem item, {Key? key, double width = 220}) {
         item: item,
         width: width,
         height: 280,
-        forceGridMode: true,
-        isOffline: true,
+        viewModeOverride: ViewMode.grid,
+        isOffline: isOffline,
         onTap: () {},
       ),
     ),
@@ -830,7 +872,7 @@ class _TestApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: monoTheme(dark: true),
+      theme: monoTheme(MonoPalette.dark),
       home: Scaffold(body: Center(child: child)),
     );
   }

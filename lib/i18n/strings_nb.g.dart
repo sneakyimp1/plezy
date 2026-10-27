@@ -40,11 +40,14 @@ class TranslationsNb extends Translations with BaseTranslations<AppLocale, Trans
 
 	// Translations
 	@override late final _Translations$app$nb app = _Translations$app$nb._(_root);
+	@override late final _Translations$appIcon$nb appIcon = _Translations$appIcon$nb._(_root);
 	@override late final _Translations$auth$nb auth = _Translations$auth$nb._(_root);
 	@override late final _Translations$common$nb common = _Translations$common$nb._(_root);
 	@override late final _Translations$screens$nb screens = _Translations$screens$nb._(_root);
 	@override late final _Translations$update$nb update = _Translations$update$nb._(_root);
+	@override late final _Translations$supporter$nb supporter = _Translations$supporter$nb._(_root);
 	@override late final _Translations$settings$nb settings = _Translations$settings$nb._(_root);
+	@override late final _Translations$themeEditor$nb themeEditor = _Translations$themeEditor$nb._(_root);
 	@override late final _Translations$search$nb search = _Translations$search$nb._(_root);
 	@override late final _Translations$hotkeys$nb hotkeys = _Translations$hotkeys$nb._(_root);
 	@override late final _Translations$fileInfo$nb fileInfo = _Translations$fileInfo$nb._(_root);
@@ -100,6 +103,24 @@ class _Translations$app$nb extends Translations$app$en {
 
 	// Translations
 	@override String get title => 'Plezy';
+}
+
+// Path: appIcon
+class _Translations$appIcon$nb extends Translations$appIcon$en {
+	_Translations$appIcon$nb._(TranslationsNb root) : this._root = root, super.internal(root);
+
+	final TranslationsNb _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Appikon';
+	@override String get defaultIcon => 'Standard';
+	@override String get current => 'Gjeldende ikon';
+	@override String get locked => 'Supporter-fordel';
+	@override String get lockedHint => 'Alternative ikoner er en Supporter-fordel.';
+	@override String get changeFailed => 'Kunne ikke endre appikonet';
+	@override String get launcherHint => 'Det nye ikonet vises på startskjermen når du forlater Plezy.';
+	@override String get tvLauncherHint => 'Det nye banneret vises når du forlater Plezy. Android TV kan fortsette å vise det gamle til TV-en startes på nytt.';
+	@override late final _Translations$appIcon$names$nb names = _Translations$appIcon$names$nb._(_root);
 }
 
 // Path: auth
@@ -218,6 +239,33 @@ class _Translations$update$nb extends Translations$update$en {
 	@override String get checkFailed => 'Kunne ikke se etter oppdateringer';
 }
 
+// Path: supporter
+class _Translations$supporter$nb extends Translations$supporter$en {
+	_Translations$supporter$nb._(TranslationsNb root) : this._root = root, super.internal(root);
+
+	final TranslationsNb _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Plezy Supporter';
+	@override String get intro => 'Et engangskjøp som støtter utviklingen av Plezy og låser opp kosmetiske tillegg:';
+	@override String get presetThemes => 'Forhåndsinnstilte temaer';
+	@override String get presetThemesDescription => 'Glød, Isbre, Skog, Plomme og Papir';
+	@override String get customTheme => 'Egendefinert tema';
+	@override String get customThemeDescription => 'Velg alle fargene selv';
+	@override String get appIcons => 'Appikoner';
+	@override String get appIconsDescription => 'Velg et alternativt Plezy-ikon';
+	@override String buy({required Object price}) => 'Kjøp for ${price}';
+	@override String get loadingPrice => 'Laster pris...';
+	@override String get restore => 'Gjenopprett kjøp';
+	@override String get pending => 'Kjøpet ditt venter på betaling eller godkjenning. Tilleggene låses opp så snart butikken har fullført kjøpet.';
+	@override String get thankYouTitle => 'Takk for at du støtter Plezy';
+	@override String get thankYouBody => 'Supporter-tilleggene dine er låst opp.';
+	@override String get tileSubtitle => 'Lås opp temaer og appikoner med et engangskjøp';
+	@override String get tileSubtitleThemesOnly => 'Lås opp temaer med et engangskjøp';
+	@override String get tileUnlocked => 'Takk for støtten';
+	@override late final _Translations$supporter$errors$nb errors = _Translations$supporter$errors$nb._(_root);
+}
+
 // Path: settings
 class _Translations$settings$nb extends Translations$settings$en {
 	_Translations$settings$nb._(TranslationsNb root) : this._root = root, super.internal(root);
@@ -248,6 +296,11 @@ class _Translations$settings$nb extends Translations$settings$en {
 	@override String get lightTheme => 'Lyst';
 	@override String get darkTheme => 'Mørkt';
 	@override String get oledTheme => 'OLED';
+	@override String get emberTheme => 'Glød';
+	@override String get glacierTheme => 'Isbre';
+	@override String get forestTheme => 'Skog';
+	@override String get plumTheme => 'Plomme';
+	@override String get paperTheme => 'Papir';
 	@override String get libraryDensity => 'Innholdstetthet i biblioteket';
 	@override String get displayScale => 'Skalering';
 	@override String get compact => 'Kompakt';
@@ -278,6 +331,8 @@ class _Translations$settings$nb extends Translations$settings$en {
 	@override String get alwaysKeepSidebarOpenDescription => 'Sidefeltet forblir utvidet og innholdsområdet tilpasser seg';
 	@override String get showUnwatchedCount => 'Vis antall usette';
 	@override String get showUnwatchedCountDescription => 'Vis antall usette episoder på serier og sesonger';
+	@override String get showWatchedIndicators => 'Vis sett-indikatorer';
+	@override String get showWatchedIndicatorsDescription => 'Vis et hakemerke på sette filmer, serier og episoder';
 	@override String get showEpisodeNumberOnCards => 'Vis episodenummer på kort';
 	@override String get showEpisodeNumberOnCardsDescription => 'Vis sesong- og episodenummer på episodekort';
 	@override String get showSeasonPostersOnTabs => 'Vis sesongplakater på faner';
@@ -307,6 +362,11 @@ class _Translations$settings$nb extends Translations$settings$en {
 	@override String get defaultQualityTitle => 'Standardkvalitet';
 	@override String get cellularQualityTitle => 'Standardkvalitet på mobilnett';
 	@override String get cellularQualitySameAsDefault => 'Samme som standardkvalitet';
+	@override String get directPlayCoveredQuality => 'Spill mindre videoer i original kvalitet';
+	@override String get directPlayCoveredQualityDescription => 'Spill av videoer som allerede er innenfor kvalitetsgrensen med Direct Play i stedet for å transkode dem';
+	@override String get videoCodecs => 'Videokodeker';
+	@override String get videoCodecsDescription => 'Kodeker uten hake transkodes av serveren';
+	@override String get videoCodecsAlwaysAccepted => 'Godtas alltid';
 	@override String get musicQualityTitle => 'Musikkvalitet';
 	@override String get subtitleStyling => 'Undertekststil';
 	@override String get subtitleStylingDescription => 'Tilpass utseendet på undertekster';
@@ -318,6 +378,7 @@ class _Translations$settings$nb extends Translations$settings$en {
 	@override String minutesUnit({required Object minutes}) => '${minutes} minutter';
 	@override String get rememberTrackSelections => 'Husk sporvalg per serie/film';
 	@override String get rememberTrackSelectionsDescription => 'Husk lyd- og undertekstvalg per tittel';
+	@override String get rememberTrackSelectionsBackendRule => 'Plex lagrer hvert valg på serveren per fil; Jellyfin slår også på kontoinnstillingen «Husk valg»; Emby støttes ikke';
 	@override String get followServerTrackSelections => 'Bruk serverens sporvalg per episode';
 	@override String get followServerTrackSelectionsDescription => 'Ved episodebytte brukes lyden og undertekstene som er valgt på serveren, i stedet for å videreføre gjeldende valg';
 	@override String get resumeMusicOnLaunch => 'Husk musikkøkt';
@@ -337,7 +398,7 @@ class _Translations$settings$nb extends Translations$settings$en {
 	@override String get videoPlayerNavigation => 'Videospillernavigering';
 	@override String get videoPlayerNavigationDescription => 'Bruk piltaster for å navigere videospillerkontroller';
 	@override String get watchTogetherRelay => 'Reléserver for Se sammen';
-	@override String get watchTogetherRelayDescription => 'Angi en egendefinert reléserver. Alle må bruke samme server.';
+	@override String get watchTogetherRelayDescription => 'Offentlige Open Watch Party-reléservere, med mindre du angir din egen';
 	@override String get watchTogetherRelayHint => 'https://min-relay.eksempel.no';
 	@override String get watchTogetherRelayInvalid => 'Angi en gyldig HTTP- eller HTTPS-adresse til reléserveren.';
 	@override String get crashReporting => 'Krasjrapportering';
@@ -363,6 +424,7 @@ class _Translations$settings$nb extends Translations$settings$en {
 	@override String get importSettingsInvalidFile => 'Denne filen er ikke en gyldig Plezy-innstillingseksport';
 	@override String get importSettingsNoUser => 'Logg inn før import av innstillinger';
 	@override String get shortcutsReset => 'Snarveier tilbakestilt til standard';
+	@override String get resetShortcutsConfirm => 'Dette vil erstatte de egendefinerte snarveiene dine med standardsnarveiene. Fortsette?';
 	@override String get about => 'Om';
 	@override String get aboutDescription => 'Appinformasjon og lisenser';
 	@override String get updates => 'Oppdateringer';
@@ -378,8 +440,21 @@ class _Translations$settings$nb extends Translations$settings$en {
 	@override String get autoPlayAndSkip => 'Autospill og hopp';
 	@override String get autoPlayNextEpisode => 'Spill neste episode automatisk';
 	@override String get autoPlayNextEpisodeDescription => 'Start neste episode automatisk når en episode er ferdig';
+	@override String get shuffleStartsFromBeginning => 'Tilfeldig avspilling starter fra begynnelsen';
+	@override String get shuffleStartsFromBeginningDescription => 'Start hver episode fra begynnelsen ved tilfeldig avspilling i stedet for å fortsette';
 	@override String get playNextCountdown => 'Nedtelling for neste episode';
 	@override String get playNextCountdownImmediate => 'Spill umiddelbart';
+	@override String get skipIntroMode => 'Hopp over intro';
+	@override String get skipIntroModeOffDescription => 'Spill av introer normalt uten en hopp over-knapp';
+	@override String get skipIntroModeButtonDescription => 'Vis en hopp over-knapp når en intro starter';
+	@override String get skipIntroModeAutoDescription => 'Hopp over introer automatisk etter forsinkelsen nedenfor';
+	@override String get skipCreditsMode => 'Hopp over rulletekst';
+	@override String get skipCreditsModeOffDescription => 'Spill av rulleteksten normalt uten en hopp over-knapp';
+	@override String get skipCreditsModeButtonDescription => 'Vis en hopp over-knapp når rulleteksten starter';
+	@override String get skipCreditsModeAutoDescription => 'Hopp over rulleteksten automatisk, og spill neste episode';
+	@override String get skipMarkerModeOff => 'Av';
+	@override String get skipMarkerModeButton => 'Vis knapp';
+	@override String get skipMarkerModeAuto => 'Automatisk';
 	@override String get forceSkipMarkerFallback => 'Tving reservemarkører';
 	@override String get forceSkipMarkerFallbackDescription => 'Bruk mønstre i kapiteltitler selv når Plex har markører';
 	@override String get autoSkipDelay => 'Forsinkelse for automatisk hopp';
@@ -416,6 +491,8 @@ class _Translations$settings$nb extends Translations$settings$en {
 	@override String get manageLibrariesDescription => 'Omorganiser og skjul biblioteker';
 	@override String get companionRemoteServer => 'Fjernkontrollserver';
 	@override String get companionRemoteServerDescription => 'La mobilenheter på nettverket styre denne appen';
+	@override String get companionRemoteServerStartFailed => 'Kunne ikke starte fjernkontrollserveren';
+	@override String get companionRemoteServerStopFailed => 'Kunne ikke stoppe fjernkontrollserveren';
 	@override String get autoPip => 'Automatisk bilde-i-bilde';
 	@override String get autoPipDescription => 'Åpne bilde-i-bilde når du forlater appen under avspilling';
 	@override String get matchContentFrameRate => 'Tilpass innholdets bildefrekvens';
@@ -428,12 +505,20 @@ class _Translations$settings$nb extends Translations$settings$en {
 	@override String get matchDynamicRangeDescription => 'Slå på HDR for HDR-innhold, og deretter tilbake til SDR';
 	@override String get displaySwitchDelay => 'Forsinkelse ved skjermbytte';
 	@override String get tunneledPlayback => 'Tunnelert avspilling';
-	@override String get tunneledPlaybackDescription => 'Bruk videotunneling. Slå av hvis HDR-avspilling viser svart video.';
+	@override String get tunneledPlaybackDescription => 'Bruk videotunneling. Slå av hvis HDR-avspilling viser svart video eller bevegelser hakker.';
 	@override String get audioPassthrough => 'Direkte lydutgang';
 	@override String get audioPassthroughDescription => 'Send Dolby/DTS-lyd til mottakeren eller TV-en uten omkoding, slik at surroundlyd bevares. Slå av hvis du ikke har lyd.';
-	@override String get audioPassthroughDescriptionAppleTv => 'Bruk Apples innebygde Dolby-dekoder for Dolby Digital Plus, inkludert Atmos. DTS og TrueHD spilles fortsatt av som flerkanals PCM. Slå av hvis du ikke har lyd.';
-	@override String get audioDownmix => 'Nedmiks til stereo';
-	@override String get audioDownmixDescription => 'Miks surroundlyd ned til to kanaler for stereohøyttalere eller hodetelefoner';
+	@override String get audioPassthroughDescriptionApple => 'Bruk Apples innebygde Dolby-dekoder for Dolby Digital Plus, inkludert Atmos. DTS og TrueHD spilles fortsatt av som flerkanals PCM. Slå av hvis du ikke har lyd.';
+	@override String get audioPassthroughDescriptionAppleSpatial => 'Bruk Apples innebygde Dolby-dekoder for Dolby Digital Plus, inkludert Atmos. På iOS, iPadOS og tvOS 26 eller nyere spilles TrueHD Atmos og DTS:X av som romlig lyd. Andre DTS- og TrueHD-spor spilles av som flerkanals PCM. Slå av hvis du ikke har lyd.';
+	@override String get audioPassthroughOverriddenByNormalization => 'Av mens lydstyrkenormalisering er på';
+	@override String get audioChannelLimit => 'Lydkanaler';
+	@override String get audioChannelLimitDescription => 'Miks dekodet lyd ned for høyttalere, hodetelefoner eller HDMI-oppsett som ikke kan spille av alle kanalene';
+	@override String get audioChannelLimitOriginal => 'Original';
+	@override String get audioChannelLimitOriginalDescription => 'Spill av alle kanalene i sporet';
+	@override String get audioChannelLimitSurround51 => 'Opptil 5.1';
+	@override String get audioChannelLimitSurround51Description => 'Miks 7.1 ned til 5.1 for TV-er og mottakere som bare støtter 5.1 PCM. Direkte lydutgang påvirkes ikke.';
+	@override String get audioChannelLimitStereo => 'Stereo';
+	@override String get audioChannelLimitStereoDescription => 'Miks ned til to kanaler for stereohøyttalere eller hodetelefoner. Slår av direkte lydutgang.';
 	@override String get downmixCenterBoost => 'Forsterkning av senterkanal';
 	@override String downmixCenterBoostValue({required Object db}) => '${db} dB';
 	@override String get downmixCenterBoostLabel => 'Forsterkning (dB)';
@@ -441,7 +526,7 @@ class _Translations$settings$nb extends Translations$settings$en {
 	@override String get audioDownmixNormalize => 'Normaliser lydstyrke ved nedmiks';
 	@override String get audioDownmixNormalizeDescription => 'Senker miksen for å unngå klipping. Slå av for å beholde originalvolumet (høye scener kan forvrenges).';
 	@override String get dvConversionMode => 'Dolby Vision-konvertering';
-	@override String get dvConversionModeDescription => 'Velg hvordan ExoPlayer håndterer filer med Dolby Vision-profil 7.';
+	@override String get dvConversionModeDescription => 'Velg hvordan filer med Dolby Vision-profil 7 håndteres.';
 	@override String get dvConversionAuto => 'Automatisk';
 	@override String get dvConversionNative => 'Nativ / deaktivert';
 	@override String get dvConversionDv81 => 'P7 → P8.1';
@@ -450,8 +535,24 @@ class _Translations$settings$nb extends Translations$settings$en {
 	@override String get dvConversionNativeDescription => 'Tving opprinnelig DV7-avspilling og ikke prøv DV-konvertering på nytt';
 	@override String get dvConversionDv81Description => 'Tving direkte RPU-konvertering til Dolby Vision-profil 8.1';
 	@override String get dvConversionHevcStripDescription => 'Fjern Dolby Vision RPU/EL-lag og lever som vanlig HEVC';
+	@override String get disableDolbyVision => 'Deaktiver Dolby Vision';
+	@override String get disableDolbyVisionDescription => 'Spill av filens HDR10- eller HLG-lag i stedet for Dolby Vision når det finnes';
+	@override String get hdrSdrConversion => 'HDR til SDR-konvertering';
+	@override String get hdrSdrConversionDescription => 'Velg hva som konverterer HDR-video når skjermen ikke kan vise HDR.';
+	@override String get hdrSdrConversionAuto => 'Automatisk';
+	@override String get hdrSdrConversionAutoDescription => 'Enhet på Android 9 og nyere, spiller på eldre versjoner';
+	@override String get hdrSdrConversionDevice => 'Enhet';
+	@override String get hdrSdrConversionDeviceDescription => 'Enhetens videomaskinvare konverterer. Raskest, men fargene avhenger av enheten';
+	@override String get hdrSdrConversionPlayer => 'Spiller';
+	@override String get hdrSdrConversionPlayerDescription => 'Spilleren konverterer. Jevne farger, men 4K kan hakke på enkle TV-bokser';
 	@override String get deinterlace => 'Deinterlacing';
 	@override String get deinterlaceDescription => 'Fjern combing-artefakter fra interlaced video (kun mpv-spiller)';
+	@override String get deinterlaceOff => 'Av';
+	@override String get deinterlaceOffDescription => 'Vis interlaced video slik den dekodes';
+	@override String get deinterlaceVideo => 'Video';
+	@override String get deinterlaceVideoDescription => 'Gjør hvert halvbilde om til et helt bilde. For video spilt inn for TV, som sport, nyheter og konserter';
+	@override String get deinterlaceFilm => 'Film';
+	@override String get deinterlaceFilmDescription => 'Gjenopprett de opprinnelige bildene i film og animasjon som er konvertert med telecine til 29,97 fps, vanlig på NTSC-DVD-er. Video spilt inn for TV vil hakke. Direkte-TV bruker Video';
 	@override String get requireProfileSelectionOnOpen => 'Spør om profil ved appåpning';
 	@override String get requireProfileSelectionOnOpenDescription => 'Vis profilvalg hver gang appen åpnes';
 	@override String get forceTvMode => 'Tving TV-modus';
@@ -493,6 +594,8 @@ class _Translations$settings$nb extends Translations$settings$en {
 	@override String get gestureVolumeSwipeDescription => 'Sveip opp eller ned på høyre kant for å justere volumet';
 	@override String get gesturePinchToZoom => 'Klyp for å zoome';
 	@override String get gesturePinchToZoomDescription => 'Klyp på videoen for å zoome inn eller ut';
+	@override String get rememberBrightnessLevel => 'Husk lysstyrkenivå';
+	@override String get rememberBrightnessLevelDescription => 'Start avspilling med lysstyrken som ble satt med det siste sveipet';
 	@override String get controls => 'Kontroller';
 	@override String get rememberPlayerChanges => 'Husk endringer i spilleren';
 	@override String get rememberPlayerChangesDescription => 'Hvor en endring under avspilling lagres og brukes på nytt';
@@ -507,6 +610,42 @@ class _Translations$settings$nb extends Translations$settings$en {
 	@override String get exportDialogTitle => 'Eksporter Plezy-innstillinger';
 }
 
+// Path: themeEditor
+class _Translations$themeEditor$nb extends Translations$themeEditor$en {
+	_Translations$themeEditor$nb._(TranslationsNb root) : this._root = root, super.internal(root);
+
+	final TranslationsNb _root; // ignore: unused_field
+
+	// Translations
+	@override String get builtIn => 'Innebygde';
+	@override String get presets => 'Forhåndsinnstillinger';
+	@override String get custom => 'Egendefinert';
+	@override String get customEmpty => 'Ikke opprettet ennå';
+	@override String get editCustom => 'Rediger egendefinert tema';
+	@override String get editCustomDescription => 'Velg alle fargene selv';
+	@override String get locked => 'Lås opp med Supporter';
+	@override String get savedLocked => 'Lagret – låses opp med Supporter';
+	@override String get title => 'Egendefinert tema';
+	@override String get startFrom => 'Start fra';
+	@override String get startFromDescription => 'Kopier alle fargene fra et annet tema';
+	@override String get colors => 'Farger';
+	@override String get preview => 'Forhåndsvisning';
+	@override late final _Translations$themeEditor$slots$nb slots = _Translations$themeEditor$slots$nb._(_root);
+	@override String get opacity => 'Opasitet';
+	@override String get hexHint => '#RRGGBB eller #AARRGGBB';
+	@override String get fromOtherThemes => 'Fra andre temaer';
+	@override String swatchLabel({required Object color, required Object theme}) => '${color} (${theme})';
+	@override late final _Translations$themeEditor$contrast$nb contrast = _Translations$themeEditor$contrast$nb._(_root);
+	@override String lowContrast({required Object pair, required Object ratio, required Object minimum}) => '${pair}: ${ratio}:1, under anbefalt minimum på ${minimum}:1';
+	@override String get discardTitle => 'Forkaste endringene?';
+	@override String get discardMessage => 'Ulagrede fargeendringer går tapt.';
+	@override String get discard => 'Forkast';
+	@override String previewCardTitle({required Object number}) => 'Episode ${number}';
+	@override String previewCardSubtitle({required Object minutes}) => '${minutes} min igjen';
+	@override String get previewSwitch => 'Autospill';
+	@override String get previewMutedText => 'Sekundærtekst ser slik ut';
+}
+
 // Path: search
 class _Translations$search$nb extends Translations$search$en {
 	_Translations$search$nb._(TranslationsNb root) : this._root = root, super.internal(root);
@@ -518,6 +657,7 @@ class _Translations$search$nb extends Translations$search$en {
 	@override String get tryDifferentTerm => 'Prøv et annet søkeord';
 	@override String get searchYourMedia => 'Søk i mediene dine';
 	@override String get enterTitleActorOrKeyword => 'Skriv inn tittel, skuespiller eller nøkkelord';
+	@override String get people => 'Personer';
 }
 
 // Path: hotkeys
@@ -654,7 +794,7 @@ class _Translations$fileInfo$nb extends Translations$fileInfo$en {
 	@override String get flagSelected => 'Valgt';
 	@override String get flagExternal => 'Ekstern';
 	@override String get flagHearingImpaired => 'Hørselshemmet';
-	@override String get flagDub => 'Dub';
+	@override String get flagDub => 'Dubbet';
 	@override String get flagOriginal => 'Original';
 	@override String get channelsMono => 'Mono';
 	@override String dolbyVisionProfile({required Object profile}) => 'Profil ${profile}';
@@ -805,7 +945,7 @@ class _Translations$videoControls$nb extends Translations$videoControls$en {
 	@override String playbackWillPauseIn({required Object duration}) => 'Avspillingen settes på pause om ${duration}';
 	@override String get sleepTimerEndOfVideo => 'Slutten av gjeldende video';
 	@override String get sleepTimerStopAtHeader => 'Stopp ved';
-	@override String get sleepTimerDurationHeader => 'Timer';
+	@override String get sleepTimerDurationHeader => 'Varighet';
 	@override String get playbackWillPauseAtEnd => 'Avspilling vil pause på slutten av denne videoen';
 	@override String get stillWatching => 'Ser du fortsatt?';
 	@override String pausingIn({required Object seconds}) => 'Pauser om ${seconds}s';
@@ -846,14 +986,15 @@ class _Translations$videoControls$nb extends Translations$videoControls$en {
 	@override String get rotationLockButton => 'Rotasjonslås';
 	@override String get lockScreen => 'Lås skjerm';
 	@override String get screenLockButton => 'Skjermlås';
-	@override String get longPressToUnlock => 'Trykk og hold for å låse opp';
 	@override String get timelineSlider => 'Videotidslinje';
 	@override String get volumeSlider => 'Volumnivå';
 	@override String endsAt({required Object time}) => 'Slutter kl. ${time}';
 	@override String get pipActive => 'Spiller i bilde-i-bilde';
 	@override String get pipFailed => 'Bilde-i-bilde kunne ikke starte';
 	@override String get screenshotSaved => 'Skjermbilde lagret';
+	@override String get screenshotFailed => 'Kunne ikke ta skjermbilde';
 	@override String zoomPercent({required Object percent}) => 'Zoom ${percent} %';
+	@override String volumePercent({required Object percent}) => 'Volum ${percent} %';
 	@override late final _Translations$videoControls$pipErrors$nb pipErrors = _Translations$videoControls$pipErrors$nb._(_root);
 	@override String get chapters => 'Kapitler';
 	@override String get noChaptersAvailable => 'Ingen kapitler tilgjengelig';
@@ -905,6 +1046,9 @@ class _Translations$messages$nb extends Translations$messages$en {
 	@override String get playbackDataInvalid => 'Serveren returnerte ugyldig avspillingsinformasjon.';
 	@override String get playbackCancelled => 'Avspillingen ble avbrutt.';
 	@override String get playbackFailed => 'Kunne ikke starte avspillingen.';
+	@override String playbackFailedDetail({required Object error}) => 'Kunne ikke starte avspillingen: ${error}';
+	@override String get audioOutputFailed => 'Lydutgangen svarer ikke lenger. Sjekk lydtilkoblingen til TV-en eller mottakeren; hvis andre apper heller ikke har lyd, må du starte enheten på nytt.';
+	@override String get mediaUnavailable => 'Dette innholdet er ikke lenger tilgjengelig.';
 	@override String errorLoadingFileInfo({required Object error}) => 'Feil ved lasting av filinformasjon: ${error}';
 	@override String get errorLoadingSeries => 'Feil ved lasting av serie';
 	@override String get musicNotSupported => 'Musikkavspilling støttes ikke ennå';
@@ -939,6 +1083,8 @@ class _Translations$messages$nb extends Translations$messages$en {
 	@override String get mediaUnreadableBody => 'Serveren fant dette elementet, men kunne ikke lese filen (HTTP 404). Filen er sannsynligvis flyttet, slettet, eller lagringen er frakoblet. Be serverens eier om å sjekke filen og skanne biblioteket på nytt.';
 	@override String get serverBusyTitle => 'Strømmen er utilgjengelig';
 	@override String get serverBusyBody => 'Serveren fortsatte å nekte å strømme denne filen (HTTP 503). Den kan være i ferd med å starte på nytt eller være opptatt, eller lagringsstedet til filen kan være frakoblet. Prøv igjen om litt – hvis det fortsetter å skje, kan du be eieren av serveren om å kontrollere serveren og lagringsstedet til filen.';
+	@override String get playbackNotAllowedTitle => 'Avspilling er ikke tillatt';
+	@override String get playbackNotAllowedBody => 'Serveren nektet å strømme dette elementet (HTTP 403). Kontoen din har kanskje ikke tillatelse til å spille det av, eller serveren tillater kanskje bare avspilling på sitt lokale nettverk.';
 	@override String get logsUploaded => 'Logger lastet opp';
 	@override String get logsUploadFailed => 'Kunne ikke laste opp logger';
 	@override String get logId => 'Logg-ID';
@@ -948,6 +1094,7 @@ class _Translations$messages$nb extends Translations$messages$en {
 	@override String get playbackDataNotPrepared => 'Avspillingen ble startet før dataene var klare';
 	@override String get streamSelectionUnavailable => 'Valg av strømmer er ikke tilgjengelig for denne kilden';
 	@override String get streamSelectionFailed => 'Kunne ikke bruke de valgte strømmene';
+	@override String get trackSelectionNotRemembered => 'Dette sporvalget gjelder bare for gjeldende avspilling.';
 	@override String get serverUnavailableForProfile => 'Ingen server er tilgjengelig for den aktive profilen';
 }
 
@@ -974,6 +1121,8 @@ class _Translations$subtitlingStyling$nb extends Translations$subtitlingStyling$
 	@override String get overrideStrip => 'Fjern formatering';
 	@override String get positionTop => 'Øverst';
 	@override String get positionBottom => 'Nederst';
+	@override String get useMargins => 'Bruk marger';
+	@override String get useMarginsDescription => 'Tillat tekstundertekster i området utenfor videoen. Stilundertekster kan beholde sin opprinnelige plassering.';
 	@override String get anchorToScreen => 'Forankre til skjermen';
 	@override String get anchorToScreenDescription => 'Vis tekstundertekster i de svarte feltene under video i bredformat';
 	@override String get bold => 'Fet';
@@ -1004,6 +1153,9 @@ class _Translations$mpvConfig$nb extends Translations$mpvConfig$en {
 	@override String get presetDeleted => 'Forhåndsinnstilling slettet';
 	@override String get confirmDeletePreset => 'Er du sikker på at du vil slette denne forhåndsinnstillingen?';
 	@override String get configPlaceholder => 'gpu-api=vulkan\nhwdec=auto\n# kommentar';
+	@override String get lineHint => 'option=value';
+	@override String get addLine => 'Legg til linje';
+	@override String get removeLine => 'Fjern linje';
 	@override String get embeddedVoHint => 'vo, gpu-context og gpu-api ignoreres på Linux: innebygd video renderes alltid via vo=libmpv på videoplanet, og gpu-next (som compute-shadere som ArtCNN trenger) kan ikke kjøre innebygd.';
 }
 
@@ -1034,6 +1186,8 @@ class _Translations$profiles$nb extends Translations$profiles$en {
 	@override String get signOut => 'Logg ut';
 	@override String get signOutPlexTitle => 'Logge ut av Plex?';
 	@override String signOutPlexMessage({required Object displayName}) => 'Fjerne ${displayName} og alle Plex Home-brukere? Du kan logge inn igjen når som helst.';
+	@override String get signOutPlexDeleteDownloads => 'Slett også nedlastinger';
+	@override String get signOutPlexDeleteDownloadsDescription => 'Ellers blir de liggende på denne enheten og kommer tilbake når du logger inn på denne kontoen igjen.';
 	@override String get signedOutPlex => 'Logget ut av Plex.';
 	@override String get signOutFailed => 'Utlogging mislyktes.';
 	@override String get sectionTitle => 'Profiler';
@@ -1070,7 +1224,7 @@ class _Translations$profiles$nb extends Translations$profiles$en {
 	@override String borrowAddTo({required Object displayName}) => 'Legg til ${displayName}';
 	@override String get borrowExplain => 'Lån en annen profils tilkobling. PIN-beskyttede profiler krever PIN.';
 	@override String get borrowEmpty => 'Ingenting å låne enda.';
-	@override String get borrowEmptySubtitle => 'Koble Plex eller Jellyfin til en annen profil først.';
+	@override String get borrowEmptySubtitle => 'Koble Plex, Jellyfin eller Emby til en annen profil først.';
 	@override String get borrowLoadFailed => 'Kunne ikke laste inn tilgjengelige tilkoblinger. Prøv igjen.';
 	@override String borrowFromProfile({required Object displayName}) => 'Fra ${displayName}';
 	@override String get borrowConnectionBorrowed => 'Tilkobling lånt.';
@@ -1098,10 +1252,12 @@ class _Translations$connections$nb extends Translations$connections$en {
 	// Translations
 	@override String get sectionTitle => 'Tilkoblinger';
 	@override String get addConnection => 'Legg til tilkobling';
-	@override String get addConnectionSubtitleNoProfile => 'Logg inn med Plex eller koble til en Jellyfin-server';
-	@override String addConnectionSubtitleScoped({required Object displayName}) => 'Legg til for ${displayName}: Plex, Jellyfin eller en annen profiltilkobling';
+	@override String get addConnectionSubtitleNoProfile => 'Logg inn med Plex eller koble til en Jellyfin- eller Emby-server';
+	@override String addConnectionSubtitleScoped({required Object displayName}) => 'Legg til for ${displayName}: Plex, Jellyfin, Emby eller en annen profiltilkobling';
 	@override String sessionExpiredOne({required Object name}) => 'Økten er utløpt for ${name}';
 	@override String sessionExpiredMany({required Object count}) => 'Økten er utløpt for ${count} servere';
+	@override String accessDeniedOne({required Object name}) => '${name} nektet tilgang for denne kontoen';
+	@override String accessDeniedMany({required Object count}) => '${count} servere nektet tilgang for denne kontoen';
 	@override String get signInAgain => 'Logg inn igjen';
 	@override String editMediaBrowserTitle({required Object product}) => 'Rediger ${product}-tilkobling';
 	@override String editMediaBrowserIntro({required Object serverName}) => 'Legg til eller fjern URL-er for ${serverName}. Plezy vil bruke den nåbare URL-en med lavest ventetid.';
@@ -1185,6 +1341,7 @@ class _Translations$discover$nb extends Translations$discover$en {
 		one: '${n} tittel',
 		other: '${n} titler',
 	);
+	@override late final _Translations$discover$person$nb person = _Translations$discover$person$nb._(_root);
 }
 
 // Path: errors
@@ -1206,6 +1363,13 @@ class _Translations$errors$nb extends Translations$errors$en {
 	@override String failedToSwitchProfile({required Object displayName}) => 'Kunne ikke bytte til ${displayName}';
 	@override String failedToDeleteProfile({required Object displayName}) => 'Kunne ikke slette ${displayName}';
 	@override String get failedToRate => 'Kunne ikke oppdatere vurderingen';
+	@override String get reasonTimedOut => 'tidsavbrudd på tilkoblingen';
+	@override String get reasonUnreachable => 'medieserveren kunne ikke nås';
+	@override String get reasonRefused => 'medieserveren avviste forespørselen';
+	@override String get reasonNotFound => 'elementet finnes ikke lenger på medieserveren';
+	@override String get reasonServerError => 'medieserveren rapporterte en feil';
+	@override String get reasonCancelled => 'forespørselen ble avbrutt';
+	@override String get reasonUnexpected => 'det oppsto en uventet feil';
 }
 
 // Path: libraries
@@ -1260,6 +1424,7 @@ class _Translations$libraries$nb extends Translations$libraries$en {
 	@override late final _Translations$libraries$groupings$nb groupings = _Translations$libraries$groupings$nb._(_root);
 	@override late final _Translations$libraries$filterCategories$nb filterCategories = _Translations$libraries$filterCategories$nb._(_root);
 	@override late final _Translations$libraries$sortLabels$nb sortLabels = _Translations$libraries$sortLabels$nb._(_root);
+	@override late final _Translations$libraries$advancedFilters$nb advancedFilters = _Translations$libraries$advancedFilters$nb._(_root);
 }
 
 // Path: about
@@ -1272,7 +1437,7 @@ class _Translations$about$nb extends Translations$about$en {
 	@override String get title => 'Om';
 	@override String get openSourceLicenses => 'Lisenser for åpen kildekode';
 	@override String versionLabel({required Object version}) => 'Versjon ${version}';
-	@override String get appDescription => 'En vakker Plex- og Jellyfin-klient for Flutter';
+	@override String get appDescription => 'En vakker Plex-, Jellyfin- og Emby-klient for Flutter';
 	@override String get viewLicensesDescription => 'Vis lisenser for tredjepartsbiblioteker';
 }
 
@@ -1405,6 +1570,10 @@ class _Translations$explore$nb extends Translations$explore$en {
 	@override String get notInLibrary => 'Ikke i biblioteket ditt';
 	@override String get inTheseLibraries => 'I disse bibliotekene';
 	@override String get checkingLibrary => 'Sjekker biblioteket ditt...';
+	@override String libraryCheckFailed({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('nb'))(n,
+		one: 'Kunne ikke sjekke ${n} server',
+		other: 'Kunne ikke sjekke ${n} servere',
+	);
 	@override String get emptyTitle => 'Ingenting her ennå';
 	@override String emptyMessage({required Object source}) => 'Rader fra ${source} vises her når de har innhold.';
 	@override String searchHint({required Object source}) => 'Søk i ${source}';
@@ -1507,7 +1676,9 @@ class _Translations$liveTv$nb extends Translations$liveTv$en {
 	@override String get editRuleAction => 'Rediger';
 	@override String get recordingRuleUpdated => 'Opptaksregel oppdatert';
 	@override String get guideReloadRequested => 'Oppdatering av programguiden er forespurt';
+	@override String get guideReloadFailed => 'Kunne ikke oppdatere programguiden';
 	@override String get rulesProcessRequested => 'Ny vurdering av reglene er forespurt';
+	@override String get rulesProcessFailed => 'Kunne ikke kjøre opptaksreglene på nytt';
 	@override String get recordShow => 'Ta opp program';
 	@override late final _Translations$liveTv$recordSettings$nb recordSettings = _Translations$liveTv$recordSettings$nb._(_root);
 	@override String startingInMinutes({required Object minutes}) => 'Starter om ${minutes} min';
@@ -1515,6 +1686,8 @@ class _Translations$liveTv$nb extends Translations$liveTv$en {
 	@override String invalidPlaybackData({required Object product}) => '${product} returnerte ugyldige avspillingsdata for direkte-TV';
 	@override String get failedToStartChannel => 'Kunne ikke starte direktekanalen';
 	@override String get failedToBuildStreamUrl => 'Kunne ikke opprette strømme-URL-en';
+	@override String playbackStartFailed({required Object reason}) => 'Kunne ikke starte kanalen: ${reason}';
+	@override String channelSwitchFailed({required Object reason}) => 'Kunne ikke bytte kanal: ${reason}';
 }
 
 // Path: collections
@@ -1629,71 +1802,113 @@ class _Translations$watchTogether$nb extends Translations$watchTogether$en {
 	// Translations
 	@override String get title => 'Se sammen';
 	@override String get description => 'Se innhold synkronisert med venner og familie';
-	@override String get createSession => 'Opprett økt';
-	@override String get creating => 'Oppretter...';
-	@override String get joinSession => 'Bli med i økt';
-	@override String get joining => 'Blir med...';
-	@override String get controlMode => 'Kontrollmodus';
-	@override String get controlModeQuestion => 'Hvem kan kontrollere avspilling?';
-	@override String get hostOnly => 'Kun vert';
-	@override String get anyone => 'Alle';
-	@override String get hostingSession => 'Er vert for økt';
-	@override String get inSession => 'I økt';
-	@override String get sessionCode => 'Øktkode';
-	@override String get openSessionControls => 'Åpne øktkontroller for Se sammen';
-	@override String get copySessionCode => 'Kopier øktkode';
-	@override String get hostControlsPlayback => 'Verten kontrollerer avspilling';
-	@override String get anyoneCanControl => 'Alle kan kontrollere avspilling';
-	@override String get hostControls => 'Vertskontroll';
-	@override String get anyoneControls => 'Alle kontrollerer';
-	@override String get participants => 'Deltakere';
-	@override String get host => 'Vert';
-	@override String get hostBadge => 'VERT';
-	@override String get youAreHost => 'Du er verten';
-	@override String get watchingWithOthers => 'Ser med andre';
-	@override String get endSession => 'Avslutt økt';
-	@override String get leaveSession => 'Forlat økt';
-	@override String get endSessionQuestion => 'Avslutte økt?';
-	@override String get leaveSessionQuestion => 'Forlate økt?';
-	@override String get endSessionConfirm => 'Dette vil avslutte økten for alle deltakere.';
-	@override String get leaveSessionConfirm => 'Du vil bli fjernet fra økten.';
-	@override String get endSessionConfirmOverlay => 'Dette vil avslutte se sammen-økten for alle deltakere.';
-	@override String get leaveSessionConfirmOverlay => 'Du vil bli frakoblet fra se sammen-økten.';
-	@override String get end => 'Avslutt';
-	@override String get leave => 'Forlat';
-	@override String get syncing => 'Synkroniserer...';
-	@override String get joinWatchSession => 'Bli med i se sammen-økt';
-	@override String get enterCodeHint => 'Skriv inn 5-tegns kode';
-	@override String get pasteFromClipboard => 'Lim inn fra utklippstavle';
-	@override String get pleaseEnterCode => 'Vennligst skriv inn en øktkode';
-	@override String get codeMustBe5Chars => 'Øktkoden må være 5 tegn';
-	@override String get joinInstructions => 'Skriv inn vertens øktkode for å bli med.';
-	@override String get failedToCreate => 'Kunne ikke opprette økt';
-	@override String get failedToJoin => 'Kunne ikke bli med i økt';
-	@override String get sessionCodeCopied => 'Øktkode kopiert til utklippstavle';
-	@override String get relayUnreachable => 'Reléserveren kan ikke nås. Blokkering hos internettleverandøren kan hindre Se sammen.';
-	@override String get reconnectingToHost => 'Kobler til verten på nytt...';
-	@override String get currentPlayback => 'Gjeldende avspilling';
-	@override String get joinCurrentPlayback => 'Bli med i gjeldende avspilling';
-	@override String get joinCurrentPlaybackDescription => 'Hopp tilbake til det verten ser på nå';
-	@override String get failedToOpenCurrentPlayback => 'Kunne ikke åpne gjeldende avspilling';
-	@override String participantJoined({required Object name}) => '${name} ble med';
-	@override String participantLeft({required Object name}) => '${name} forlot';
-	@override String participantPaused({required Object name}) => '${name} satte avspillingen på pause';
-	@override String participantResumed({required Object name}) => '${name} startet avspillingen igjen';
-	@override String participantSeeked({required Object name}) => '${name} endret avspillingsposisjonen';
-	@override String participantBuffering({required Object name}) => '${name} buffrer';
-	@override String participantNeedsUpdate({required Object name}) => '${name} bruker en eldre appversjon — synkronisering er ikke tilgjengelig';
-	@override String resumingWithout({required Object name}) => 'Fortsetter uten ${name}';
-	@override String get waitingForParticipants => 'Venter på at de andre skal laste inn...';
-	@override String waitingForName({required Object name}) => 'Venter på ${name}...';
+	@override String get createRoom => 'Opprett rom';
+	@override String get creatingRoom => 'Oppretter rom...';
+	@override String get joinRoom => 'Bli med i rom';
+	@override String get joiningRoom => 'Blir med i rom...';
+	@override String get connecting => 'Kobler til...';
+	@override String get relayPublic => 'Rom bruker de offentlige Open Watch Party-reléserverne.';
+	@override String relayCustom({required Object url}) => 'Rom bruker reléserveren din på ${url}.';
 	@override String get recentRooms => 'Nylige rom';
+	@override String get roomActions => 'Romhandlinger';
 	@override String get renameRoom => 'Gi nytt navn til rom';
 	@override String get removeRoom => 'Fjern';
-	@override String get guestSwitchUnavailable => 'Kunne ikke bytte — server ikke tilgjengelig for synkronisering';
-	@override String get guestSwitchFailed => 'Kunne ikke bytte — innhold ble ikke funnet på denne serveren';
-	@override String get defaultDisplayName => 'Bruker';
+	@override String get enterRoomCode => 'Skriv inn koden på 6 tegn fra verten.';
+	@override String get roomCode => 'Romkode';
+	@override String get paste => 'Lim inn';
+	@override String get noCodeInClipboard => 'Utklippstavlen inneholder ingen romkode';
+	@override String get copyCode => 'Kopier kode';
+	@override String get codeCopied => 'Romkode kopiert';
+	@override String get shareInvite => 'Del invitasjon';
+	@override String get inviteCopied => 'Invitasjon kopiert. Lim den inn i en melding.';
+	@override String inviteMessage({required Object code}) => 'Bli med i Se sammen-rommet mitt i Plezy: åpne Se sammen, velg «Bli med i rom» og skriv inn ${code}.';
+	@override String get openSessionControls => 'Åpne øktkontroller for Se sammen';
+	@override String get reconnecting => 'Kobler til på nytt...';
+	@override String get reconnectingDescription => 'Tilkoblingen ble brutt. Du blir automatisk med i rommet igjen.';
+	@override String get connected => 'Tilkoblet';
+	@override String get disconnected => 'Frakoblet';
+	@override String get youAreHost => 'Du er verten';
+	@override String hostedBy({required Object name}) => 'Vert: ${name}';
+	@override String get hostControlsPlayback => 'Verten kontrollerer avspilling';
+	@override String get anyoneCanControl => 'Alle kan kontrollere avspilling';
+	@override String get roomLocked => 'Rommet er låst';
+	@override String get nowPlaying => 'Spilles nå';
+	@override String get nothingPlaying => 'Ingenting spilles';
+	@override String get nothingPlayingHost => 'Spill av noe fra et hvilket som helst bibliotek for å dele det med rommet.';
+	@override String get nothingPlayingGuest => 'Når verten spiller av noe, åpnes det her.';
+	@override String get notShareable => 'Denne videoen har ingen treff i katalogen, så bare de med tilgang til samme server kan spille den av.';
+	@override String get searching => 'Ser etter denne videoen i bibliotekene dine...';
+	@override String get yourCopy => 'Din kopi';
+	@override String get sharingYourCopy => 'Du deler din kopi';
+	@override String playingOtherLength({required Object difference}) => 'Spiller av din kopi, ${difference}';
+	@override String get mismatchTitle => 'Kopien din har en annen lengde';
+	@override String mismatchDescription({required Object difference}) => 'Den nærmeste kopien din er ${difference} enn videoen i rommet. Det kan være en annen klipping eller versjon.';
+	@override String get playAnyway => 'Spill av likevel';
+	@override String get chooseAnotherCopy => 'Velg en annen kopi';
+	@override String get dontPlay => 'Ikke spill av';
+	@override String get unavailableTitle => 'Du har ikke denne videoen';
+	@override String get unavailableDescription => 'Plezy fant den ikke i bibliotekene dine. Velg en kopi selv eller søk på nytt.';
+	@override String get chooseCopy => 'Velg en kopi';
+	@override String get searchAgain => 'Søk på nytt';
+	@override String get noCandidates => 'Fant ingen kopier i bibliotekene dine.';
+	@override String get choiceFailed => 'Kunne ikke spille av denne kopien for rommet';
+	@override String lengthLonger({required Object duration}) => '${duration} lengre';
+	@override String lengthShorter({required Object duration}) => '${duration} kortere';
+	@override String get lengthSame => 'Samme lengde';
+	@override String get lengthUnknown => 'Ukjent lengde';
+	@override String get joinCurrentPlayback => 'Bli med i gjeldende avspilling';
+	@override String get joinCurrentPlaybackDescription => 'Hopp tilbake til det verten ser på nå';
+	@override String get stopMedia => 'Stopp videoen for alle';
+	@override String get syncOffset => 'Tidsforskyvning';
+	@override String get syncOffsetDescription => 'Forskyv videoen din hvis den ligger foran eller bak rommet.';
+	@override String offsetHint({required Object difference}) => 'Kopien din er ${difference} enn videoen i rommet.';
+	@override String applyDifference({required Object offset}) => 'Bruk ${offset}';
+	@override String get offsetMinusSecond => '-1 s';
+	@override String get offsetMinusTenth => '-100 ms';
+	@override String get offsetPlusTenth => '+100 ms';
+	@override String get offsetPlusSecond => '+1 s';
+	@override String get participants => 'Deltakere';
+	@override String participantCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('nb'))(n,
+		one: '${n} deltaker',
+		other: '${n} deltakere',
+	);
+	@override String get hostBadge => 'VERT';
+	@override String nameYou({required Object name}) => '${name} (deg)';
+	@override String get playerIdle => 'Inaktiv';
+	@override String get playerLoading => 'Laster';
+	@override String get playerReady => 'Klar';
+	@override String get playerBuffering => 'Bufrer';
+	@override String get matchSearching => 'Søker';
+	@override String get matchMatched => 'Har videoen';
+	@override String get matchMismatched => 'Annen lengde';
+	@override String get matchUnavailable => 'Har ikke videoen';
+	@override String participantOffset({required Object offset}) => 'Forskyvning ${offset}';
+	@override String get makeHost => 'Gjør til vert';
+	@override String get makeHostQuestion => 'Overfør vert?';
+	@override String makeHostConfirm({required Object name}) => '${name} vil kontrollere avspillingen og styre økten for alle.';
+	@override String get transfer => 'Overfør';
+	@override String get removeParticipant => 'Fjern fra rommet';
+	@override String removeParticipantQuestion({required Object name}) => 'Fjerne ${name}?';
+	@override String removeParticipantConfirm({required Object name}) => '${name} fjernes fra rommet, men kan bli med igjen med koden med mindre du låser rommet.';
+	@override String get remove => 'Fjern';
+	@override String get roomSettings => 'Rominnstillinger';
+	@override String get letEveryoneControl => 'La alle kontrollere avspillingen';
+	@override String get lockRoom => 'Lås rommet';
+	@override String get lockRoomDescription => 'Ingen nye kan bli med';
+	@override String get leaveRoom => 'Forlat rommet';
+	@override String get leaveRoomQuestion => 'Forlate rommet?';
+	@override String get leaveRoomConfirm => 'Du kan bli med igjen med romkoden.';
+	@override String get leave => 'Forlat';
+	@override String get endRoom => 'Avslutt rommet';
+	@override String get endRoomQuestion => 'Avslutte rommet?';
+	@override String get endRoomConfirm => 'Dette avslutter rommet for alle.';
+	@override String get end => 'Avslutt';
+	@override String get playBlockedTitle => 'Avspillingen startet ikke';
+	@override String get playBlockedDescription => 'Trykk på spill av for å begynne å se sammen med rommet.';
+	@override late final _Translations$watchTogether$notices$nb notices = _Translations$watchTogether$notices$nb._(_root);
+	@override late final _Translations$watchTogether$ended$nb ended = _Translations$watchTogether$ended$nb._(_root);
 	@override late final _Translations$watchTogether$errors$nb errors = _Translations$watchTogether$errors$nb._(_root);
+	@override String untitledEpisode({required Object number}) => 'Episode ${number}';
 }
 
 // Path: downloads
@@ -1717,10 +1932,14 @@ class _Translations$downloads$nb extends Translations$downloads$en {
 	@override String get downloadQueued => 'Nedlasting i kø';
 	@override String get downloadResumed => 'Nedlasting gjenopptatt';
 	@override String get serverErrorBitrate => 'Serverfeil: filen kan overskride grensen for ekstern bitrate';
-	@override String get storageFull => 'Nedlastingene ble stoppet fordi lagringsplassen på enheten er full. Frigjør plass, og prøv igjen.';
+	@override String get storageFull => 'Nedlastingene ble stoppet for å beskytte ledig lagringsplass. Frigjør plass eller velg en annen nedlastingsplassering, og prøv igjen.';
+	@override String get storageUnavailable => 'Nedlastingene ble stoppet fordi tilgjengelig lagringsplass ikke kunne sjekkes. Sjekk nedlastingsstedet, og prøv igjen.';
 	@override String episodesQueued({required Object count}) => '${count} episoder i nedlastingskø';
 	@override String get downloadDeleted => 'Nedlasting slettet';
 	@override String deleteConfirm({required Object title}) => 'Slette "${title}" fra denne enheten?';
+	@override String get deleteCollectionDownloads => 'Slett nedlastinger';
+	@override String deleteCollectionDownloadsConfirm({required Object title}) => 'Slette alle nedlastinger i «${title}» fra denne enheten?';
+	@override String get collectionDownloadsDeleted => 'Nedlastinger slettet';
 	@override String get cancelledDownloadTitle => 'Avbrutt nedlasting';
 	@override String get cancelledDownloadMessage => 'Denne nedlastingen ble avbrutt. Hva vil du gjøre?';
 	@override String get allEpisodesAlreadyDownloaded => 'Alle episoder er allerede lastet ned';
@@ -1738,6 +1957,8 @@ class _Translations$downloads$nb extends Translations$downloads$en {
 	@override String get noDownloadsTree => 'Ingen nedlastinger';
 	@override String get pauseAll => 'Pause alle';
 	@override String get resumeAll => 'Gjenoppta alle';
+	@override String get retryAll => 'Prøv alle på nytt';
+	@override String get retryFailed => 'Prøv mislykkede nedlastinger på nytt';
 	@override String get deleteAll => 'Slett alle';
 	@override String get selectVersion => 'Velg versjon';
 	@override String get allEpisodes => 'Alle episoder';
@@ -1774,17 +1995,27 @@ class _Translations$downloads$nb extends Translations$downloads$en {
 	@override String get syncRuleAvailable => 'Tilgjengelig';
 	@override String get syncRuleOffline => 'Frakoblet';
 	@override String get syncRuleSignInRequired => 'Innlogging kreves';
+	@override String get syncRuleAccessDenied => 'Tilgang nektet';
 	@override String get syncRuleNotAvailableForProfile => 'Ikke tilgjengelig for gjeldende profil';
 	@override String get syncRuleUnknownServer => 'Ukjent server';
 	@override String get syncRuleListCreated => 'Synkroniseringsregel opprettet';
 	@override late final _Translations$downloads$backgroundWarning$nb backgroundWarning = _Translations$downloads$backgroundWarning$nb._(_root);
+	@override String get options => 'Valg for nedlastinger';
+	@override late final _Translations$downloads$groupings$nb groupings = _Translations$downloads$groupings$nb._(_root);
+	@override String get unknownLibrary => 'Ukjent bibliotek';
 	@override String get unknownShow => 'Ukjent serie';
 	@override String get unknownSeason => 'Ukjent sesong';
 	@override String get unknownAlbum => 'Ukjent album';
 	@override String completedOfTotal({required Object completed, required Object total}) => '${completed}/${total} fullført';
 	@override String get errorFileNotFound => 'Filen ble ikke funnet (404)';
+	@override String get errorDownloadNotAllowed => 'Serveren tillater ikke nedlasting (403)';
 	@override String get errorDownloadFailed => 'Nedlastingen mislyktes';
-	@override String errorPostProcessing({required Object error}) => 'Etterbehandlingen mislyktes: ${error}';
+	@override String errorDownloadFailedWithReason({required Object reason}) => 'Nedlastingen mislyktes: ${reason}';
+	@override String errorHttpStatus({required Object status}) => 'Nedlastingen mislyktes (HTTP ${status})';
+	@override String errorPostProcessing({required Object reason}) => 'Etterbehandlingen mislyktes: ${reason}';
+	@override String get reasonFileNotSaved => 'filen kunne ikke lagres på denne enheten';
+	@override String get reasonCannotResume => 'den delvise nedlastingen kunne ikke gjenopptas';
+	@override String get reasonDeviceStorageFull => 'denne enheten er tom for lagringsplass';
 	@override String get notificationDownloading => 'Laster ned...';
 	@override String get notificationComplete => 'Nedlastingen er fullført';
 	@override String get notificationPaused => 'Nedlastingen er satt på pause';
@@ -1861,7 +2092,7 @@ class _Translations$videoSettings$nb extends Translations$videoSettings$en {
 	@override String get audioOutputSpatial => 'Romlig lyd';
 	@override String get audioOutputStereo => 'Stereo';
 	@override String get audioNormalization => 'Normaliser lydstyrke';
-	@override String get audioDownmix => 'Nedmiks til stereo';
+	@override String get audioNormalizationDisablesPassthrough => 'Dekoder lyd til PCM; direkte lydutgang er av mens dette er på';
 }
 
 // Path: performanceOverlay
@@ -1883,6 +2114,13 @@ class _Translations$performanceOverlay$nb extends Translations$performanceOverla
 	@override String get rotation => 'Rotasjon';
 	@override String get dvSource => 'DV-kilde';
 	@override String get dvPath => 'DV-sti';
+	@override String get dvRouteDecoder => 'Dolby Vision-dekoder';
+	@override String get dvRouteDecoderP81 => 'Dolby Vision-dekoder (P7→8.1)';
+	@override String get dvRouteBaseLayer => 'Basislag';
+	@override String get dvRouteBaseLayerHdr10 => 'HDR10-basislag';
+	@override String get dvRouteBaseLayerHlg => 'HLG-basislag';
+	@override String get dvRouteBaseLayerSdr => 'SDR-basislag';
+	@override String get dvRouteReshaped => 'RPU-omformet (gpu-next)';
 	@override String get p7Conversion => 'P7-konv.';
 	@override String get sampleRate => 'Samplingsrate';
 	@override String get pixelFormat => 'Pikselformat';
@@ -2025,6 +2263,7 @@ class _Translations$metadataEdit$nb extends Translations$metadataEdit$en {
 	@override String get country => 'Land';
 	@override String get collection => 'Samling';
 	@override String get label => 'Etikett';
+	@override String get quickTag => 'Hurtigtagg...';
 }
 
 // Path: matchScreen
@@ -2107,6 +2346,10 @@ class _Translations$seerr$nb extends Translations$seerr$en {
 	@override String get qualityProfile => 'Kvalitetsprofil';
 	@override String get rootFolder => 'Rotmappe';
 	@override String get languageProfile => 'Språkprofil';
+	@override String get tags => 'Tagger';
+	@override String get noTags => 'Ingen tagger';
+	@override String defaultOption({required Object name}) => '${name} (standard)';
+	@override String get animeNote => 'Denne serien er en anime.';
 	@override String get requestSubmitted => 'Forespørsel sendt';
 	@override String requestFailed({required Object error}) => 'Forespørsel mislyktes: ${error}';
 	@override String get requestsLoadFailed => 'Kunne ikke laste forespørselsalternativer';
@@ -2118,6 +2361,7 @@ class _Translations$seerr$nb extends Translations$seerr$en {
 	@override String get statusBlocklisted => 'På blokkeringslisten';
 	@override String couldNotReach({required Object url, required Object error}) => 'Kunne ikke nå ${url}: ${error}';
 	@override String noInstanceAtUrl({required Object url, required Object status}) => 'Ingen Seerr-instans på ${url} (HTTP ${status})';
+	@override String get behindAuthProxy => 'En autentiserende omvendt proxy (SSO eller HTTP-autentisering) svarte i stedet for Seerr. Plezy kan ikke logge inn gjennom den: La Seerrs /api/v1-sti omgå proxyen for denne appen, eller bruk en adresse som når Seerr direkte.';
 	@override String get invalidUrl => 'Skriv inn en serveradresse som https://seerr.example.com';
 	@override String get quickConnectUnsupported => 'Denne Seerr-instansen støtter ikke Quick Connect. Den krever Seerr 3.4 eller nyere.';
 	@override String get notInitialized => 'Denne Seerr-instansen har ikke fullført førstegangsoppsettet';
@@ -2128,6 +2372,8 @@ class _Translations$seerr$nb extends Translations$seerr$en {
 	@override String get freshCookieRejected => 'Seerr avviste den nye øktinformasjonskapselen';
 	@override String get noUserInformation => 'Seerr returnerte ingen brukerinformasjon';
 	@override String get sessionRejectedAfterReauth => 'Økten ble avvist etter ny innlogging';
+	@override String get permissionDenied => 'Seerr avviste denne handlingen: kontoen din har ikke lenger den nødvendige tillatelsen';
+	@override String get permissionRevoked => 'Du har ikke lenger tillatelse til å be om dette';
 }
 
 // Path: services
@@ -2148,6 +2394,7 @@ class _Translations$services$nb extends Translations$services$en {
 	@override String disconnectConfirmBody({required Object service}) => 'Plezy slutter å oppdatere ${service}. Koble til igjen når som helst.';
 	@override String connectFailed({required Object service}) => 'Kunne ikke koble til ${service}. Prøv igjen.';
 	@override late final _Translations$services$names$nb names = _Translations$services$names$nb._(_root);
+	@override late final _Translations$services$simklReconnect$nb simklReconnect = _Translations$services$simklReconnect$nb._(_root);
 	@override late final _Translations$services$deviceCode$nb deviceCode = _Translations$services$deviceCode$nb._(_root);
 	@override late final _Translations$services$oauthProxy$nb oauthProxy = _Translations$services$oauthProxy$nb._(_root);
 	@override late final _Translations$services$pendingAuth$nb pendingAuth = _Translations$services$pendingAuth$nb._(_root);
@@ -2210,6 +2457,38 @@ class _Translations$addServer$nb extends Translations$addServer$en {
 	@override String redirectUnsupportedEnterFinal({required Object product}) => 'Serveren omdirigerte til en URL som ikke støttes. Angi den endelige ${product}-URL-en direkte.';
 }
 
+// Path: appIcon.names
+class _Translations$appIcon$names$nb extends Translations$appIcon$names$en {
+	_Translations$appIcon$names$nb._(TranslationsNb root) : this._root = root, super.internal(root);
+
+	final TranslationsNb _root; // ignore: unused_field
+
+	// Translations
+	@override String get midnight => 'Midnatt';
+	@override String get ember => 'Glød';
+	@override String get paper => 'Papir';
+	@override String get oled => 'OLED';
+	@override String get line => 'Strek';
+	@override String get ocean => 'Hav';
+	@override String get ultraviolet => 'Ultrafiolett';
+	@override String get matcha => 'Matcha';
+	@override String get sunset => 'Solnedgang';
+	@override String get gold => 'Gull';
+	@override String get titanium => 'Titan';
+	@override String get glass => 'Glass';
+	@override String get crt => 'CRT';
+	@override String get vhs => 'VHS';
+	@override String get synthwave => 'Synthwave';
+	@override String get pixel => 'Piksel';
+	@override String get neon => 'Neon';
+	@override String get sticker => 'Klistremerke';
+	@override String get ticket => 'Billett';
+	@override String get pop => 'Pop';
+	@override String get strata => 'Sjikt';
+	@override String get facet => 'Fasett';
+	@override String get tilde => 'Tilde';
+}
+
 // Path: common.ratingSource
 class _Translations$common$ratingSource$nb extends Translations$common$ratingSource$en {
 	_Translations$common$ratingSource$nb._(TranslationsNb root) : this._root = root, super.internal(root);
@@ -2228,6 +2507,8 @@ class _Translations$common$ratingSource$nb extends Translations$common$ratingSou
 	@override String get trakt => 'Trakt';
 	@override String get rottenTomatoesCritic => 'Rotten Tomatoes-kritikere';
 	@override String get rottenTomatoesAudience => 'Rotten Tomatoes-publikum';
+	@override String get metacritic => 'Metacritic';
+	@override String get letterboxd => 'Letterboxd';
 }
 
 // Path: common.mediaKind
@@ -2249,6 +2530,52 @@ class _Translations$common$mediaKind$nb extends Translations$common$mediaKind$en
 	@override String get clip => 'Klipp';
 	@override String get photo => 'Bilde';
 	@override String get folder => 'Mappe';
+}
+
+// Path: supporter.errors
+class _Translations$supporter$errors$nb extends Translations$supporter$errors$en {
+	_Translations$supporter$errors$nb._(TranslationsNb root) : this._root = root, super.internal(root);
+
+	final TranslationsNb _root; // ignore: unused_field
+
+	// Translations
+	@override String get storeUnavailable => 'Kjøp er ikke tilgjengelig. Sjekk at du er logget inn i butikken, og at kjøp er tillatt på denne enheten.';
+	@override String get productNotFound => 'Supporter-kjøpet er ikke tilgjengelig i butikken din akkurat nå.';
+	@override String get productQueryFailed => 'Kunne ikke laste inn prisen. Sjekk tilkoblingen og prøv igjen.';
+	@override String get purchaseFailed => 'Kjøpet gikk ikke gjennom. Prøv igjen.';
+	@override String get restoreFailed => 'Kunne ikke nå butikken for å gjenopprette kjøpet. Prøv igjen.';
+	@override String get nothingToRestore => 'Fant ikke noe Supporter-kjøp for denne butikkontoen.';
+}
+
+// Path: themeEditor.slots
+class _Translations$themeEditor$slots$nb extends Translations$themeEditor$slots$en {
+	_Translations$themeEditor$slots$nb._(TranslationsNb root) : this._root = root, super.internal(root);
+
+	final TranslationsNb _root; // ignore: unused_field
+
+	// Translations
+	@override String get bg => 'Bakgrunn';
+	@override String get surface => 'Overflate';
+	@override String get outline => 'Kontur';
+	@override String get text => 'Tekst';
+	@override String get textMuted => 'Sekundærtekst';
+	@override String get accent => 'Aksent';
+}
+
+// Path: themeEditor.contrast
+class _Translations$themeEditor$contrast$nb extends Translations$themeEditor$contrast$en {
+	_Translations$themeEditor$contrast$nb._(TranslationsNb root) : this._root = root, super.internal(root);
+
+	final TranslationsNb _root; // ignore: unused_field
+
+	// Translations
+	@override String get textOnBg => 'Tekst på bakgrunn';
+	@override String get textOnSurface => 'Tekst på overflate';
+	@override String get textMutedOnBg => 'Sekundærtekst på bakgrunn';
+	@override String get textMutedOnSurface => 'Sekundærtekst på overflate';
+	@override String get accentOnBg => 'Aksent på bakgrunn';
+	@override String get accentOnSurface => 'Aksent på overflate';
+	@override String get labelOnAccent => 'Knappetekst på aksent';
 }
 
 // Path: hotkeys.actions
@@ -2385,6 +2712,20 @@ class _Translations$accountPreferences$mediaReviewsOptions$nb extends Translatio
 	@override String get nobody => 'Skjult';
 }
 
+// Path: discover.person
+class _Translations$discover$person$nb extends Translations$discover$person$en {
+	_Translations$discover$person$nb._(TranslationsNb root) : this._root = root, super.internal(root);
+
+	final TranslationsNb _root; // ignore: unused_field
+
+	// Translations
+	@override String get born => 'Født';
+	@override String get died => 'Død';
+	@override String get birthplace => 'Fødested';
+	@override String dateWithAge({required Object date, required Object age}) => '${date} (${age} år)';
+	@override String dateWithAgeAtDeath({required Object date, required Object age}) => '${date} (${age} år gammel)';
+}
+
 // Path: libraries.tabs
 class _Translations$libraries$tabs$nb extends Translations$libraries$tabs$en {
 	_Translations$libraries$tabs$nb._(TranslationsNb root) : this._root = root, super.internal(root);
@@ -2431,6 +2772,7 @@ class _Translations$libraries$filterCategories$nb extends Translations$libraries
 	@override String get unwatched => 'Usette';
 	@override String get unplayed => 'Ikke avspilt';
 	@override String get favorites => 'Favoritter';
+	@override String get filePath => 'Filbane';
 }
 
 // Path: libraries.sortLabels
@@ -2460,6 +2802,44 @@ class _Translations$libraries$sortLabels$nb extends Translations$libraries$sortL
 	@override String get dateShared => 'Delingsdato';
 	@override String get latestEpisodeAirDate => 'Siste episodes sendedato';
 	@override String get lastEpisodeDateAdded => 'Dato for sist lagt til episode';
+	@override String get dateDownloaded => 'Dato lastet ned';
+	@override String get size => 'Størrelse';
+	@override String get library => 'Bibliotek';
+}
+
+// Path: libraries.advancedFilters
+class _Translations$libraries$advancedFilters$nb extends Translations$libraries$advancedFilters$en {
+	_Translations$libraries$advancedFilters$nb._(TranslationsNb root) : this._root = root, super.internal(root);
+
+	final TranslationsNb _root; // ignore: unused_field
+
+	// Translations
+	@override String get include => 'Inkluder';
+	@override String get exclude => 'Ekskluder';
+	@override String get any => 'Uansett';
+	@override String get yes => 'Ja';
+	@override String get no => 'Nei';
+	@override String not({required Object value}) => 'Ikke ${value}';
+	@override String valueCount({required Object count}) => '${count} valgt';
+	@override String valueCountExcluded({required Object count}) => '${count} ekskludert';
+	@override String get searchValues => 'Søk etter verdier';
+	@override String get noValues => 'Ingen verdier';
+	@override String get matchContains => 'Inneholder';
+	@override String get matchNotContains => 'Inneholder ikke';
+	@override String get matchIs => 'Er';
+	@override String get matchIsNot => 'Er ikke';
+	@override String get matchBeginsWith => 'Begynner med';
+	@override String get matchEndsWith => 'Slutter med';
+	@override String get textHint => 'Skriv inn tekst';
+	@override String get from => 'Fra';
+	@override String get to => 'Til';
+	@override String range({required Object from, required Object to}) => '${from} til ${to}';
+	@override String atLeast({required Object value}) => '${value} og over';
+	@override String atMost({required Object value}) => 'Opptil ${value}';
+	@override String dateLastDays({required Object count}) => 'Siste ${count} dager';
+	@override String get dateLastYear => 'Siste år';
+	@override String dateOlderThanDays({required Object count}) => 'Eldre enn ${count} dager';
+	@override String get dateOlderThanYear => 'Eldre enn ett år';
 }
 
 // Path: explore.rows
@@ -2611,6 +2991,7 @@ class _Translations$explore$creditRole$nb extends Translations$explore$creditRol
 	final TranslationsNb _root; // ignore: unused_field
 
 	// Translations
+	@override String get actor => 'Skuespiller';
 	@override String get director => 'Regissør';
 	@override String get writer => 'Forfatter';
 	@override String get producer => 'Produsent';
@@ -2625,8 +3006,8 @@ class _Translations$explore$relation$nb extends Translations$explore$relation$en
 	final TranslationsNb _root; // ignore: unused_field
 
 	// Translations
-	@override String get prequel => 'Prequel';
-	@override String get sequel => 'Sequel';
+	@override String get prequel => 'Forløper';
+	@override String get sequel => 'Oppfølger';
 	@override String get sideStory => 'Bihistorie';
 	@override String get spinOff => 'Spin-off';
 	@override String get alternativeVersion => 'Alternativ versjon';
@@ -2706,6 +3087,54 @@ class _Translations$music$discography$nb extends Translations$music$discography$
 	@override String get compilations => 'Samlealbum';
 }
 
+// Path: watchTogether.notices
+class _Translations$watchTogether$notices$nb extends Translations$watchTogether$notices$en {
+	_Translations$watchTogether$notices$nb._(TranslationsNb root) : this._root = root, super.internal(root);
+
+	final TranslationsNb _root; // ignore: unused_field
+
+	// Translations
+	@override String pressedPlay({required Object name}) => '${name} trykket på spill av';
+	@override String get playbackStarted => 'Avspillingen startet';
+	@override String paused({required Object name}) => '${name} satte avspillingen på pause';
+	@override String get playbackPaused => 'Avspillingen ble satt på pause';
+	@override String jumpedTo({required Object name, required Object position}) => '${name} hoppet til ${position}';
+	@override String roomJumpedTo({required Object position}) => 'Hoppet til ${position}';
+	@override String changedSpeed({required Object name, required Object speed}) => '${name} satte hastigheten til ${speed}';
+	@override String speedChanged({required Object speed}) => 'Hastigheten satt til ${speed}';
+	@override String startedMedia({required Object name, required Object title}) => '${name} startet ${title}';
+	@override String mediaStarted({required Object title}) => 'Spilles nå: ${title}';
+	@override String stoppedMedia({required Object name}) => '${name} stoppet videoen';
+	@override String get mediaStopped => 'Videoen stoppet';
+	@override String waitingFor({required Object name}) => 'Venter på ${name}...';
+	@override String get waitingForSomeone => 'Venter på at noen skal ta igjen...';
+	@override String get finished => 'Ferdig';
+	@override String hostChangedTo({required Object name}) => '${name} er nå verten';
+	@override String get youAreNowHost => 'Du er nå verten';
+	@override String joined({required Object name}) => '${name} ble med';
+	@override String left({required Object name}) => '${name} forlot';
+	@override String get controlRefused => 'Bare verten kan kontrollere avspillingen';
+	@override String get searchFailed => 'Enkelte servere kunne ikke gjennomsøkes etter videoen i rommet';
+	@override String get playBlocked => 'Trykk på spill av for å starte';
+	@override String get shareFailed => 'Kunne ikke dele denne videoen med rommet';
+	@override String get downloadNotShared => 'Nedlastinger deles ikke med rommet mens serveren deres er frakoblet';
+	@override String get openFailed => 'Kunne ikke åpne videoen i rommet';
+}
+
+// Path: watchTogether.ended
+class _Translations$watchTogether$ended$nb extends Translations$watchTogether$ended$en {
+	_Translations$watchTogether$ended$nb._(TranslationsNb root) : this._root = root, super.internal(root);
+
+	final TranslationsNb _root; // ignore: unused_field
+
+	// Translations
+	@override String get ended => 'Verten avsluttet rommet';
+	@override String get kicked => 'Du ble fjernet fra rommet';
+	@override String get expired => 'Rommet er utløpt';
+	@override String get replaced => 'Du ble med i dette rommet på en annen enhet';
+	@override String get lost => 'Mistet tilkoblingen til rommet';
+}
+
 // Path: watchTogether.errors
 class _Translations$watchTogether$errors$nb extends Translations$watchTogether$errors$en {
 	_Translations$watchTogether$errors$nb._(TranslationsNb root) : this._root = root, super.internal(root);
@@ -2713,10 +3142,20 @@ class _Translations$watchTogether$errors$nb extends Translations$watchTogether$e
 	final TranslationsNb _root; // ignore: unused_field
 
 	// Translations
-	@override String get timedOut => 'Reléserveren svarte ikke i tide';
-	@override String get connectionLost => 'Tilkoblingen ble lukket før økten var klar';
-	@override String get invalidRelayResponse => 'Reléserveren sendte et uventet svar';
-	@override String get sessionEnded => 'Verten avsluttet økten';
+	@override String get invalidCode => 'Det er ikke en romkode. Koder har 6 bokstaver og sifre, uten 0, 1, I, L eller O.';
+	@override String get roomNotFound => 'Ingen rom har den koden. Det kan være avsluttet.';
+	@override String get roomFull => 'Rommet er fullt.';
+	@override String get roomLocked => 'Verten har låst rommet.';
+	@override String get relayFull => 'Se sammen er opptatt akkurat nå. Prøv igjen senere.';
+	@override String get unreachable => 'Kunne ikke nå reléserveren for Se sammen. Sjekk tilkoblingen.';
+	@override String get rateLimited => 'For mange forsøk. Vent litt og prøv igjen.';
+	@override String get clientBlocked => 'Denne versjonen av Plezy kan ikke bruke reléserveren. Oppdater appen.';
+	@override String get forbidden => 'Bare verten kan gjøre det.';
+	@override String get notInRoom => 'Du er ikke i et rom.';
+	@override String get alreadyInRoom => 'Du er allerede i et rom.';
+	@override String get resumeFailed => 'Kunne ikke bli med i rommet igjen.';
+	@override String get unsupported => 'Reléserveren støtter ikke dette.';
+	@override String get generic => 'Noe gikk galt. Prøv igjen.';
 }
 
 // Path: downloads.backgroundWarning
@@ -2752,6 +3191,17 @@ class _Translations$downloads$backgroundWarning$nb extends Translations$download
 	@override String get statusUnknown => 'Ikke sjekket ennå';
 	@override String get settingsUnavailable => 'Kunne ikke åpne systeminnstillingene på denne enheten';
 	@override String get linkUnavailable => 'Kunne ikke åpne dontkillmyapp.com på denne enheten';
+}
+
+// Path: downloads.groupings
+class _Translations$downloads$groupings$nb extends Translations$downloads$groupings$en {
+	_Translations$downloads$groupings$nb._(TranslationsNb root) : this._root = root, super.internal(root);
+
+	final TranslationsNb _root; // ignore: unused_field
+
+	// Translations
+	@override String get library => 'Bibliotek';
+	@override String get collections => 'Samlinger';
 }
 
 // Path: companionRemote.session
@@ -2866,6 +3316,17 @@ class _Translations$services$names$nb extends Translations$services$names$en {
 	@override String get mdblist => 'MDBList';
 }
 
+// Path: services.simklReconnect
+class _Translations$services$simklReconnect$nb extends Translations$services$simklReconnect$en {
+	_Translations$services$simklReconnect$nb._(TranslationsNb root) : this._root = root, super.internal(root);
+
+	final TranslationsNb _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Koble til Simkl på nytt';
+	@override String get subtitle => 'Simkl avvikler påloggingsmetoden som denne tilkoblingen bruker. Når du kobler til på nytt, åpnes simkl.com slik at du kan godkjenne Plezy – Plezy ser aldri passordet ditt. Visningshistorikken din blir liggende på Simkl.';
+}
+
 // Path: services.deviceCode
 class _Translations$services$deviceCode$nb extends Translations$services$deviceCode$en {
 	_Translations$services$deviceCode$nb._(TranslationsNb root) : this._root = root, super.internal(root);
@@ -2934,6 +3395,37 @@ extension on TranslationsNb {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
 			'app.title' => 'Plezy',
+			'appIcon.title' => 'Appikon',
+			'appIcon.defaultIcon' => 'Standard',
+			'appIcon.current' => 'Gjeldende ikon',
+			'appIcon.locked' => 'Supporter-fordel',
+			'appIcon.lockedHint' => 'Alternative ikoner er en Supporter-fordel.',
+			'appIcon.changeFailed' => 'Kunne ikke endre appikonet',
+			'appIcon.launcherHint' => 'Det nye ikonet vises på startskjermen når du forlater Plezy.',
+			'appIcon.tvLauncherHint' => 'Det nye banneret vises når du forlater Plezy. Android TV kan fortsette å vise det gamle til TV-en startes på nytt.',
+			'appIcon.names.midnight' => 'Midnatt',
+			'appIcon.names.ember' => 'Glød',
+			'appIcon.names.paper' => 'Papir',
+			'appIcon.names.oled' => 'OLED',
+			'appIcon.names.line' => 'Strek',
+			'appIcon.names.ocean' => 'Hav',
+			'appIcon.names.ultraviolet' => 'Ultrafiolett',
+			'appIcon.names.matcha' => 'Matcha',
+			'appIcon.names.sunset' => 'Solnedgang',
+			'appIcon.names.gold' => 'Gull',
+			'appIcon.names.titanium' => 'Titan',
+			'appIcon.names.glass' => 'Glass',
+			'appIcon.names.crt' => 'CRT',
+			'appIcon.names.vhs' => 'VHS',
+			'appIcon.names.synthwave' => 'Synthwave',
+			'appIcon.names.pixel' => 'Piksel',
+			'appIcon.names.neon' => 'Neon',
+			'appIcon.names.sticker' => 'Klistremerke',
+			'appIcon.names.ticket' => 'Billett',
+			'appIcon.names.pop' => 'Pop',
+			'appIcon.names.strata' => 'Sjikt',
+			'appIcon.names.facet' => 'Fasett',
+			'appIcon.names.tilde' => 'Tilde',
 			'auth.signInWithPlex' => 'Logg inn med Plex',
 			'auth.showQRCode' => 'Vis QR-kode',
 			'auth.authenticate' => 'Autentiser',
@@ -3008,6 +3500,8 @@ extension on TranslationsNb {
 			'common.ratingSource.trakt' => 'Trakt',
 			'common.ratingSource.rottenTomatoesCritic' => 'Rotten Tomatoes-kritikere',
 			'common.ratingSource.rottenTomatoesAudience' => 'Rotten Tomatoes-publikum',
+			'common.ratingSource.metacritic' => 'Metacritic',
+			'common.ratingSource.letterboxd' => 'Letterboxd',
 			'common.notAvailable' => 'I/T',
 			'common.url' => 'URL',
 			'common.letterKeys' => 'ABC',
@@ -3035,6 +3529,29 @@ extension on TranslationsNb {
 			'update.viewRelease' => 'Vis utgivelse',
 			'update.latestVersion' => 'Du har den nyeste versjonen',
 			'update.checkFailed' => 'Kunne ikke se etter oppdateringer',
+			'supporter.title' => 'Plezy Supporter',
+			'supporter.intro' => 'Et engangskjøp som støtter utviklingen av Plezy og låser opp kosmetiske tillegg:',
+			'supporter.presetThemes' => 'Forhåndsinnstilte temaer',
+			'supporter.presetThemesDescription' => 'Glød, Isbre, Skog, Plomme og Papir',
+			'supporter.customTheme' => 'Egendefinert tema',
+			'supporter.customThemeDescription' => 'Velg alle fargene selv',
+			'supporter.appIcons' => 'Appikoner',
+			'supporter.appIconsDescription' => 'Velg et alternativt Plezy-ikon',
+			'supporter.buy' => ({required Object price}) => 'Kjøp for ${price}',
+			'supporter.loadingPrice' => 'Laster pris...',
+			'supporter.restore' => 'Gjenopprett kjøp',
+			'supporter.pending' => 'Kjøpet ditt venter på betaling eller godkjenning. Tilleggene låses opp så snart butikken har fullført kjøpet.',
+			'supporter.thankYouTitle' => 'Takk for at du støtter Plezy',
+			'supporter.thankYouBody' => 'Supporter-tilleggene dine er låst opp.',
+			'supporter.tileSubtitle' => 'Lås opp temaer og appikoner med et engangskjøp',
+			'supporter.tileSubtitleThemesOnly' => 'Lås opp temaer med et engangskjøp',
+			'supporter.tileUnlocked' => 'Takk for støtten',
+			'supporter.errors.storeUnavailable' => 'Kjøp er ikke tilgjengelig. Sjekk at du er logget inn i butikken, og at kjøp er tillatt på denne enheten.',
+			'supporter.errors.productNotFound' => 'Supporter-kjøpet er ikke tilgjengelig i butikken din akkurat nå.',
+			'supporter.errors.productQueryFailed' => 'Kunne ikke laste inn prisen. Sjekk tilkoblingen og prøv igjen.',
+			'supporter.errors.purchaseFailed' => 'Kjøpet gikk ikke gjennom. Prøv igjen.',
+			'supporter.errors.restoreFailed' => 'Kunne ikke nå butikken for å gjenopprette kjøpet. Prøv igjen.',
+			'supporter.errors.nothingToRestore' => 'Fant ikke noe Supporter-kjøp for denne butikkontoen.',
 			'settings.title' => 'Innstillinger',
 			'settings.supportDeveloper' => 'Støtt Plezy',
 			'settings.supportDeveloperDescription' => 'Doner via Liberapay for å finansiere utviklingen',
@@ -3058,6 +3575,11 @@ extension on TranslationsNb {
 			'settings.lightTheme' => 'Lyst',
 			'settings.darkTheme' => 'Mørkt',
 			'settings.oledTheme' => 'OLED',
+			'settings.emberTheme' => 'Glød',
+			'settings.glacierTheme' => 'Isbre',
+			'settings.forestTheme' => 'Skog',
+			'settings.plumTheme' => 'Plomme',
+			'settings.paperTheme' => 'Papir',
 			'settings.libraryDensity' => 'Innholdstetthet i biblioteket',
 			'settings.displayScale' => 'Skalering',
 			'settings.compact' => 'Kompakt',
@@ -3088,6 +3610,8 @@ extension on TranslationsNb {
 			'settings.alwaysKeepSidebarOpenDescription' => 'Sidefeltet forblir utvidet og innholdsområdet tilpasser seg',
 			'settings.showUnwatchedCount' => 'Vis antall usette',
 			'settings.showUnwatchedCountDescription' => 'Vis antall usette episoder på serier og sesonger',
+			'settings.showWatchedIndicators' => 'Vis sett-indikatorer',
+			'settings.showWatchedIndicatorsDescription' => 'Vis et hakemerke på sette filmer, serier og episoder',
 			'settings.showEpisodeNumberOnCards' => 'Vis episodenummer på kort',
 			'settings.showEpisodeNumberOnCardsDescription' => 'Vis sesong- og episodenummer på episodekort',
 			'settings.showSeasonPostersOnTabs' => 'Vis sesongplakater på faner',
@@ -3117,6 +3641,11 @@ extension on TranslationsNb {
 			'settings.defaultQualityTitle' => 'Standardkvalitet',
 			'settings.cellularQualityTitle' => 'Standardkvalitet på mobilnett',
 			'settings.cellularQualitySameAsDefault' => 'Samme som standardkvalitet',
+			'settings.directPlayCoveredQuality' => 'Spill mindre videoer i original kvalitet',
+			'settings.directPlayCoveredQualityDescription' => 'Spill av videoer som allerede er innenfor kvalitetsgrensen med Direct Play i stedet for å transkode dem',
+			'settings.videoCodecs' => 'Videokodeker',
+			'settings.videoCodecsDescription' => 'Kodeker uten hake transkodes av serveren',
+			'settings.videoCodecsAlwaysAccepted' => 'Godtas alltid',
 			'settings.musicQualityTitle' => 'Musikkvalitet',
 			'settings.subtitleStyling' => 'Undertekststil',
 			'settings.subtitleStylingDescription' => 'Tilpass utseendet på undertekster',
@@ -3128,6 +3657,7 @@ extension on TranslationsNb {
 			'settings.minutesUnit' => ({required Object minutes}) => '${minutes} minutter',
 			'settings.rememberTrackSelections' => 'Husk sporvalg per serie/film',
 			'settings.rememberTrackSelectionsDescription' => 'Husk lyd- og undertekstvalg per tittel',
+			'settings.rememberTrackSelectionsBackendRule' => 'Plex lagrer hvert valg på serveren per fil; Jellyfin slår også på kontoinnstillingen «Husk valg»; Emby støttes ikke',
 			'settings.followServerTrackSelections' => 'Bruk serverens sporvalg per episode',
 			'settings.followServerTrackSelectionsDescription' => 'Ved episodebytte brukes lyden og undertekstene som er valgt på serveren, i stedet for å videreføre gjeldende valg',
 			'settings.resumeMusicOnLaunch' => 'Husk musikkøkt',
@@ -3147,7 +3677,7 @@ extension on TranslationsNb {
 			'settings.videoPlayerNavigation' => 'Videospillernavigering',
 			'settings.videoPlayerNavigationDescription' => 'Bruk piltaster for å navigere videospillerkontroller',
 			'settings.watchTogetherRelay' => 'Reléserver for Se sammen',
-			'settings.watchTogetherRelayDescription' => 'Angi en egendefinert reléserver. Alle må bruke samme server.',
+			'settings.watchTogetherRelayDescription' => 'Offentlige Open Watch Party-reléservere, med mindre du angir din egen',
 			'settings.watchTogetherRelayHint' => 'https://min-relay.eksempel.no',
 			'settings.watchTogetherRelayInvalid' => 'Angi en gyldig HTTP- eller HTTPS-adresse til reléserveren.',
 			'settings.crashReporting' => 'Krasjrapportering',
@@ -3173,6 +3703,7 @@ extension on TranslationsNb {
 			'settings.importSettingsInvalidFile' => 'Denne filen er ikke en gyldig Plezy-innstillingseksport',
 			'settings.importSettingsNoUser' => 'Logg inn før import av innstillinger',
 			'settings.shortcutsReset' => 'Snarveier tilbakestilt til standard',
+			'settings.resetShortcutsConfirm' => 'Dette vil erstatte de egendefinerte snarveiene dine med standardsnarveiene. Fortsette?',
 			'settings.about' => 'Om',
 			'settings.aboutDescription' => 'Appinformasjon og lisenser',
 			'settings.updates' => 'Oppdateringer',
@@ -3188,8 +3719,21 @@ extension on TranslationsNb {
 			'settings.autoPlayAndSkip' => 'Autospill og hopp',
 			'settings.autoPlayNextEpisode' => 'Spill neste episode automatisk',
 			'settings.autoPlayNextEpisodeDescription' => 'Start neste episode automatisk når en episode er ferdig',
+			'settings.shuffleStartsFromBeginning' => 'Tilfeldig avspilling starter fra begynnelsen',
+			'settings.shuffleStartsFromBeginningDescription' => 'Start hver episode fra begynnelsen ved tilfeldig avspilling i stedet for å fortsette',
 			'settings.playNextCountdown' => 'Nedtelling for neste episode',
 			'settings.playNextCountdownImmediate' => 'Spill umiddelbart',
+			'settings.skipIntroMode' => 'Hopp over intro',
+			'settings.skipIntroModeOffDescription' => 'Spill av introer normalt uten en hopp over-knapp',
+			'settings.skipIntroModeButtonDescription' => 'Vis en hopp over-knapp når en intro starter',
+			'settings.skipIntroModeAutoDescription' => 'Hopp over introer automatisk etter forsinkelsen nedenfor',
+			'settings.skipCreditsMode' => 'Hopp over rulletekst',
+			'settings.skipCreditsModeOffDescription' => 'Spill av rulleteksten normalt uten en hopp over-knapp',
+			'settings.skipCreditsModeButtonDescription' => 'Vis en hopp over-knapp når rulleteksten starter',
+			'settings.skipCreditsModeAutoDescription' => 'Hopp over rulleteksten automatisk, og spill neste episode',
+			'settings.skipMarkerModeOff' => 'Av',
+			'settings.skipMarkerModeButton' => 'Vis knapp',
+			'settings.skipMarkerModeAuto' => 'Automatisk',
 			'settings.forceSkipMarkerFallback' => 'Tving reservemarkører',
 			'settings.forceSkipMarkerFallbackDescription' => 'Bruk mønstre i kapiteltitler selv når Plex har markører',
 			'settings.autoSkipDelay' => 'Forsinkelse for automatisk hopp',
@@ -3226,6 +3770,8 @@ extension on TranslationsNb {
 			'settings.manageLibrariesDescription' => 'Omorganiser og skjul biblioteker',
 			'settings.companionRemoteServer' => 'Fjernkontrollserver',
 			'settings.companionRemoteServerDescription' => 'La mobilenheter på nettverket styre denne appen',
+			'settings.companionRemoteServerStartFailed' => 'Kunne ikke starte fjernkontrollserveren',
+			'settings.companionRemoteServerStopFailed' => 'Kunne ikke stoppe fjernkontrollserveren',
 			'settings.autoPip' => 'Automatisk bilde-i-bilde',
 			'settings.autoPipDescription' => 'Åpne bilde-i-bilde når du forlater appen under avspilling',
 			'settings.matchContentFrameRate' => 'Tilpass innholdets bildefrekvens',
@@ -3238,12 +3784,20 @@ extension on TranslationsNb {
 			'settings.matchDynamicRangeDescription' => 'Slå på HDR for HDR-innhold, og deretter tilbake til SDR',
 			'settings.displaySwitchDelay' => 'Forsinkelse ved skjermbytte',
 			'settings.tunneledPlayback' => 'Tunnelert avspilling',
-			'settings.tunneledPlaybackDescription' => 'Bruk videotunneling. Slå av hvis HDR-avspilling viser svart video.',
+			'settings.tunneledPlaybackDescription' => 'Bruk videotunneling. Slå av hvis HDR-avspilling viser svart video eller bevegelser hakker.',
 			'settings.audioPassthrough' => 'Direkte lydutgang',
 			'settings.audioPassthroughDescription' => 'Send Dolby/DTS-lyd til mottakeren eller TV-en uten omkoding, slik at surroundlyd bevares. Slå av hvis du ikke har lyd.',
-			'settings.audioPassthroughDescriptionAppleTv' => 'Bruk Apples innebygde Dolby-dekoder for Dolby Digital Plus, inkludert Atmos. DTS og TrueHD spilles fortsatt av som flerkanals PCM. Slå av hvis du ikke har lyd.',
-			'settings.audioDownmix' => 'Nedmiks til stereo',
-			'settings.audioDownmixDescription' => 'Miks surroundlyd ned til to kanaler for stereohøyttalere eller hodetelefoner',
+			'settings.audioPassthroughDescriptionApple' => 'Bruk Apples innebygde Dolby-dekoder for Dolby Digital Plus, inkludert Atmos. DTS og TrueHD spilles fortsatt av som flerkanals PCM. Slå av hvis du ikke har lyd.',
+			'settings.audioPassthroughDescriptionAppleSpatial' => 'Bruk Apples innebygde Dolby-dekoder for Dolby Digital Plus, inkludert Atmos. På iOS, iPadOS og tvOS 26 eller nyere spilles TrueHD Atmos og DTS:X av som romlig lyd. Andre DTS- og TrueHD-spor spilles av som flerkanals PCM. Slå av hvis du ikke har lyd.',
+			'settings.audioPassthroughOverriddenByNormalization' => 'Av mens lydstyrkenormalisering er på',
+			'settings.audioChannelLimit' => 'Lydkanaler',
+			'settings.audioChannelLimitDescription' => 'Miks dekodet lyd ned for høyttalere, hodetelefoner eller HDMI-oppsett som ikke kan spille av alle kanalene',
+			'settings.audioChannelLimitOriginal' => 'Original',
+			'settings.audioChannelLimitOriginalDescription' => 'Spill av alle kanalene i sporet',
+			'settings.audioChannelLimitSurround51' => 'Opptil 5.1',
+			'settings.audioChannelLimitSurround51Description' => 'Miks 7.1 ned til 5.1 for TV-er og mottakere som bare støtter 5.1 PCM. Direkte lydutgang påvirkes ikke.',
+			'settings.audioChannelLimitStereo' => 'Stereo',
+			'settings.audioChannelLimitStereoDescription' => 'Miks ned til to kanaler for stereohøyttalere eller hodetelefoner. Slår av direkte lydutgang.',
 			'settings.downmixCenterBoost' => 'Forsterkning av senterkanal',
 			'settings.downmixCenterBoostValue' => ({required Object db}) => '${db} dB',
 			'settings.downmixCenterBoostLabel' => 'Forsterkning (dB)',
@@ -3251,7 +3805,7 @@ extension on TranslationsNb {
 			'settings.audioDownmixNormalize' => 'Normaliser lydstyrke ved nedmiks',
 			'settings.audioDownmixNormalizeDescription' => 'Senker miksen for å unngå klipping. Slå av for å beholde originalvolumet (høye scener kan forvrenges).',
 			'settings.dvConversionMode' => 'Dolby Vision-konvertering',
-			'settings.dvConversionModeDescription' => 'Velg hvordan ExoPlayer håndterer filer med Dolby Vision-profil 7.',
+			'settings.dvConversionModeDescription' => 'Velg hvordan filer med Dolby Vision-profil 7 håndteres.',
 			'settings.dvConversionAuto' => 'Automatisk',
 			'settings.dvConversionNative' => 'Nativ / deaktivert',
 			'settings.dvConversionDv81' => 'P7 → P8.1',
@@ -3260,8 +3814,24 @@ extension on TranslationsNb {
 			'settings.dvConversionNativeDescription' => 'Tving opprinnelig DV7-avspilling og ikke prøv DV-konvertering på nytt',
 			'settings.dvConversionDv81Description' => 'Tving direkte RPU-konvertering til Dolby Vision-profil 8.1',
 			'settings.dvConversionHevcStripDescription' => 'Fjern Dolby Vision RPU/EL-lag og lever som vanlig HEVC',
+			'settings.disableDolbyVision' => 'Deaktiver Dolby Vision',
+			'settings.disableDolbyVisionDescription' => 'Spill av filens HDR10- eller HLG-lag i stedet for Dolby Vision når det finnes',
+			'settings.hdrSdrConversion' => 'HDR til SDR-konvertering',
+			'settings.hdrSdrConversionDescription' => 'Velg hva som konverterer HDR-video når skjermen ikke kan vise HDR.',
+			'settings.hdrSdrConversionAuto' => 'Automatisk',
+			'settings.hdrSdrConversionAutoDescription' => 'Enhet på Android 9 og nyere, spiller på eldre versjoner',
+			'settings.hdrSdrConversionDevice' => 'Enhet',
+			'settings.hdrSdrConversionDeviceDescription' => 'Enhetens videomaskinvare konverterer. Raskest, men fargene avhenger av enheten',
+			'settings.hdrSdrConversionPlayer' => 'Spiller',
+			'settings.hdrSdrConversionPlayerDescription' => 'Spilleren konverterer. Jevne farger, men 4K kan hakke på enkle TV-bokser',
 			'settings.deinterlace' => 'Deinterlacing',
 			'settings.deinterlaceDescription' => 'Fjern combing-artefakter fra interlaced video (kun mpv-spiller)',
+			'settings.deinterlaceOff' => 'Av',
+			'settings.deinterlaceOffDescription' => 'Vis interlaced video slik den dekodes',
+			'settings.deinterlaceVideo' => 'Video',
+			'settings.deinterlaceVideoDescription' => 'Gjør hvert halvbilde om til et helt bilde. For video spilt inn for TV, som sport, nyheter og konserter',
+			'settings.deinterlaceFilm' => 'Film',
+			'settings.deinterlaceFilmDescription' => 'Gjenopprett de opprinnelige bildene i film og animasjon som er konvertert med telecine til 29,97 fps, vanlig på NTSC-DVD-er. Video spilt inn for TV vil hakke. Direkte-TV bruker Video',
 			'settings.requireProfileSelectionOnOpen' => 'Spør om profil ved appåpning',
 			'settings.requireProfileSelectionOnOpenDescription' => 'Vis profilvalg hver gang appen åpnes',
 			'settings.forceTvMode' => 'Tving TV-modus',
@@ -3303,6 +3873,8 @@ extension on TranslationsNb {
 			'settings.gestureVolumeSwipeDescription' => 'Sveip opp eller ned på høyre kant for å justere volumet',
 			'settings.gesturePinchToZoom' => 'Klyp for å zoome',
 			'settings.gesturePinchToZoomDescription' => 'Klyp på videoen for å zoome inn eller ut',
+			'settings.rememberBrightnessLevel' => 'Husk lysstyrkenivå',
+			'settings.rememberBrightnessLevelDescription' => 'Start avspilling med lysstyrken som ble satt med det siste sveipet',
 			'settings.controls' => 'Kontroller',
 			'settings.rememberPlayerChanges' => 'Husk endringer i spilleren',
 			'settings.rememberPlayerChangesDescription' => 'Hvor en endring under avspilling lagres og brukes på nytt',
@@ -3315,10 +3887,51 @@ extension on TranslationsNb {
 			'settings.playerScopeLibrary' => 'Per bibliotek',
 			'settings.playerScopeTitle' => 'Per serie eller film',
 			'settings.exportDialogTitle' => 'Eksporter Plezy-innstillinger',
+			'themeEditor.builtIn' => 'Innebygde',
+			'themeEditor.presets' => 'Forhåndsinnstillinger',
+			'themeEditor.custom' => 'Egendefinert',
+			'themeEditor.customEmpty' => 'Ikke opprettet ennå',
+			'themeEditor.editCustom' => 'Rediger egendefinert tema',
+			'themeEditor.editCustomDescription' => 'Velg alle fargene selv',
+			'themeEditor.locked' => 'Lås opp med Supporter',
+			'themeEditor.savedLocked' => 'Lagret – låses opp med Supporter',
+			'themeEditor.title' => 'Egendefinert tema',
+			'themeEditor.startFrom' => 'Start fra',
+			'themeEditor.startFromDescription' => 'Kopier alle fargene fra et annet tema',
+			'themeEditor.colors' => 'Farger',
+			'themeEditor.preview' => 'Forhåndsvisning',
+			'themeEditor.slots.bg' => 'Bakgrunn',
+			'themeEditor.slots.surface' => 'Overflate',
+			'themeEditor.slots.outline' => 'Kontur',
+			'themeEditor.slots.text' => 'Tekst',
+			'themeEditor.slots.textMuted' => 'Sekundærtekst',
+			'themeEditor.slots.accent' => 'Aksent',
+			_ => null,
+		} ?? switch (path) {
+			'themeEditor.opacity' => 'Opasitet',
+			'themeEditor.hexHint' => '#RRGGBB eller #AARRGGBB',
+			'themeEditor.fromOtherThemes' => 'Fra andre temaer',
+			'themeEditor.swatchLabel' => ({required Object color, required Object theme}) => '${color} (${theme})',
+			'themeEditor.contrast.textOnBg' => 'Tekst på bakgrunn',
+			'themeEditor.contrast.textOnSurface' => 'Tekst på overflate',
+			'themeEditor.contrast.textMutedOnBg' => 'Sekundærtekst på bakgrunn',
+			'themeEditor.contrast.textMutedOnSurface' => 'Sekundærtekst på overflate',
+			'themeEditor.contrast.accentOnBg' => 'Aksent på bakgrunn',
+			'themeEditor.contrast.accentOnSurface' => 'Aksent på overflate',
+			'themeEditor.contrast.labelOnAccent' => 'Knappetekst på aksent',
+			'themeEditor.lowContrast' => ({required Object pair, required Object ratio, required Object minimum}) => '${pair}: ${ratio}:1, under anbefalt minimum på ${minimum}:1',
+			'themeEditor.discardTitle' => 'Forkaste endringene?',
+			'themeEditor.discardMessage' => 'Ulagrede fargeendringer går tapt.',
+			'themeEditor.discard' => 'Forkast',
+			'themeEditor.previewCardTitle' => ({required Object number}) => 'Episode ${number}',
+			'themeEditor.previewCardSubtitle' => ({required Object minutes}) => '${minutes} min igjen',
+			'themeEditor.previewSwitch' => 'Autospill',
+			'themeEditor.previewMutedText' => 'Sekundærtekst ser slik ut',
 			'search.hint' => 'Søk i filmer, serier, musikk...',
 			'search.tryDifferentTerm' => 'Prøv et annet søkeord',
 			'search.searchYourMedia' => 'Søk i mediene dine',
 			'search.enterTitleActorOrKeyword' => 'Skriv inn tittel, skuespiller eller nøkkelord',
+			'search.people' => 'Personer',
 			'hotkeys.setShortcutFor' => ({required Object actionName}) => 'Angi snarvei for ${actionName}',
 			'hotkeys.clearShortcut' => 'Fjern snarvei',
 			'hotkeys.noShortcutSet' => 'Ingen snarvei satt',
@@ -3445,8 +4058,6 @@ extension on TranslationsNb {
 			'fileInfo.optimizedVersion' => 'Optimalisert versjon',
 			'fileInfo.optimizationTarget' => 'Optimaliseringsmål',
 			'fileInfo.deletedAt' => 'Slettet',
-			_ => null,
-		} ?? switch (path) {
 			'fileInfo.remoteSource' => 'Ekstern kilde',
 			'fileInfo.infiniteStream' => 'Uendelig strøm',
 			'fileInfo.directPlay' => 'Direct Play',
@@ -3463,7 +4074,7 @@ extension on TranslationsNb {
 			'fileInfo.flagSelected' => 'Valgt',
 			'fileInfo.flagExternal' => 'Ekstern',
 			'fileInfo.flagHearingImpaired' => 'Hørselshemmet',
-			'fileInfo.flagDub' => 'Dub',
+			'fileInfo.flagDub' => 'Dubbet',
 			'fileInfo.flagOriginal' => 'Original',
 			'fileInfo.channelsMono' => 'Mono',
 			'fileInfo.dolbyVisionProfile' => ({required Object profile}) => 'Profil ${profile}',
@@ -3551,7 +4162,7 @@ extension on TranslationsNb {
 			'videoControls.playbackWillPauseIn' => ({required Object duration}) => 'Avspillingen settes på pause om ${duration}',
 			'videoControls.sleepTimerEndOfVideo' => 'Slutten av gjeldende video',
 			'videoControls.sleepTimerStopAtHeader' => 'Stopp ved',
-			'videoControls.sleepTimerDurationHeader' => 'Timer',
+			'videoControls.sleepTimerDurationHeader' => 'Varighet',
 			'videoControls.playbackWillPauseAtEnd' => 'Avspilling vil pause på slutten av denne videoen',
 			'videoControls.stillWatching' => 'Ser du fortsatt?',
 			'videoControls.pausingIn' => ({required Object seconds}) => 'Pauser om ${seconds}s',
@@ -3592,14 +4203,15 @@ extension on TranslationsNb {
 			'videoControls.rotationLockButton' => 'Rotasjonslås',
 			'videoControls.lockScreen' => 'Lås skjerm',
 			'videoControls.screenLockButton' => 'Skjermlås',
-			'videoControls.longPressToUnlock' => 'Trykk og hold for å låse opp',
 			'videoControls.timelineSlider' => 'Videotidslinje',
 			'videoControls.volumeSlider' => 'Volumnivå',
 			'videoControls.endsAt' => ({required Object time}) => 'Slutter kl. ${time}',
 			'videoControls.pipActive' => 'Spiller i bilde-i-bilde',
 			'videoControls.pipFailed' => 'Bilde-i-bilde kunne ikke starte',
 			'videoControls.screenshotSaved' => 'Skjermbilde lagret',
+			'videoControls.screenshotFailed' => 'Kunne ikke ta skjermbilde',
 			'videoControls.zoomPercent' => ({required Object percent}) => 'Zoom ${percent} %',
+			'videoControls.volumePercent' => ({required Object percent}) => 'Volum ${percent} %',
 			'videoControls.pipErrors.androidVersion' => 'Krever Android 8.0 eller nyere',
 			'videoControls.pipErrors.iosVersion' => 'Krever iOS 15.0 eller nyere',
 			'videoControls.pipErrors.permissionDisabled' => 'Bilde-i-bilde er deaktivert. Slå det på i systeminnstillinger.',
@@ -3646,6 +4258,9 @@ extension on TranslationsNb {
 			'messages.playbackDataInvalid' => 'Serveren returnerte ugyldig avspillingsinformasjon.',
 			'messages.playbackCancelled' => 'Avspillingen ble avbrutt.',
 			'messages.playbackFailed' => 'Kunne ikke starte avspillingen.',
+			'messages.playbackFailedDetail' => ({required Object error}) => 'Kunne ikke starte avspillingen: ${error}',
+			'messages.audioOutputFailed' => 'Lydutgangen svarer ikke lenger. Sjekk lydtilkoblingen til TV-en eller mottakeren; hvis andre apper heller ikke har lyd, må du starte enheten på nytt.',
+			'messages.mediaUnavailable' => 'Dette innholdet er ikke lenger tilgjengelig.',
 			'messages.errorLoadingFileInfo' => ({required Object error}) => 'Feil ved lasting av filinformasjon: ${error}',
 			'messages.errorLoadingSeries' => 'Feil ved lasting av serie',
 			'messages.musicNotSupported' => 'Musikkavspilling støttes ikke ennå',
@@ -3680,6 +4295,8 @@ extension on TranslationsNb {
 			'messages.mediaUnreadableBody' => 'Serveren fant dette elementet, men kunne ikke lese filen (HTTP 404). Filen er sannsynligvis flyttet, slettet, eller lagringen er frakoblet. Be serverens eier om å sjekke filen og skanne biblioteket på nytt.',
 			'messages.serverBusyTitle' => 'Strømmen er utilgjengelig',
 			'messages.serverBusyBody' => 'Serveren fortsatte å nekte å strømme denne filen (HTTP 503). Den kan være i ferd med å starte på nytt eller være opptatt, eller lagringsstedet til filen kan være frakoblet. Prøv igjen om litt – hvis det fortsetter å skje, kan du be eieren av serveren om å kontrollere serveren og lagringsstedet til filen.',
+			'messages.playbackNotAllowedTitle' => 'Avspilling er ikke tillatt',
+			'messages.playbackNotAllowedBody' => 'Serveren nektet å strømme dette elementet (HTTP 403). Kontoen din har kanskje ikke tillatelse til å spille det av, eller serveren tillater kanskje bare avspilling på sitt lokale nettverk.',
 			'messages.logsUploaded' => 'Logger lastet opp',
 			'messages.logsUploadFailed' => 'Kunne ikke laste opp logger',
 			'messages.logId' => 'Logg-ID',
@@ -3689,6 +4306,7 @@ extension on TranslationsNb {
 			'messages.playbackDataNotPrepared' => 'Avspillingen ble startet før dataene var klare',
 			'messages.streamSelectionUnavailable' => 'Valg av strømmer er ikke tilgjengelig for denne kilden',
 			'messages.streamSelectionFailed' => 'Kunne ikke bruke de valgte strømmene',
+			'messages.trackSelectionNotRemembered' => 'Dette sporvalget gjelder bare for gjeldende avspilling.',
 			'messages.serverUnavailableForProfile' => 'Ingen server er tilgjengelig for den aktive profilen',
 			'subtitlingStyling.text' => 'Tekst',
 			'subtitlingStyling.border' => 'Kantlinje',
@@ -3706,6 +4324,8 @@ extension on TranslationsNb {
 			'subtitlingStyling.overrideStrip' => 'Fjern formatering',
 			'subtitlingStyling.positionTop' => 'Øverst',
 			'subtitlingStyling.positionBottom' => 'Nederst',
+			'subtitlingStyling.useMargins' => 'Bruk marger',
+			'subtitlingStyling.useMarginsDescription' => 'Tillat tekstundertekster i området utenfor videoen. Stilundertekster kan beholde sin opprinnelige plassering.',
 			'subtitlingStyling.anchorToScreen' => 'Forankre til skjermen',
 			'subtitlingStyling.anchorToScreenDescription' => 'Vis tekstundertekster i de svarte feltene under video i bredformat',
 			'subtitlingStyling.bold' => 'Fet',
@@ -3727,6 +4347,9 @@ extension on TranslationsNb {
 			'mpvConfig.presetDeleted' => 'Forhåndsinnstilling slettet',
 			'mpvConfig.confirmDeletePreset' => 'Er du sikker på at du vil slette denne forhåndsinnstillingen?',
 			'mpvConfig.configPlaceholder' => 'gpu-api=vulkan\nhwdec=auto\n# kommentar',
+			'mpvConfig.lineHint' => 'option=value',
+			'mpvConfig.addLine' => 'Legg til linje',
+			'mpvConfig.removeLine' => 'Fjern linje',
 			'mpvConfig.embeddedVoHint' => 'vo, gpu-context og gpu-api ignoreres på Linux: innebygd video renderes alltid via vo=libmpv på videoplanet, og gpu-next (som compute-shadere som ArtCNN trenger) kan ikke kjøre innebygd.',
 			'dialog.confirmAction' => 'Bekreft handling',
 			'profiles.addPlezyProfile' => 'Legg til Plezy-profil',
@@ -3739,6 +4362,8 @@ extension on TranslationsNb {
 			'profiles.signOut' => 'Logg ut',
 			'profiles.signOutPlexTitle' => 'Logge ut av Plex?',
 			'profiles.signOutPlexMessage' => ({required Object displayName}) => 'Fjerne ${displayName} og alle Plex Home-brukere? Du kan logge inn igjen når som helst.',
+			'profiles.signOutPlexDeleteDownloads' => 'Slett også nedlastinger',
+			'profiles.signOutPlexDeleteDownloadsDescription' => 'Ellers blir de liggende på denne enheten og kommer tilbake når du logger inn på denne kontoen igjen.',
 			'profiles.signedOutPlex' => 'Logget ut av Plex.',
 			'profiles.signOutFailed' => 'Utlogging mislyktes.',
 			'profiles.sectionTitle' => 'Profiler',
@@ -3775,7 +4400,7 @@ extension on TranslationsNb {
 			'profiles.borrowAddTo' => ({required Object displayName}) => 'Legg til ${displayName}',
 			'profiles.borrowExplain' => 'Lån en annen profils tilkobling. PIN-beskyttede profiler krever PIN.',
 			'profiles.borrowEmpty' => 'Ingenting å låne enda.',
-			'profiles.borrowEmptySubtitle' => 'Koble Plex eller Jellyfin til en annen profil først.',
+			'profiles.borrowEmptySubtitle' => 'Koble Plex, Jellyfin eller Emby til en annen profil først.',
 			'profiles.borrowLoadFailed' => 'Kunne ikke laste inn tilgjengelige tilkoblinger. Prøv igjen.',
 			'profiles.borrowFromProfile' => ({required Object displayName}) => 'Fra ${displayName}',
 			'profiles.borrowConnectionBorrowed' => 'Tilkobling lånt.',
@@ -3794,10 +4419,14 @@ extension on TranslationsNb {
 			'profiles.tokenIdentityMismatch' => 'Plex-profiltokenet ble knyttet til en uventet server',
 			'connections.sectionTitle' => 'Tilkoblinger',
 			'connections.addConnection' => 'Legg til tilkobling',
-			'connections.addConnectionSubtitleNoProfile' => 'Logg inn med Plex eller koble til en Jellyfin-server',
-			'connections.addConnectionSubtitleScoped' => ({required Object displayName}) => 'Legg til for ${displayName}: Plex, Jellyfin eller en annen profiltilkobling',
+			'connections.addConnectionSubtitleNoProfile' => 'Logg inn med Plex eller koble til en Jellyfin- eller Emby-server',
+			_ => null,
+		} ?? switch (path) {
+			'connections.addConnectionSubtitleScoped' => ({required Object displayName}) => 'Legg til for ${displayName}: Plex, Jellyfin, Emby eller en annen profiltilkobling',
 			'connections.sessionExpiredOne' => ({required Object name}) => 'Økten er utløpt for ${name}',
 			'connections.sessionExpiredMany' => ({required Object count}) => 'Økten er utløpt for ${count} servere',
+			'connections.accessDeniedOne' => ({required Object name}) => '${name} nektet tilgang for denne kontoen',
+			'connections.accessDeniedMany' => ({required Object count}) => '${count} servere nektet tilgang for denne kontoen',
 			'connections.signInAgain' => 'Logg inn igjen',
 			'connections.editMediaBrowserTitle' => ({required Object product}) => 'Rediger ${product}-tilkobling',
 			'connections.editMediaBrowserIntro' => ({required Object serverName}) => 'Legg til eller fjern URL-er for ${serverName}. Plezy vil bruke den nåbare URL-en med lavest ventetid.',
@@ -3883,6 +4512,11 @@ extension on TranslationsNb {
 			'discover.minutesLeft' => ({required Object minutes}) => '${minutes} min igjen',
 			'discover.moreLikeThis' => 'Mer som dette',
 			'discover.titleCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('nb'))(n, one: '${n} tittel', other: '${n} titler', ), 
+			'discover.person.born' => 'Født',
+			'discover.person.died' => 'Død',
+			'discover.person.birthplace' => 'Fødested',
+			'discover.person.dateWithAge' => ({required Object date, required Object age}) => '${date} (${age} år)',
+			'discover.person.dateWithAgeAtDeath' => ({required Object date, required Object age}) => '${date} (${age} år gammel)',
 			'errors.searchFailed' => ({required Object error}) => 'Søk mislyktes: ${error}',
 			'errors.searchUnavailable' => 'Søket kunne ikke nå noen medieserver.',
 			'errors.connectionTimeout' => ({required Object context}) => 'Tidsavbrudd ved lasting av ${context}',
@@ -3895,6 +4529,13 @@ extension on TranslationsNb {
 			'errors.failedToSwitchProfile' => ({required Object displayName}) => 'Kunne ikke bytte til ${displayName}',
 			'errors.failedToDeleteProfile' => ({required Object displayName}) => 'Kunne ikke slette ${displayName}',
 			'errors.failedToRate' => 'Kunne ikke oppdatere vurderingen',
+			'errors.reasonTimedOut' => 'tidsavbrudd på tilkoblingen',
+			'errors.reasonUnreachable' => 'medieserveren kunne ikke nås',
+			'errors.reasonRefused' => 'medieserveren avviste forespørselen',
+			'errors.reasonNotFound' => 'elementet finnes ikke lenger på medieserveren',
+			'errors.reasonServerError' => 'medieserveren rapporterte en feil',
+			'errors.reasonCancelled' => 'forespørselen ble avbrutt',
+			'errors.reasonUnexpected' => 'det oppsto en uventet feil',
 			'libraries.title' => 'Biblioteker',
 			'libraries.fallbackTitle' => 'Bibliotek',
 			'libraries.scanLibraryFiles' => 'Skann bibliotekfiler',
@@ -3957,10 +4598,9 @@ extension on TranslationsNb {
 			'libraries.filterCategories.unwatched' => 'Usette',
 			'libraries.filterCategories.unplayed' => 'Ikke avspilt',
 			'libraries.filterCategories.favorites' => 'Favoritter',
+			'libraries.filterCategories.filePath' => 'Filbane',
 			'libraries.sortLabels.title' => 'Tittel',
 			'libraries.sortLabels.dateAdded' => 'Dato lagt til',
-			_ => null,
-		} ?? switch (path) {
 			'libraries.sortLabels.releaseDate' => 'Utgivelsesdato',
 			'libraries.sortLabels.rating' => 'Vurdering',
 			'libraries.sortLabels.communityRating' => 'Fellesskapsvurdering',
@@ -3979,10 +4619,39 @@ extension on TranslationsNb {
 			'libraries.sortLabels.dateShared' => 'Delingsdato',
 			'libraries.sortLabels.latestEpisodeAirDate' => 'Siste episodes sendedato',
 			'libraries.sortLabels.lastEpisodeDateAdded' => 'Dato for sist lagt til episode',
+			'libraries.sortLabels.dateDownloaded' => 'Dato lastet ned',
+			'libraries.sortLabels.size' => 'Størrelse',
+			'libraries.sortLabels.library' => 'Bibliotek',
+			'libraries.advancedFilters.include' => 'Inkluder',
+			'libraries.advancedFilters.exclude' => 'Ekskluder',
+			'libraries.advancedFilters.any' => 'Uansett',
+			'libraries.advancedFilters.yes' => 'Ja',
+			'libraries.advancedFilters.no' => 'Nei',
+			'libraries.advancedFilters.not' => ({required Object value}) => 'Ikke ${value}',
+			'libraries.advancedFilters.valueCount' => ({required Object count}) => '${count} valgt',
+			'libraries.advancedFilters.valueCountExcluded' => ({required Object count}) => '${count} ekskludert',
+			'libraries.advancedFilters.searchValues' => 'Søk etter verdier',
+			'libraries.advancedFilters.noValues' => 'Ingen verdier',
+			'libraries.advancedFilters.matchContains' => 'Inneholder',
+			'libraries.advancedFilters.matchNotContains' => 'Inneholder ikke',
+			'libraries.advancedFilters.matchIs' => 'Er',
+			'libraries.advancedFilters.matchIsNot' => 'Er ikke',
+			'libraries.advancedFilters.matchBeginsWith' => 'Begynner med',
+			'libraries.advancedFilters.matchEndsWith' => 'Slutter med',
+			'libraries.advancedFilters.textHint' => 'Skriv inn tekst',
+			'libraries.advancedFilters.from' => 'Fra',
+			'libraries.advancedFilters.to' => 'Til',
+			'libraries.advancedFilters.range' => ({required Object from, required Object to}) => '${from} til ${to}',
+			'libraries.advancedFilters.atLeast' => ({required Object value}) => '${value} og over',
+			'libraries.advancedFilters.atMost' => ({required Object value}) => 'Opptil ${value}',
+			'libraries.advancedFilters.dateLastDays' => ({required Object count}) => 'Siste ${count} dager',
+			'libraries.advancedFilters.dateLastYear' => 'Siste år',
+			'libraries.advancedFilters.dateOlderThanDays' => ({required Object count}) => 'Eldre enn ${count} dager',
+			'libraries.advancedFilters.dateOlderThanYear' => 'Eldre enn ett år',
 			'about.title' => 'Om',
 			'about.openSourceLicenses' => 'Lisenser for åpen kildekode',
 			'about.versionLabel' => ({required Object version}) => 'Versjon ${version}',
-			'about.appDescription' => 'En vakker Plex- og Jellyfin-klient for Flutter',
+			'about.appDescription' => 'En vakker Plex-, Jellyfin- og Emby-klient for Flutter',
 			'about.viewLicensesDescription' => 'Vis lisenser for tredjepartsbiblioteker',
 			'serverSelection.noServersFoundForAccount' => ({required Object username, required Object email}) => 'Ingen servere funnet for ${username} (${email})',
 			'serverSelection.failedToLoadServers' => ({required Object error}) => 'Kunne ikke laste servere: ${error}',
@@ -4065,6 +4734,7 @@ extension on TranslationsNb {
 			'explore.notInLibrary' => 'Ikke i biblioteket ditt',
 			'explore.inTheseLibraries' => 'I disse bibliotekene',
 			'explore.checkingLibrary' => 'Sjekker biblioteket ditt...',
+			'explore.libraryCheckFailed' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('nb'))(n, one: 'Kunne ikke sjekke ${n} server', other: 'Kunne ikke sjekke ${n} servere', ), 
 			'explore.emptyTitle' => 'Ingenting her ennå',
 			'explore.emptyMessage' => ({required Object source}) => 'Rader fra ${source} vises her når de har innhold.',
 			'explore.searchHint' => ({required Object source}) => 'Søk i ${source}',
@@ -4129,13 +4799,14 @@ extension on TranslationsNb {
 			'explore.sourceMaterial.webComic' => 'Nettserie',
 			'explore.sourceMaterial.musicRelease' => 'Musikk',
 			'explore.sourceMaterial.otherMedia' => 'Annet',
+			'explore.creditRole.actor' => 'Skuespiller',
 			'explore.creditRole.director' => 'Regissør',
 			'explore.creditRole.writer' => 'Forfatter',
 			'explore.creditRole.producer' => 'Produsent',
 			'explore.creditRole.creator' => 'Skaper',
 			'explore.creditRole.composer' => 'Komponist',
-			'explore.relation.prequel' => 'Prequel',
-			'explore.relation.sequel' => 'Sequel',
+			'explore.relation.prequel' => 'Forløper',
+			'explore.relation.sequel' => 'Oppfølger',
 			'explore.relation.sideStory' => 'Bihistorie',
 			'explore.relation.spinOff' => 'Spin-off',
 			'explore.relation.alternativeVersion' => 'Alternativ versjon',
@@ -4248,7 +4919,9 @@ extension on TranslationsNb {
 			'liveTv.editRuleAction' => 'Rediger',
 			'liveTv.recordingRuleUpdated' => 'Opptaksregel oppdatert',
 			'liveTv.guideReloadRequested' => 'Oppdatering av programguiden er forespurt',
+			'liveTv.guideReloadFailed' => 'Kunne ikke oppdatere programguiden',
 			'liveTv.rulesProcessRequested' => 'Ny vurdering av reglene er forespurt',
+			'liveTv.rulesProcessFailed' => 'Kunne ikke kjøre opptaksreglene på nytt',
 			'liveTv.recordShow' => 'Ta opp program',
 			'liveTv.recordSettings.startEarly' => 'Start tidligere (sekunder)',
 			'liveTv.recordSettings.endLate' => 'Slutt senere (sekunder)',
@@ -4261,8 +4934,12 @@ extension on TranslationsNb {
 			'liveTv.startingInMinutes' => ({required Object minutes}) => 'Starter om ${minutes} min',
 			'liveTv.dayAtTime' => ({required Object day, required Object time}) => '${day} kl. ${time}',
 			'liveTv.invalidPlaybackData' => ({required Object product}) => '${product} returnerte ugyldige avspillingsdata for direkte-TV',
+			_ => null,
+		} ?? switch (path) {
 			'liveTv.failedToStartChannel' => 'Kunne ikke starte direktekanalen',
 			'liveTv.failedToBuildStreamUrl' => 'Kunne ikke opprette strømme-URL-en',
+			'liveTv.playbackStartFailed' => ({required Object reason}) => 'Kunne ikke starte kanalen: ${reason}',
+			'liveTv.channelSwitchFailed' => ({required Object reason}) => 'Kunne ikke bytte kanal: ${reason}',
 			'collections.title' => 'Samlinger',
 			'collections.collection' => 'Samling',
 			'collections.empty' => 'Samlingen er tom',
@@ -4340,74 +5017,151 @@ extension on TranslationsNb {
 			'music.discography.compilations' => 'Samlealbum',
 			'watchTogether.title' => 'Se sammen',
 			'watchTogether.description' => 'Se innhold synkronisert med venner og familie',
-			'watchTogether.createSession' => 'Opprett økt',
-			'watchTogether.creating' => 'Oppretter...',
-			'watchTogether.joinSession' => 'Bli med i økt',
-			'watchTogether.joining' => 'Blir med...',
-			'watchTogether.controlMode' => 'Kontrollmodus',
-			'watchTogether.controlModeQuestion' => 'Hvem kan kontrollere avspilling?',
-			'watchTogether.hostOnly' => 'Kun vert',
-			'watchTogether.anyone' => 'Alle',
-			'watchTogether.hostingSession' => 'Er vert for økt',
-			'watchTogether.inSession' => 'I økt',
-			'watchTogether.sessionCode' => 'Øktkode',
-			'watchTogether.openSessionControls' => 'Åpne øktkontroller for Se sammen',
-			'watchTogether.copySessionCode' => 'Kopier øktkode',
-			'watchTogether.hostControlsPlayback' => 'Verten kontrollerer avspilling',
-			'watchTogether.anyoneCanControl' => 'Alle kan kontrollere avspilling',
-			'watchTogether.hostControls' => 'Vertskontroll',
-			'watchTogether.anyoneControls' => 'Alle kontrollerer',
-			'watchTogether.participants' => 'Deltakere',
-			'watchTogether.host' => 'Vert',
-			'watchTogether.hostBadge' => 'VERT',
-			'watchTogether.youAreHost' => 'Du er verten',
-			'watchTogether.watchingWithOthers' => 'Ser med andre',
-			'watchTogether.endSession' => 'Avslutt økt',
-			'watchTogether.leaveSession' => 'Forlat økt',
-			'watchTogether.endSessionQuestion' => 'Avslutte økt?',
-			'watchTogether.leaveSessionQuestion' => 'Forlate økt?',
-			'watchTogether.endSessionConfirm' => 'Dette vil avslutte økten for alle deltakere.',
-			'watchTogether.leaveSessionConfirm' => 'Du vil bli fjernet fra økten.',
-			'watchTogether.endSessionConfirmOverlay' => 'Dette vil avslutte se sammen-økten for alle deltakere.',
-			'watchTogether.leaveSessionConfirmOverlay' => 'Du vil bli frakoblet fra se sammen-økten.',
-			'watchTogether.end' => 'Avslutt',
-			'watchTogether.leave' => 'Forlat',
-			'watchTogether.syncing' => 'Synkroniserer...',
-			'watchTogether.joinWatchSession' => 'Bli med i se sammen-økt',
-			'watchTogether.enterCodeHint' => 'Skriv inn 5-tegns kode',
-			'watchTogether.pasteFromClipboard' => 'Lim inn fra utklippstavle',
-			'watchTogether.pleaseEnterCode' => 'Vennligst skriv inn en øktkode',
-			'watchTogether.codeMustBe5Chars' => 'Øktkoden må være 5 tegn',
-			'watchTogether.joinInstructions' => 'Skriv inn vertens øktkode for å bli med.',
-			'watchTogether.failedToCreate' => 'Kunne ikke opprette økt',
-			'watchTogether.failedToJoin' => 'Kunne ikke bli med i økt',
-			'watchTogether.sessionCodeCopied' => 'Øktkode kopiert til utklippstavle',
-			'watchTogether.relayUnreachable' => 'Reléserveren kan ikke nås. Blokkering hos internettleverandøren kan hindre Se sammen.',
-			'watchTogether.reconnectingToHost' => 'Kobler til verten på nytt...',
-			'watchTogether.currentPlayback' => 'Gjeldende avspilling',
-			'watchTogether.joinCurrentPlayback' => 'Bli med i gjeldende avspilling',
-			'watchTogether.joinCurrentPlaybackDescription' => 'Hopp tilbake til det verten ser på nå',
-			'watchTogether.failedToOpenCurrentPlayback' => 'Kunne ikke åpne gjeldende avspilling',
-			'watchTogether.participantJoined' => ({required Object name}) => '${name} ble med',
-			'watchTogether.participantLeft' => ({required Object name}) => '${name} forlot',
-			'watchTogether.participantPaused' => ({required Object name}) => '${name} satte avspillingen på pause',
-			'watchTogether.participantResumed' => ({required Object name}) => '${name} startet avspillingen igjen',
-			'watchTogether.participantSeeked' => ({required Object name}) => '${name} endret avspillingsposisjonen',
-			'watchTogether.participantBuffering' => ({required Object name}) => '${name} buffrer',
-			'watchTogether.participantNeedsUpdate' => ({required Object name}) => '${name} bruker en eldre appversjon — synkronisering er ikke tilgjengelig',
-			'watchTogether.resumingWithout' => ({required Object name}) => 'Fortsetter uten ${name}',
-			'watchTogether.waitingForParticipants' => 'Venter på at de andre skal laste inn...',
-			'watchTogether.waitingForName' => ({required Object name}) => 'Venter på ${name}...',
+			'watchTogether.createRoom' => 'Opprett rom',
+			'watchTogether.creatingRoom' => 'Oppretter rom...',
+			'watchTogether.joinRoom' => 'Bli med i rom',
+			'watchTogether.joiningRoom' => 'Blir med i rom...',
+			'watchTogether.connecting' => 'Kobler til...',
+			'watchTogether.relayPublic' => 'Rom bruker de offentlige Open Watch Party-reléserverne.',
+			'watchTogether.relayCustom' => ({required Object url}) => 'Rom bruker reléserveren din på ${url}.',
 			'watchTogether.recentRooms' => 'Nylige rom',
+			'watchTogether.roomActions' => 'Romhandlinger',
 			'watchTogether.renameRoom' => 'Gi nytt navn til rom',
 			'watchTogether.removeRoom' => 'Fjern',
-			'watchTogether.guestSwitchUnavailable' => 'Kunne ikke bytte — server ikke tilgjengelig for synkronisering',
-			'watchTogether.guestSwitchFailed' => 'Kunne ikke bytte — innhold ble ikke funnet på denne serveren',
-			'watchTogether.defaultDisplayName' => 'Bruker',
-			'watchTogether.errors.timedOut' => 'Reléserveren svarte ikke i tide',
-			'watchTogether.errors.connectionLost' => 'Tilkoblingen ble lukket før økten var klar',
-			'watchTogether.errors.invalidRelayResponse' => 'Reléserveren sendte et uventet svar',
-			'watchTogether.errors.sessionEnded' => 'Verten avsluttet økten',
+			'watchTogether.enterRoomCode' => 'Skriv inn koden på 6 tegn fra verten.',
+			'watchTogether.roomCode' => 'Romkode',
+			'watchTogether.paste' => 'Lim inn',
+			'watchTogether.noCodeInClipboard' => 'Utklippstavlen inneholder ingen romkode',
+			'watchTogether.copyCode' => 'Kopier kode',
+			'watchTogether.codeCopied' => 'Romkode kopiert',
+			'watchTogether.shareInvite' => 'Del invitasjon',
+			'watchTogether.inviteCopied' => 'Invitasjon kopiert. Lim den inn i en melding.',
+			'watchTogether.inviteMessage' => ({required Object code}) => 'Bli med i Se sammen-rommet mitt i Plezy: åpne Se sammen, velg «Bli med i rom» og skriv inn ${code}.',
+			'watchTogether.openSessionControls' => 'Åpne øktkontroller for Se sammen',
+			'watchTogether.reconnecting' => 'Kobler til på nytt...',
+			'watchTogether.reconnectingDescription' => 'Tilkoblingen ble brutt. Du blir automatisk med i rommet igjen.',
+			'watchTogether.connected' => 'Tilkoblet',
+			'watchTogether.disconnected' => 'Frakoblet',
+			'watchTogether.youAreHost' => 'Du er verten',
+			'watchTogether.hostedBy' => ({required Object name}) => 'Vert: ${name}',
+			'watchTogether.hostControlsPlayback' => 'Verten kontrollerer avspilling',
+			'watchTogether.anyoneCanControl' => 'Alle kan kontrollere avspilling',
+			'watchTogether.roomLocked' => 'Rommet er låst',
+			'watchTogether.nowPlaying' => 'Spilles nå',
+			'watchTogether.nothingPlaying' => 'Ingenting spilles',
+			'watchTogether.nothingPlayingHost' => 'Spill av noe fra et hvilket som helst bibliotek for å dele det med rommet.',
+			'watchTogether.nothingPlayingGuest' => 'Når verten spiller av noe, åpnes det her.',
+			'watchTogether.notShareable' => 'Denne videoen har ingen treff i katalogen, så bare de med tilgang til samme server kan spille den av.',
+			'watchTogether.searching' => 'Ser etter denne videoen i bibliotekene dine...',
+			'watchTogether.yourCopy' => 'Din kopi',
+			'watchTogether.sharingYourCopy' => 'Du deler din kopi',
+			'watchTogether.playingOtherLength' => ({required Object difference}) => 'Spiller av din kopi, ${difference}',
+			'watchTogether.mismatchTitle' => 'Kopien din har en annen lengde',
+			'watchTogether.mismatchDescription' => ({required Object difference}) => 'Den nærmeste kopien din er ${difference} enn videoen i rommet. Det kan være en annen klipping eller versjon.',
+			'watchTogether.playAnyway' => 'Spill av likevel',
+			'watchTogether.chooseAnotherCopy' => 'Velg en annen kopi',
+			'watchTogether.dontPlay' => 'Ikke spill av',
+			'watchTogether.unavailableTitle' => 'Du har ikke denne videoen',
+			'watchTogether.unavailableDescription' => 'Plezy fant den ikke i bibliotekene dine. Velg en kopi selv eller søk på nytt.',
+			'watchTogether.chooseCopy' => 'Velg en kopi',
+			'watchTogether.searchAgain' => 'Søk på nytt',
+			'watchTogether.noCandidates' => 'Fant ingen kopier i bibliotekene dine.',
+			'watchTogether.choiceFailed' => 'Kunne ikke spille av denne kopien for rommet',
+			'watchTogether.lengthLonger' => ({required Object duration}) => '${duration} lengre',
+			'watchTogether.lengthShorter' => ({required Object duration}) => '${duration} kortere',
+			'watchTogether.lengthSame' => 'Samme lengde',
+			'watchTogether.lengthUnknown' => 'Ukjent lengde',
+			'watchTogether.joinCurrentPlayback' => 'Bli med i gjeldende avspilling',
+			'watchTogether.joinCurrentPlaybackDescription' => 'Hopp tilbake til det verten ser på nå',
+			'watchTogether.stopMedia' => 'Stopp videoen for alle',
+			'watchTogether.syncOffset' => 'Tidsforskyvning',
+			'watchTogether.syncOffsetDescription' => 'Forskyv videoen din hvis den ligger foran eller bak rommet.',
+			'watchTogether.offsetHint' => ({required Object difference}) => 'Kopien din er ${difference} enn videoen i rommet.',
+			'watchTogether.applyDifference' => ({required Object offset}) => 'Bruk ${offset}',
+			'watchTogether.offsetMinusSecond' => '-1 s',
+			'watchTogether.offsetMinusTenth' => '-100 ms',
+			'watchTogether.offsetPlusTenth' => '+100 ms',
+			'watchTogether.offsetPlusSecond' => '+1 s',
+			'watchTogether.participants' => 'Deltakere',
+			'watchTogether.participantCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('nb'))(n, one: '${n} deltaker', other: '${n} deltakere', ), 
+			'watchTogether.hostBadge' => 'VERT',
+			'watchTogether.nameYou' => ({required Object name}) => '${name} (deg)',
+			'watchTogether.playerIdle' => 'Inaktiv',
+			'watchTogether.playerLoading' => 'Laster',
+			'watchTogether.playerReady' => 'Klar',
+			'watchTogether.playerBuffering' => 'Bufrer',
+			'watchTogether.matchSearching' => 'Søker',
+			'watchTogether.matchMatched' => 'Har videoen',
+			'watchTogether.matchMismatched' => 'Annen lengde',
+			'watchTogether.matchUnavailable' => 'Har ikke videoen',
+			'watchTogether.participantOffset' => ({required Object offset}) => 'Forskyvning ${offset}',
+			'watchTogether.makeHost' => 'Gjør til vert',
+			'watchTogether.makeHostQuestion' => 'Overfør vert?',
+			'watchTogether.makeHostConfirm' => ({required Object name}) => '${name} vil kontrollere avspillingen og styre økten for alle.',
+			'watchTogether.transfer' => 'Overfør',
+			'watchTogether.removeParticipant' => 'Fjern fra rommet',
+			'watchTogether.removeParticipantQuestion' => ({required Object name}) => 'Fjerne ${name}?',
+			'watchTogether.removeParticipantConfirm' => ({required Object name}) => '${name} fjernes fra rommet, men kan bli med igjen med koden med mindre du låser rommet.',
+			'watchTogether.remove' => 'Fjern',
+			'watchTogether.roomSettings' => 'Rominnstillinger',
+			'watchTogether.letEveryoneControl' => 'La alle kontrollere avspillingen',
+			'watchTogether.lockRoom' => 'Lås rommet',
+			'watchTogether.lockRoomDescription' => 'Ingen nye kan bli med',
+			'watchTogether.leaveRoom' => 'Forlat rommet',
+			'watchTogether.leaveRoomQuestion' => 'Forlate rommet?',
+			'watchTogether.leaveRoomConfirm' => 'Du kan bli med igjen med romkoden.',
+			'watchTogether.leave' => 'Forlat',
+			'watchTogether.endRoom' => 'Avslutt rommet',
+			'watchTogether.endRoomQuestion' => 'Avslutte rommet?',
+			'watchTogether.endRoomConfirm' => 'Dette avslutter rommet for alle.',
+			'watchTogether.end' => 'Avslutt',
+			'watchTogether.playBlockedTitle' => 'Avspillingen startet ikke',
+			'watchTogether.playBlockedDescription' => 'Trykk på spill av for å begynne å se sammen med rommet.',
+			'watchTogether.notices.pressedPlay' => ({required Object name}) => '${name} trykket på spill av',
+			'watchTogether.notices.playbackStarted' => 'Avspillingen startet',
+			'watchTogether.notices.paused' => ({required Object name}) => '${name} satte avspillingen på pause',
+			'watchTogether.notices.playbackPaused' => 'Avspillingen ble satt på pause',
+			'watchTogether.notices.jumpedTo' => ({required Object name, required Object position}) => '${name} hoppet til ${position}',
+			'watchTogether.notices.roomJumpedTo' => ({required Object position}) => 'Hoppet til ${position}',
+			'watchTogether.notices.changedSpeed' => ({required Object name, required Object speed}) => '${name} satte hastigheten til ${speed}',
+			'watchTogether.notices.speedChanged' => ({required Object speed}) => 'Hastigheten satt til ${speed}',
+			'watchTogether.notices.startedMedia' => ({required Object name, required Object title}) => '${name} startet ${title}',
+			'watchTogether.notices.mediaStarted' => ({required Object title}) => 'Spilles nå: ${title}',
+			'watchTogether.notices.stoppedMedia' => ({required Object name}) => '${name} stoppet videoen',
+			'watchTogether.notices.mediaStopped' => 'Videoen stoppet',
+			'watchTogether.notices.waitingFor' => ({required Object name}) => 'Venter på ${name}...',
+			'watchTogether.notices.waitingForSomeone' => 'Venter på at noen skal ta igjen...',
+			'watchTogether.notices.finished' => 'Ferdig',
+			'watchTogether.notices.hostChangedTo' => ({required Object name}) => '${name} er nå verten',
+			'watchTogether.notices.youAreNowHost' => 'Du er nå verten',
+			'watchTogether.notices.joined' => ({required Object name}) => '${name} ble med',
+			'watchTogether.notices.left' => ({required Object name}) => '${name} forlot',
+			'watchTogether.notices.controlRefused' => 'Bare verten kan kontrollere avspillingen',
+			'watchTogether.notices.searchFailed' => 'Enkelte servere kunne ikke gjennomsøkes etter videoen i rommet',
+			'watchTogether.notices.playBlocked' => 'Trykk på spill av for å starte',
+			'watchTogether.notices.shareFailed' => 'Kunne ikke dele denne videoen med rommet',
+			'watchTogether.notices.downloadNotShared' => 'Nedlastinger deles ikke med rommet mens serveren deres er frakoblet',
+			'watchTogether.notices.openFailed' => 'Kunne ikke åpne videoen i rommet',
+			'watchTogether.ended.ended' => 'Verten avsluttet rommet',
+			'watchTogether.ended.kicked' => 'Du ble fjernet fra rommet',
+			'watchTogether.ended.expired' => 'Rommet er utløpt',
+			'watchTogether.ended.replaced' => 'Du ble med i dette rommet på en annen enhet',
+			'watchTogether.ended.lost' => 'Mistet tilkoblingen til rommet',
+			'watchTogether.errors.invalidCode' => 'Det er ikke en romkode. Koder har 6 bokstaver og sifre, uten 0, 1, I, L eller O.',
+			'watchTogether.errors.roomNotFound' => 'Ingen rom har den koden. Det kan være avsluttet.',
+			'watchTogether.errors.roomFull' => 'Rommet er fullt.',
+			'watchTogether.errors.roomLocked' => 'Verten har låst rommet.',
+			'watchTogether.errors.relayFull' => 'Se sammen er opptatt akkurat nå. Prøv igjen senere.',
+			'watchTogether.errors.unreachable' => 'Kunne ikke nå reléserveren for Se sammen. Sjekk tilkoblingen.',
+			'watchTogether.errors.rateLimited' => 'For mange forsøk. Vent litt og prøv igjen.',
+			'watchTogether.errors.clientBlocked' => 'Denne versjonen av Plezy kan ikke bruke reléserveren. Oppdater appen.',
+			'watchTogether.errors.forbidden' => 'Bare verten kan gjøre det.',
+			'watchTogether.errors.notInRoom' => 'Du er ikke i et rom.',
+			'watchTogether.errors.alreadyInRoom' => 'Du er allerede i et rom.',
+			'watchTogether.errors.resumeFailed' => 'Kunne ikke bli med i rommet igjen.',
+			'watchTogether.errors.unsupported' => 'Reléserveren støtter ikke dette.',
+			'watchTogether.errors.generic' => 'Noe gikk galt. Prøv igjen.',
+			'watchTogether.untitledEpisode' => ({required Object number}) => 'Episode ${number}',
 			'downloads.title' => 'Nedlastinger',
 			'downloads.manage' => 'Administrer',
 			'downloads.tvShows' => 'TV-serier',
@@ -4422,10 +5176,14 @@ extension on TranslationsNb {
 			'downloads.downloadQueued' => 'Nedlasting i kø',
 			'downloads.downloadResumed' => 'Nedlasting gjenopptatt',
 			'downloads.serverErrorBitrate' => 'Serverfeil: filen kan overskride grensen for ekstern bitrate',
-			'downloads.storageFull' => 'Nedlastingene ble stoppet fordi lagringsplassen på enheten er full. Frigjør plass, og prøv igjen.',
+			'downloads.storageFull' => 'Nedlastingene ble stoppet for å beskytte ledig lagringsplass. Frigjør plass eller velg en annen nedlastingsplassering, og prøv igjen.',
+			'downloads.storageUnavailable' => 'Nedlastingene ble stoppet fordi tilgjengelig lagringsplass ikke kunne sjekkes. Sjekk nedlastingsstedet, og prøv igjen.',
 			'downloads.episodesQueued' => ({required Object count}) => '${count} episoder i nedlastingskø',
 			'downloads.downloadDeleted' => 'Nedlasting slettet',
 			'downloads.deleteConfirm' => ({required Object title}) => 'Slette "${title}" fra denne enheten?',
+			'downloads.deleteCollectionDownloads' => 'Slett nedlastinger',
+			'downloads.deleteCollectionDownloadsConfirm' => ({required Object title}) => 'Slette alle nedlastinger i «${title}» fra denne enheten?',
+			'downloads.collectionDownloadsDeleted' => 'Nedlastinger slettet',
 			'downloads.cancelledDownloadTitle' => 'Avbrutt nedlasting',
 			'downloads.cancelledDownloadMessage' => 'Denne nedlastingen ble avbrutt. Hva vil du gjøre?',
 			'downloads.allEpisodesAlreadyDownloaded' => 'Alle episoder er allerede lastet ned',
@@ -4443,6 +5201,8 @@ extension on TranslationsNb {
 			'downloads.noDownloadsTree' => 'Ingen nedlastinger',
 			'downloads.pauseAll' => 'Pause alle',
 			'downloads.resumeAll' => 'Gjenoppta alle',
+			'downloads.retryAll' => 'Prøv alle på nytt',
+			'downloads.retryFailed' => 'Prøv mislykkede nedlastinger på nytt',
 			'downloads.deleteAll' => 'Slett alle',
 			'downloads.selectVersion' => 'Velg versjon',
 			'downloads.allEpisodes' => 'Alle episoder',
@@ -4473,14 +5233,13 @@ extension on TranslationsNb {
 			'downloads.manageSyncRule' => 'Administrer synkronisering',
 			'downloads.editEpisodeCount' => 'Antall episoder',
 			'downloads.editSyncFilter' => 'Synkroniseringsfilter',
-			_ => null,
-		} ?? switch (path) {
 			'downloads.syncAllItems' => 'Synkroniserer alle elementer',
 			'downloads.syncUnwatchedItems' => 'Synkroniserer usette elementer',
 			'downloads.syncRuleServerContext' => ({required Object server, required Object status}) => 'Server: ${server} • ${status}',
 			'downloads.syncRuleAvailable' => 'Tilgjengelig',
 			'downloads.syncRuleOffline' => 'Frakoblet',
 			'downloads.syncRuleSignInRequired' => 'Innlogging kreves',
+			'downloads.syncRuleAccessDenied' => 'Tilgang nektet',
 			'downloads.syncRuleNotAvailableForProfile' => 'Ikke tilgjengelig for gjeldende profil',
 			'downloads.syncRuleUnknownServer' => 'Ukjent server',
 			'downloads.syncRuleListCreated' => 'Synkroniseringsregel opprettet',
@@ -4510,13 +5269,23 @@ extension on TranslationsNb {
 			'downloads.backgroundWarning.statusUnknown' => 'Ikke sjekket ennå',
 			'downloads.backgroundWarning.settingsUnavailable' => 'Kunne ikke åpne systeminnstillingene på denne enheten',
 			'downloads.backgroundWarning.linkUnavailable' => 'Kunne ikke åpne dontkillmyapp.com på denne enheten',
+			'downloads.options' => 'Valg for nedlastinger',
+			'downloads.groupings.library' => 'Bibliotek',
+			'downloads.groupings.collections' => 'Samlinger',
+			'downloads.unknownLibrary' => 'Ukjent bibliotek',
 			'downloads.unknownShow' => 'Ukjent serie',
 			'downloads.unknownSeason' => 'Ukjent sesong',
 			'downloads.unknownAlbum' => 'Ukjent album',
 			'downloads.completedOfTotal' => ({required Object completed, required Object total}) => '${completed}/${total} fullført',
 			'downloads.errorFileNotFound' => 'Filen ble ikke funnet (404)',
+			'downloads.errorDownloadNotAllowed' => 'Serveren tillater ikke nedlasting (403)',
 			'downloads.errorDownloadFailed' => 'Nedlastingen mislyktes',
-			'downloads.errorPostProcessing' => ({required Object error}) => 'Etterbehandlingen mislyktes: ${error}',
+			'downloads.errorDownloadFailedWithReason' => ({required Object reason}) => 'Nedlastingen mislyktes: ${reason}',
+			'downloads.errorHttpStatus' => ({required Object status}) => 'Nedlastingen mislyktes (HTTP ${status})',
+			'downloads.errorPostProcessing' => ({required Object reason}) => 'Etterbehandlingen mislyktes: ${reason}',
+			'downloads.reasonFileNotSaved' => 'filen kunne ikke lagres på denne enheten',
+			'downloads.reasonCannotResume' => 'den delvise nedlastingen kunne ikke gjenopptas',
+			'downloads.reasonDeviceStorageFull' => 'denne enheten er tom for lagringsplass',
 			'downloads.notificationDownloading' => 'Laster ned...',
 			'downloads.notificationComplete' => 'Nedlastingen er fullført',
 			'downloads.notificationPaused' => 'Nedlastingen er satt på pause',
@@ -4624,7 +5393,7 @@ extension on TranslationsNb {
 			'videoSettings.audioOutputSpatial' => 'Romlig lyd',
 			'videoSettings.audioOutputStereo' => 'Stereo',
 			'videoSettings.audioNormalization' => 'Normaliser lydstyrke',
-			'videoSettings.audioDownmix' => 'Nedmiks til stereo',
+			'videoSettings.audioNormalizationDisablesPassthrough' => 'Dekoder lyd til PCM; direkte lydutgang er av mens dette er på',
 			'performanceOverlay.color' => 'Farge',
 			'performanceOverlay.performance' => 'Ytelse',
 			'performanceOverlay.buffer' => 'Buffer',
@@ -4637,6 +5406,13 @@ extension on TranslationsNb {
 			'performanceOverlay.rotation' => 'Rotasjon',
 			'performanceOverlay.dvSource' => 'DV-kilde',
 			'performanceOverlay.dvPath' => 'DV-sti',
+			'performanceOverlay.dvRouteDecoder' => 'Dolby Vision-dekoder',
+			'performanceOverlay.dvRouteDecoderP81' => 'Dolby Vision-dekoder (P7→8.1)',
+			'performanceOverlay.dvRouteBaseLayer' => 'Basislag',
+			'performanceOverlay.dvRouteBaseLayerHdr10' => 'HDR10-basislag',
+			'performanceOverlay.dvRouteBaseLayerHlg' => 'HLG-basislag',
+			'performanceOverlay.dvRouteBaseLayerSdr' => 'SDR-basislag',
+			'performanceOverlay.dvRouteReshaped' => 'RPU-omformet (gpu-next)',
 			'performanceOverlay.p7Conversion' => 'P7-konv.',
 			'performanceOverlay.sampleRate' => 'Samplingsrate',
 			'performanceOverlay.pixelFormat' => 'Pikselformat',
@@ -4672,6 +5448,8 @@ extension on TranslationsNb {
 			'performanceOverlay.tunnelingActive' => 'Aktiv',
 			'performanceOverlay.dvRpuFailed' => ({required Object converted, required Object failures}) => '${converted} (${failures} mislyktes)',
 			'externalPlayer.title' => 'Ekstern spiller',
+			_ => null,
+		} ?? switch (path) {
 			'externalPlayer.useExternalPlayer' => 'Bruk ekstern spiller',
 			'externalPlayer.useExternalPlayerDescription' => 'Åpne videoer i en annen app',
 			'externalPlayer.selectPlayer' => 'Velg spiller',
@@ -4761,6 +5539,7 @@ extension on TranslationsNb {
 			'metadataEdit.country' => 'Land',
 			'metadataEdit.collection' => 'Samling',
 			'metadataEdit.label' => 'Etikett',
+			'metadataEdit.quickTag' => 'Hurtigtagg...',
 			'matchScreen.match' => 'Finn treff...',
 			'matchScreen.fixMatch' => 'Korriger treff...',
 			'matchScreen.unmatch' => 'Fjern treff',
@@ -4807,6 +5586,10 @@ extension on TranslationsNb {
 			'seerr.qualityProfile' => 'Kvalitetsprofil',
 			'seerr.rootFolder' => 'Rotmappe',
 			'seerr.languageProfile' => 'Språkprofil',
+			'seerr.tags' => 'Tagger',
+			'seerr.noTags' => 'Ingen tagger',
+			'seerr.defaultOption' => ({required Object name}) => '${name} (standard)',
+			'seerr.animeNote' => 'Denne serien er en anime.',
 			'seerr.requestSubmitted' => 'Forespørsel sendt',
 			'seerr.requestFailed' => ({required Object error}) => 'Forespørsel mislyktes: ${error}',
 			'seerr.requestsLoadFailed' => 'Kunne ikke laste forespørselsalternativer',
@@ -4818,6 +5601,7 @@ extension on TranslationsNb {
 			'seerr.statusBlocklisted' => 'På blokkeringslisten',
 			'seerr.couldNotReach' => ({required Object url, required Object error}) => 'Kunne ikke nå ${url}: ${error}',
 			'seerr.noInstanceAtUrl' => ({required Object url, required Object status}) => 'Ingen Seerr-instans på ${url} (HTTP ${status})',
+			'seerr.behindAuthProxy' => 'En autentiserende omvendt proxy (SSO eller HTTP-autentisering) svarte i stedet for Seerr. Plezy kan ikke logge inn gjennom den: La Seerrs /api/v1-sti omgå proxyen for denne appen, eller bruk en adresse som når Seerr direkte.',
 			'seerr.invalidUrl' => 'Skriv inn en serveradresse som https://seerr.example.com',
 			'seerr.quickConnectUnsupported' => 'Denne Seerr-instansen støtter ikke Quick Connect. Den krever Seerr 3.4 eller nyere.',
 			'seerr.notInitialized' => 'Denne Seerr-instansen har ikke fullført førstegangsoppsettet',
@@ -4828,6 +5612,8 @@ extension on TranslationsNb {
 			'seerr.freshCookieRejected' => 'Seerr avviste den nye øktinformasjonskapselen',
 			'seerr.noUserInformation' => 'Seerr returnerte ingen brukerinformasjon',
 			'seerr.sessionRejectedAfterReauth' => 'Økten ble avvist etter ny innlogging',
+			'seerr.permissionDenied' => 'Seerr avviste denne handlingen: kontoen din har ikke lenger den nødvendige tillatelsen',
+			'seerr.permissionRevoked' => 'Du har ikke lenger tillatelse til å be om dette',
 			'services.title' => 'Tjenester',
 			'services.hubSubtitle' => 'Synkroniser fremdrift og forespør nye titler.',
 			'services.integrations' => 'Integrasjoner',
@@ -4843,6 +5629,8 @@ extension on TranslationsNb {
 			'services.names.simkl' => 'Simkl',
 			'services.names.seerr' => 'Seerr',
 			'services.names.mdblist' => 'MDBList',
+			'services.simklReconnect.title' => 'Koble til Simkl på nytt',
+			'services.simklReconnect.subtitle' => 'Simkl avvikler påloggingsmetoden som denne tilkoblingen bruker. Når du kobler til på nytt, åpnes simkl.com slik at du kan godkjenne Plezy – Plezy ser aldri passordet ditt. Visningshistorikken din blir liggende på Simkl.',
 			'services.deviceCode.title' => ({required Object service}) => 'Aktiver Plezy på ${service}',
 			'services.deviceCode.instructions' => 'Skann QR-koden, eller gå til adressen nedenfor og skriv inn denne koden:',
 			'services.deviceCode.openToActivate' => ({required Object service}) => 'Åpne ${service} for å aktivere',

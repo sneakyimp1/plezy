@@ -4,20 +4,36 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:plezy/database/app_database.dart';
+import 'package:plezy/media/ids.dart';
 import 'package:plezy/media/media_backend.dart';
 
 import 'package:plezy/media/media_item.dart';
 import 'package:plezy/media/media_kind.dart';
+import 'package:plezy/media/media_server_client.dart';
 import 'package:plezy/media/media_version.dart';
+import 'package:plezy/models/download_models.dart';
 import 'package:plezy/models/transcode_quality_preset.dart';
 import 'package:plezy/mpv/player/player_native.dart';
+import 'package:plezy/providers/download_provider.dart';
+import 'package:plezy/providers/multi_server_provider.dart';
+import 'package:plezy/services/downloaded_video_source.dart';
+import 'package:plezy/services/offline_watch_sync_service.dart';
+import 'package:plezy/services/playback_initialization_types.dart';
+import 'package:plezy/services/saf_storage_service.dart';
 import 'package:plezy/services/settings_service.dart';
 import 'package:plezy/utils/video_player_navigation.dart';
+import 'package:openwatchparty/openwatchparty.dart' as owp;
+import 'package:plezy/watch_together/models/watch_copy.dart';
+import 'package:plezy/watch_together/providers/watch_together_provider.dart';
+import 'package:provider/provider.dart';
 
 import '../test_helpers/prefs.dart';
 import '../test_helpers/media_items.dart';
 import '../test_helpers/mock_player_channels.dart';
+import '../test_helpers/multi_server_fixtures.dart';
 import '../test_helpers/pump.dart';
+import '../test_helpers/saf_fakes.dart';
 
 void main() {
   testWidgets('replacement releases the native owner and Back never exposes an abandoned player', (tester) async {
@@ -129,22 +145,6 @@ void main() {
         routeKind: routeKind,
       );
     }
-
-    test('in-flight guard scopes duplicates and releases only the exact target', () {
-      final guard = VideoPlayerNavigationInFlightGuard();
-      final targetA = identity(plexA);
-      final targetB = identity(plexB);
-
-      expect(guard.tryStart(targetA), isTrue);
-      expect(guard.tryStart(targetA), isFalse);
-      expect(guard.tryStart(targetB), isTrue);
-      expect(guard.tryStart(identity(plexA, mediaIndex: 1)), isTrue);
-
-      guard.finish(targetA);
-
-      expect(guard.tryStart(targetA), isTrue);
-      expect(guard.tryStart(targetB), isFalse);
-    });
 
     test('active guard blocks only the complete server-qualified route target', () {
       final guard = VideoPlayerActiveRouteGuard();
@@ -293,6 +293,192 @@ void main() {
       expect(await resolveSavedMediaVersionFor(episode), isNull);
     });
   });
+
+  group('launching a downloaded item while its server is reachable (issue #2466)', () {
+    const urlLauncherChannel = MethodChannel('plugins.flutter.io/url_launcher');
+    const localCopy = 'content://sdcard/Movie.mkv';
+    final movie = testMediaItem(id: 'movie-1', backend: MediaBackend.plex, kind: MediaKind.movie, serverId: 'srv');
+    // Only the second version is on disk, so a launch that ignored the
+    // download would request version 0 and stream it.
+    final downloadedRow = DownloadedMediaItem(
+      id: 1,
+      serverId: 'srv',
+      ratingKey: 'movie-1',
+      globalKey: 'srv:movie-1',
+      type: 'movie',
+      status: DownloadStatus.completed.index,
+      progress: 100,
+      downloadedBytes: 0,
+      videoFilePath: localCopy,
+      retryCount: 0,
+      mediaIndex: 1,
+      mediaSourceId: 'v1',
+    );
+
+    late List<String> externalLaunches;
+    late _ExternalUrlClient client;
+
+    setUp(() async {
+      resetSharedPreferencesForTest();
+      SettingsService.resetForTesting();
+      SafStorageService.setOpsForTesting(FakeSafStorage());
+      await (await SettingsService.getInstance()).write(SettingsService.useExternalPlayer, true);
+      externalLaunches = [];
+      client = _ExternalUrlClient();
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(urlLauncherChannel, (
+        call,
+      ) async {
+        if (call.method != 'launch') return null;
+        externalLaunches.add((call.arguments as Map)['url'] as String);
+        return true;
+      });
+    });
+
+    tearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
+        urlLauncherChannel,
+        null,
+      );
+      SafStorageService.setOpsForTesting(null);
+      SettingsService.resetForTesting();
+    });
+
+    Future<void> launch(WidgetTester tester, {int? selectedMediaIndex, String? selectedMediaSourceId}) async {
+      final servers = testMultiServer(clients: [client]);
+      final downloads = _CompletedDownloads(downloadedRow);
+      final offlineWatch = _OfflineWatchSync();
+      addTearDown(downloads.dispose);
+      addTearDown(offlineWatch.dispose);
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<MultiServerProvider>.value(value: servers.provider),
+            ChangeNotifierProvider<DownloadProvider>.value(value: downloads),
+            ChangeNotifierProvider<OfflineWatchSyncService>.value(value: offlineWatch),
+          ],
+          child: const MaterialApp(home: Scaffold(body: Text('Detail'))),
+        ),
+      );
+      unawaited(
+        navigateToVideoPlayer(
+          tester.element(find.text('Detail')),
+          metadata: movie,
+          selectedMediaIndex: selectedMediaIndex,
+          selectedMediaSourceId: selectedMediaSourceId,
+          resolveWatchState: false,
+        ),
+      );
+      await pumpUntil(tester, () => externalLaunches.isNotEmpty, describe: () => 'no external player launch');
+    }
+
+    testWidgets('plain Play hands the external player the downloaded copy', (tester) async {
+      await launch(tester);
+
+      expect(externalLaunches, [localCopy]);
+      expect(client.resolvedMediaIndexes, isEmpty, reason: 'the server must not be asked for a stream');
+    });
+
+    testWidgets('an explicitly chosen version that is not downloaded streams from the server', (tester) async {
+      await launch(tester, selectedMediaIndex: 0, selectedMediaSourceId: 'v0');
+
+      expect(externalLaunches, ['https://server/stream/0']);
+      expect(client.resolvedMediaIndexes, [0]);
+    });
+  });
+
+  group('the Watch Together room version (#2536)', () {
+    const versions = [
+      MediaVersion(id: 'v0', videoResolution: '4k', videoCodec: 'hevc', container: 'mkv'),
+      MediaVersion(id: 'v1', videoResolution: '1080', videoCodec: 'h264', container: 'mkv'),
+    ];
+    final movie = testMediaItem(
+      id: 'movie-1',
+      backend: MediaBackend.plex,
+      kind: MediaKind.movie,
+      serverId: 'srv',
+      mediaVersions: versions,
+    );
+    WatchCopy copyOf(String versionId) =>
+        WatchCopy(serverId: 'srv', itemId: 'movie-1', versionId: versionId, item: movie);
+
+    test('opens the version the room chose', () {
+      expect(watchTogetherVersionOf(movie, copyOf('v1')), (index: 1, sourceId: 'v1'));
+    });
+
+    test("yields to the viewer's own version when the copy names none or the item no longer lists it", () {
+      expect(watchTogetherVersionOf(movie, copyOf('')), isNull);
+      expect(watchTogetherVersionOf(movie, copyOf('replaced')), isNull);
+    });
+
+    test('passes the source through when the item lists no versions', () {
+      final bare = testMediaItem(id: 'movie-1', backend: MediaBackend.plex, kind: MediaKind.movie, serverId: 'srv');
+      expect(watchTogetherVersionOf(bare, copyOf('v1')), (index: 0, sourceId: 'v1'));
+    });
+
+    group('launching the room item', () {
+      const urlLauncherChannel = MethodChannel('plugins.flutter.io/url_launcher');
+      late List<String> externalLaunches;
+      late _ExternalUrlClient client;
+
+      setUp(() async {
+        resetSharedPreferencesForTest();
+        SettingsService.resetForTesting();
+        await (await SettingsService.getInstance()).write(SettingsService.useExternalPlayer, true);
+        externalLaunches = [];
+        client = _ExternalUrlClient();
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(urlLauncherChannel, (
+          call,
+        ) async {
+          if (call.method != 'launch') return null;
+          externalLaunches.add((call.arguments as Map)['url'] as String);
+          return true;
+        });
+      });
+
+      tearDown(() {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
+          urlLauncherChannel,
+          null,
+        );
+        SettingsService.resetForTesting();
+      });
+
+      testWidgets('a launch for a file the room no longer plays opens nothing', (tester) async {
+        final watchTogether = _RoomCopyProvider(copyOf('v0'));
+        final servers = testMultiServer(clients: [client]);
+        final downloads = _NoDownloads();
+        final offlineWatch = _OfflineWatchSync();
+        addTearDown(() {
+          watchTogether.dispose();
+          downloads.dispose();
+          offlineWatch.dispose();
+        });
+        await tester.pumpWidget(
+          MultiProvider(
+            providers: [
+              ChangeNotifierProvider<MultiServerProvider>.value(value: servers.provider),
+              ChangeNotifierProvider<DownloadProvider>.value(value: downloads),
+              ChangeNotifierProvider<OfflineWatchSyncService>.value(value: offlineWatch),
+              ChangeNotifierProvider<WatchTogetherProvider>.value(value: watchTogether),
+            ],
+            child: const MaterialApp(home: Scaffold(body: Text('Detail'))),
+          ),
+        );
+
+        final opened = await navigateToVideoPlayer(
+          tester.element(find.text('Detail')),
+          metadata: movie,
+          watchTogetherCopy: copyOf('v1'),
+          resolveWatchState: false,
+        );
+        await tester.pump();
+
+        expect(opened, isNull);
+        expect(externalLaunches, isEmpty);
+        expect(client.resolvedMediaIndexes, isEmpty, reason: 'a stale room launch must not reach the server');
+      });
+    });
+  });
 }
 
 /// A route-owned real Dart player: native calls are mocked, but ownership
@@ -335,4 +521,85 @@ class _PlaybackPageState extends State<_PlaybackPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(body: Text('${widget.name} $status'));
+}
+
+class _ExternalUrlClient implements MediaServerClient {
+  final resolvedMediaIndexes = <int>[];
+
+  @override
+  ServerId get serverId => ServerId('srv');
+
+  @override
+  MediaBackend get backend => MediaBackend.plex;
+
+  @override
+  Future<ExternalPlaybackTarget?> resolveExternalPlayback(
+    MediaItem item, {
+    int mediaIndex = 0,
+    String? mediaSourceId,
+    Duration? position,
+  }) async {
+    resolvedMediaIndexes.add(mediaIndex);
+    return ExternalPlaybackTarget(url: 'https://server/stream/$mediaIndex');
+  }
+
+  @override
+  void close() {}
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// One completed download, resolved through the production version-match and
+/// reachability rules.
+class _CompletedDownloads extends ChangeNotifier implements DownloadProvider {
+  _CompletedDownloads(this.row);
+
+  final DownloadedMediaItem row;
+
+  @override
+  bool isDownloaded(String globalKey) => globalKey == row.globalKey;
+
+  @override
+  Future<DownloadedMediaItem?> getCompletedDownload(String globalKey) async => globalKey == row.globalKey ? row : null;
+
+  @override
+  Future<String?> getVideoFilePath(String globalKey, {int? mediaIndex, String? mediaSourceId}) async {
+    if (globalKey != row.globalKey) return null;
+    final source = await resolveDownloadedVideoSource(
+      row,
+      requestedMediaIndex: mediaIndex,
+      requestedMediaSourceId: mediaSourceId,
+    );
+    return source?.path;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _NoDownloads extends ChangeNotifier implements DownloadProvider {
+  @override
+  bool isDownloaded(String globalKey) => false;
+
+  @override
+  Future<DownloadedMediaItem?> getCompletedDownload(String globalKey) async => null;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// A Watch Together room whose file to open is [copy].
+class _RoomCopyProvider extends WatchTogetherProvider {
+  _RoomCopyProvider(this.copy);
+
+  final WatchCopy copy;
+
+  @override
+  owp.Candidate<WatchCopy>? get roomCopy => owp.Candidate(id: 'match', ref: copy, durationMs: 7200000);
+}
+
+class _OfflineWatchSync extends ChangeNotifier implements OfflineWatchSyncService {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logger/logger.dart';
 import 'package:plezy/focus/input_mode_tracker.dart';
 import 'package:plezy/i18n/strings.g.dart';
 import 'package:plezy/media/ids.dart';
@@ -10,6 +13,7 @@ import 'package:plezy/media/media_hub.dart';
 import 'package:plezy/media/media_item.dart';
 import 'package:plezy/media/media_kind.dart';
 import 'package:plezy/media/media_server_client.dart';
+import 'package:plezy/media/media_sort.dart';
 import 'package:plezy/media/server_capabilities.dart';
 import 'package:plezy/providers/multi_server_provider.dart';
 import 'package:plezy/screens/hub_detail_screen.dart';
@@ -17,7 +21,9 @@ import 'package:plezy/services/multi_server_manager.dart';
 import 'package:plezy/services/settings_service.dart';
 import 'package:plezy/theme/mono_theme.dart';
 import 'package:plezy/utils/media_server_http_client.dart';
+import 'package:plezy/utils/app_logger.dart' as logging;
 import 'package:plezy/utils/grid_size_calculator.dart';
+import 'package:plezy/widgets/app_bar_back_button.dart';
 import 'package:plezy/widgets/focusable_media_card.dart';
 import 'package:plezy/widgets/media_card.dart';
 import 'package:provider/provider.dart';
@@ -132,13 +138,58 @@ void main() {
     expect(harness.client.requestedStarts, [0]);
     expect(harness.client.requestedSizes, [200]);
 
+    // A drag stops at the end of what is loaded; reaching it fetches the next
+    // page. How many pages one drag reaches depends on when the grid relays
+    // out, so walk to the end and assert the order instead.
+    for (var i = 0; i < 3; i++) {
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -50000));
+      await tester.pumpAndSettle();
+    }
+    expect(find.text('Item 449'), findsOneWidget);
+    expect(harness.client.requestedStarts, [0, 200, 400]);
+    expect(harness.client.requestedSizes, [200, 200, 50]);
+  });
+
+  testWidgets('Jellyfin Recently Added does not fetch past a page that has not been laid out yet', (tester) async {
+    final items = List.generate(450, (index) => _item(index, backend: MediaBackend.jellyfin));
+    final harness = await _createHarness(items, backend: MediaBackend.jellyfin);
+
+    await tester.pumpWidget(
+      harness.wrap(
+        HubDetailScreen(
+          hub: MediaHub(
+            id: 'home.recent',
+            title: 'Recently Added',
+            type: 'mixed',
+            items: items.take(20).toList(),
+            size: items.length,
+            more: true,
+            serverId: 'server_1',
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(harness.client.requestedStarts, [0]);
+
+    final gate = harness.client.pageGate = Completer<void>();
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -50000));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    expect(harness.client.requestedStarts, [0, 200]);
+
+    // The page lands and the user scrolls back a little before the next frame
+    // lays the new items out. Items 200-399 now sit below the viewport.
+    harness.client.pageGate = null;
+    gate.complete();
+    await tester.idle();
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, 100));
+    await tester.pumpAndSettle();
+    expect(harness.client.requestedStarts, [0, 200]);
+
     await tester.drag(find.byType(CustomScrollView), const Offset(0, -50000));
     await tester.pumpAndSettle();
     expect(harness.client.requestedStarts, [0, 200, 400]);
-    expect(harness.client.requestedSizes, [200, 200, 50]);
-    await tester.drag(find.byType(CustomScrollView), const Offset(0, -50000));
-    await tester.pumpAndSettle();
-    expect(find.text('Item 449'), findsOneWidget);
   });
 
   testWidgets('Plex hub replaces its preview with the full-hub response', (tester) async {
@@ -262,6 +313,236 @@ void main() {
       expect(FocusManager.instance.primaryFocus?.debugLabel, 'hub_detail_item_1');
     });
   });
+
+  group('back', () {
+    final items = [_titled('z', 'Zulu'), _titled('m', 'Mike')];
+
+    /// The hub pushed over a launcher, with a D-pad session parked on Mike.
+    Future<void> pushHubFocusingMike(WidgetTester tester) async {
+      final harness = await _createHarness(items, backend: MediaBackend.plex);
+      await tester.pumpWidget(
+        harness.wrap(
+          Builder(
+            builder: (context) => TextButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (_) => HubDetailScreen(
+                    hub: MediaHub(id: 'hub_1', title: 'Hub', type: 'movie', items: items, size: items.length),
+                  ),
+                ),
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      _cardFor(tester, 'Mike').focusNode!.requestFocus();
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('a tap on the app-bar arrow leaves at once, wherever D-pad focus was', (tester) async {
+      await pushHubFocusingMike(tester);
+
+      await tester.tap(find.byType(AppBarBackButton));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(HubDetailScreen), findsNothing);
+      expect(find.text('open'), findsOneWidget);
+    });
+  });
+
+  group('DOWN from the app bar', () {
+    // Regression for #2618: DOWN re-focused the remembered card even after the
+    // grid had unmounted it. Flutter parks a request on a detached node until it
+    // is reparented, so focus stayed on the app bar and every DOWN was a no-op.
+    Future<void> pumpHub(WidgetTester tester, List<MediaItem> items) async {
+      final harness = await _createHarness(items, backend: MediaBackend.plex);
+      await tester.pumpWidget(
+        harness.wrap(
+          HubDetailScreen(
+            hub: MediaHub(id: 'hub_1', title: 'Hub', type: 'movie', items: items, size: items.length),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      // D-pad session.
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> focusCard(WidgetTester tester, String title) async {
+      _cardFor(tester, title).focusNode!.requestFocus();
+      await tester.pumpAndSettle();
+      expect(_cardFor(tester, title).focusNode!.hasPrimaryFocus, isTrue);
+    }
+
+    Future<void> backToAppBar(WidgetTester tester) async {
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      expect(FocusManager.instance.primaryFocus?.debugLabel, 'ActionBar[0]');
+    }
+
+    String numbered(int index) => 'Item ${index.toString().padLeft(3, '0')}';
+
+    testWidgets('after a sort moved the remembered card out of range, DOWN lands on the first item', (tester) async {
+      // Zulu opens first and sorts last under Title ascending.
+      await pumpHub(tester, [_titled('z', 'Zulu'), for (var i = 1; i < 60; i++) _titled('i$i', numbered(i))]);
+      await focusCard(tester, 'Zulu');
+      await backToAppBar(tester);
+
+      // Open Sort, pick Title (the sheet's initial focus), close the sheet.
+      await tester.sendKeyEvent(LogicalKeyboardKey.select);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.select);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      expect(FocusManager.instance.primaryFocus?.debugLabel, 'ActionBar[0]');
+      expect(find.text('Zulu'), findsNothing, reason: 'the remembered card must be outside the build range');
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+
+      expect(_cardFor(tester, numbered(1)).focusNode!.hasPrimaryFocus, isTrue);
+    });
+
+    testWidgets('after BACK from deep in the grid, DOWN lands on the first item', (tester) async {
+      await pumpHub(tester, [for (var i = 0; i < 60; i++) _titled('i$i', numbered(i))]);
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -30000));
+      await tester.pumpAndSettle();
+      await focusCard(tester, numbered(59));
+      // BACK scrolls to the top, unmounting the remembered card.
+      await backToAppBar(tester);
+      expect(find.text(numbered(59)), findsNothing, reason: 'the remembered card must be outside the build range');
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+
+      expect(_cardFor(tester, numbered(0)).focusNode!.hasPrimaryFocus, isTrue);
+    });
+
+    testWidgets('a remembered card that is still mounted gets the focus back', (tester) async {
+      await pumpHub(tester, [_titled('z', 'Zulu'), _titled('m', 'Mike'), _titled('a', 'Alpha')]);
+      await focusCard(tester, 'Mike');
+      await backToAppBar(tester);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+
+      expect(_cardFor(tester, 'Mike').focusNode!.hasPrimaryFocus, isTrue);
+    });
+  });
+
+  testWidgets('Plex section sorts order by their own field and unsupported ones are not offered', (tester) async {
+    MediaItem played(String id, String title, int plays) => testMediaItem(
+      id: id,
+      backend: MediaBackend.plex,
+      kind: MediaKind.movie,
+      title: title,
+      viewCount: plays,
+      serverId: 'server_1',
+      serverName: 'Server',
+    );
+    final items = [played('a', 'Alpha', 1), played('b', 'Bravo', 3), played('c', 'Charlie', 2)];
+    final harness = await _createHarness(items, backend: MediaBackend.plex);
+    harness.client.sortOptions = const [
+      MediaSort(key: 'titleSort', descKey: 'titleSort:desc', title: 'Title', defaultDirection: 'asc'),
+      MediaSort(key: 'viewCount', descKey: 'viewCount:desc', title: 'Plays', defaultDirection: 'desc'),
+      MediaSort(key: 'mediaHeight', descKey: 'mediaHeight:desc', title: 'Resolution', defaultDirection: 'desc'),
+    ];
+    await tester.pumpWidget(
+      harness.wrap(
+        HubDetailScreen(
+          hub: MediaHub(
+            id: '/hubs/sections/1/recentlyAdded',
+            title: 'Hub',
+            type: 'movie',
+            items: items,
+            size: items.length,
+            serverId: 'server_1',
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip(t.libraries.sort));
+    await tester.pumpAndSettle();
+    // A sort the loaded items cannot honor would silently order by title.
+    expect(find.text('Resolution'), findsNothing);
+    await tester.tap(find.text('Plays'));
+    await tester.pump();
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    final titles = tester
+        .widgetList<FocusableMediaCard>(find.byType(FocusableMediaCard))
+        .map((card) => (card.item as MediaItem).title)
+        .toList();
+    expect(titles, ['Bravo', 'Charlie', 'Alpha']);
+  });
+
+  group('default sort fallback logging', () {
+    // Sort options are fetched per Plex library section. Aggregated rows
+    // (Continue Watching spans servers) and MediaBrowser hubs name no section,
+    // so falling back to the default sorts is the designed path and must not
+    // raise a warning; a Plex section hub that lost its serverId is a real
+    // tagging defect and must.
+    late Logger originalLogger;
+    late _RecordingLogOutput logOutput;
+
+    setUp(() {
+      originalLogger = logging.appLogger;
+      logOutput = _RecordingLogOutput();
+      logging.appLogger = Logger(printer: SimplePrinter(), output: logOutput);
+    });
+    tearDown(() => logging.appLogger = originalLogger);
+
+    Future<void> pumpHub(WidgetTester tester, {required String id, String? identifier, String? serverId}) async {
+      final items = List.generate(3, (index) => _item(index, backend: MediaBackend.plex));
+      final harness = await _createHarness(items, backend: MediaBackend.plex);
+      await tester.pumpWidget(
+        harness.wrap(
+          HubDetailScreen(
+            hub: MediaHub(
+              id: id,
+              identifier: identifier,
+              title: 'Hub',
+              type: 'mixed',
+              items: items,
+              size: items.length,
+              serverId: serverId,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('the synthesized Continue Watching hub opens without a warning', (tester) async {
+      await pumpHub(tester, id: 'continue_watching', identifier: '_continue_watching_');
+
+      expect(logOutput.levels.where((level) => level.value >= Level.warning.value), isEmpty);
+      expect(find.byTooltip(t.libraries.sort), findsOneWidget);
+    });
+
+    testWidgets('a MediaBrowser hub key opens without a warning', (tester) async {
+      await pumpHub(tester, id: 'home.recent', identifier: 'home.recent', serverId: 'server_1');
+
+      expect(logOutput.levels.where((level) => level.value >= Level.warning.value), isEmpty);
+    });
+
+    testWidgets('a Plex section hub that lost its serverId still warns', (tester) async {
+      await pumpHub(tester, id: '/hubs/sections/1/recentlyAdded');
+
+      expect(logOutput.levels, contains(Level.warning));
+    });
+  });
 }
 
 MediaItem _item(int index, {required MediaBackend backend, String? libraryId}) => testMediaItem(
@@ -306,12 +587,19 @@ class _HubHarness {
       value: provider,
       child: InputModeTracker(
         child: MaterialApp(
-          theme: monoTheme(dark: true).copyWith(platform: platform),
+          theme: monoTheme(MonoPalette.dark).copyWith(platform: platform),
           home: SizedBox(width: 1280, height: 720, child: child),
         ),
       ),
     ),
   );
+}
+
+class _RecordingLogOutput extends LogOutput {
+  final List<Level> levels = [];
+
+  @override
+  void output(OutputEvent event) => levels.add(event.level);
 }
 
 class _PagedHubClient implements MediaServerClient {
@@ -321,6 +609,10 @@ class _PagedHubClient implements MediaServerClient {
   final List<int?> requestedStarts = [];
   final List<int?> requestedSizes = [];
   int fullHubRequests = 0;
+  List<MediaSort> sortOptions = const [];
+
+  /// While set, page responses wait on it, so a test decides when a page lands.
+  Completer<void>? pageGate;
 
   @override
   final MediaBackend backend;
@@ -344,8 +636,12 @@ class _PagedHubClient implements MediaServerClient {
   }) async {
     requestedStarts.add(start);
     requestedSizes.add(size);
+    await pageGate?.future;
     return fakeLibraryPage(items, start: start, size: size);
   }
+
+  @override
+  Future<List<MediaSort>> fetchSortOptions(String libraryId, {String? libraryType}) async => sortOptions;
 
   @override
   Future<List<MediaItem>> fetchMoreHubItems(String hubId, {int? limit}) async {

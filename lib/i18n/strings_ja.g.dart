@@ -40,11 +40,14 @@ class TranslationsJa extends Translations with BaseTranslations<AppLocale, Trans
 
 	// Translations
 	@override late final _Translations$app$ja app = _Translations$app$ja._(_root);
+	@override late final _Translations$appIcon$ja appIcon = _Translations$appIcon$ja._(_root);
 	@override late final _Translations$auth$ja auth = _Translations$auth$ja._(_root);
 	@override late final _Translations$common$ja common = _Translations$common$ja._(_root);
 	@override late final _Translations$screens$ja screens = _Translations$screens$ja._(_root);
 	@override late final _Translations$update$ja update = _Translations$update$ja._(_root);
+	@override late final _Translations$supporter$ja supporter = _Translations$supporter$ja._(_root);
 	@override late final _Translations$settings$ja settings = _Translations$settings$ja._(_root);
+	@override late final _Translations$themeEditor$ja themeEditor = _Translations$themeEditor$ja._(_root);
 	@override late final _Translations$search$ja search = _Translations$search$ja._(_root);
 	@override late final _Translations$hotkeys$ja hotkeys = _Translations$hotkeys$ja._(_root);
 	@override late final _Translations$fileInfo$ja fileInfo = _Translations$fileInfo$ja._(_root);
@@ -100,6 +103,24 @@ class _Translations$app$ja extends Translations$app$en {
 
 	// Translations
 	@override String get title => 'Plezy';
+}
+
+// Path: appIcon
+class _Translations$appIcon$ja extends Translations$appIcon$en {
+	_Translations$appIcon$ja._(TranslationsJa root) : this._root = root, super.internal(root);
+
+	final TranslationsJa _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'アプリアイコン';
+	@override String get defaultIcon => 'デフォルト';
+	@override String get current => '現在のアイコン';
+	@override String get locked => 'Supporter特典';
+	@override String get lockedHint => '別のアイコンはSupporter特典です。';
+	@override String get changeFailed => 'アプリアイコンを変更できませんでした';
+	@override String get launcherHint => 'Plezyを離れると、ホーム画面に新しいアイコンが表示されます。';
+	@override String get tvLauncherHint => 'Plezyを離れると、新しいバナーが表示されます。Android TVでは、テレビを再起動するまで古いバナーが表示され続ける場合があります。';
+	@override late final _Translations$appIcon$names$ja names = _Translations$appIcon$names$ja._(_root);
 }
 
 // Path: auth
@@ -218,6 +239,33 @@ class _Translations$update$ja extends Translations$update$en {
 	@override String get checkFailed => 'アップデートの確認に失敗しました';
 }
 
+// Path: supporter
+class _Translations$supporter$ja extends Translations$supporter$en {
+	_Translations$supporter$ja._(TranslationsJa root) : this._root = root, super.internal(root);
+
+	final TranslationsJa _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Plezy Supporter';
+	@override String get intro => '1回限りの購入でPlezyの開発を支援し、次の見た目の特典をご利用いただけます：';
+	@override String get presetThemes => 'プリセットテーマ';
+	@override String get presetThemesDescription => '残り火、氷河、森、プラム、ペーパー';
+	@override String get customTheme => 'カスタムテーマ';
+	@override String get customThemeDescription => 'すべての色を自分で選択';
+	@override String get appIcons => 'アプリアイコン';
+	@override String get appIconsDescription => 'Plezyの別のアイコンを選択';
+	@override String buy({required Object price}) => '${price}で購入';
+	@override String get loadingPrice => '価格を読み込み中…';
+	@override String get restore => '購入を復元';
+	@override String get pending => '購入は支払いまたは承認を待っています。ストアでの処理が完了すると、すぐに特典のロックが解除されます。';
+	@override String get thankYouTitle => 'Plezyをご支援いただきありがとうございます';
+	@override String get thankYouBody => 'Supporter特典のロックが解除されました。';
+	@override String get tileSubtitle => '1回限りの購入でテーマとアプリアイコンのロックを解除';
+	@override String get tileSubtitleThemesOnly => '1回限りの購入でテーマのロックを解除';
+	@override String get tileUnlocked => 'ご支援ありがとうございます';
+	@override late final _Translations$supporter$errors$ja errors = _Translations$supporter$errors$ja._(_root);
+}
+
 // Path: settings
 class _Translations$settings$ja extends Translations$settings$en {
 	_Translations$settings$ja._(TranslationsJa root) : this._root = root, super.internal(root);
@@ -248,6 +296,11 @@ class _Translations$settings$ja extends Translations$settings$en {
 	@override String get lightTheme => 'ライト';
 	@override String get darkTheme => 'ダーク';
 	@override String get oledTheme => 'OLED';
+	@override String get emberTheme => '残り火';
+	@override String get glacierTheme => '氷河';
+	@override String get forestTheme => '森';
+	@override String get plumTheme => 'プラム';
+	@override String get paperTheme => 'ペーパー';
 	@override String get libraryDensity => 'ライブラリの密度';
 	@override String get displayScale => '表示スケール';
 	@override String get compact => 'コンパクト';
@@ -278,6 +331,8 @@ class _Translations$settings$ja extends Translations$settings$en {
 	@override String get alwaysKeepSidebarOpenDescription => 'サイドバーを展開したままにし、コンテンツ領域を幅に合わせて調整します';
 	@override String get showUnwatchedCount => '未視聴数を表示';
 	@override String get showUnwatchedCountDescription => '番組とシーズンに未視聴エピソード数を表示';
+	@override String get showWatchedIndicators => '視聴済みマークを表示';
+	@override String get showWatchedIndicatorsDescription => '視聴済みの映画、番組、エピソードにチェックマークを表示します';
 	@override String get showEpisodeNumberOnCards => 'カードにエピソード番号を表示';
 	@override String get showEpisodeNumberOnCardsDescription => 'エピソードカードにシーズン番号とエピソード番号を表示します';
 	@override String get showSeasonPostersOnTabs => 'タブにシーズンポスターを表示';
@@ -307,6 +362,11 @@ class _Translations$settings$ja extends Translations$settings$en {
 	@override String get defaultQualityTitle => 'デフォルト画質';
 	@override String get cellularQualityTitle => 'モバイルデータ通信時のデフォルト画質';
 	@override String get cellularQualitySameAsDefault => 'デフォルト画質と同じ';
+	@override String get directPlayCoveredQuality => '小さい動画をオリジナル画質で再生';
+	@override String get directPlayCoveredQualityDescription => '画質制限内の動画はトランスコードせずにダイレクト再生します';
+	@override String get videoCodecs => 'ビデオコーデック';
+	@override String get videoCodecsDescription => 'チェックを外したコーデックはサーバーがトランスコードします';
+	@override String get videoCodecsAlwaysAccepted => '常に許可';
 	@override String get musicQualityTitle => '音楽の音質';
 	@override String get subtitleStyling => '字幕スタイル';
 	@override String get subtitleStylingDescription => '字幕の外観をカスタマイズ';
@@ -318,6 +378,7 @@ class _Translations$settings$ja extends Translations$settings$en {
 	@override String minutesUnit({required Object minutes}) => '${minutes}分';
 	@override String get rememberTrackSelections => '番組/映画ごとにトラック選択を記憶';
 	@override String get rememberTrackSelectionsDescription => 'タイトルごとに音声と字幕の選択を記憶します';
+	@override String get rememberTrackSelectionsBackendRule => 'Plexはファイルごとに選択をサーバーに保存します。Jellyfinはアカウントの「選択を記憶」も有効にします。Embyはサポートされていません';
 	@override String get followServerTrackSelections => 'サーバーのエピソードごとのトラック選択を使用';
 	@override String get followServerTrackSelectionsDescription => 'エピソード切り替え時に、現在の選択を引き継ぐ代わりにサーバーで選択された音声と字幕を適用します';
 	@override String get resumeMusicOnLaunch => '音楽セッションを記憶';
@@ -337,7 +398,7 @@ class _Translations$settings$ja extends Translations$settings$en {
 	@override String get videoPlayerNavigation => '動画プレーヤーナビゲーション';
 	@override String get videoPlayerNavigationDescription => '矢印キーで動画プレーヤーコントロールを操作';
 	@override String get watchTogetherRelay => '一緒に視聴リレーサーバー';
-	@override String get watchTogetherRelayDescription => 'カスタムリレーを設定します。全員が同じサーバーを使う必要があります。';
+	@override String get watchTogetherRelayDescription => '独自のリレーサーバーを設定しない限り、公開のOpen Watch Partyリレーサーバーを使用します';
 	@override String get watchTogetherRelayHint => 'https://my-relay.example.com';
 	@override String get watchTogetherRelayInvalid => '有効なHTTPまたはHTTPSのリレーサーバーURLを入力してください。';
 	@override String get crashReporting => 'クラッシュレポート';
@@ -363,6 +424,7 @@ class _Translations$settings$ja extends Translations$settings$en {
 	@override String get importSettingsInvalidFile => 'このファイルは有効なPlezyの設定エクスポートではありません';
 	@override String get importSettingsNoUser => '設定をインポートする前にサインインしてください';
 	@override String get shortcutsReset => 'ショートカットをデフォルトにリセットしました';
+	@override String get resetShortcutsConfirm => 'カスタムショートカットがデフォルトに置き換えられます。続行しますか？';
 	@override String get about => 'アプリについて';
 	@override String get aboutDescription => 'アプリ情報とライセンス';
 	@override String get updates => 'アップデート';
@@ -378,8 +440,21 @@ class _Translations$settings$ja extends Translations$settings$en {
 	@override String get autoPlayAndSkip => '自動再生とスキップ';
 	@override String get autoPlayNextEpisode => '次のエピソードを自動再生';
 	@override String get autoPlayNextEpisodeDescription => 'エピソードが終了すると、次のエピソードを自動的に再生します';
+	@override String get shuffleStartsFromBeginning => 'シャッフルは最初から再生';
+	@override String get shuffleStartsFromBeginningDescription => 'シャッフル時に各エピソードを再開位置ではなく最初から再生します';
 	@override String get playNextCountdown => '次回再生のカウントダウン';
 	@override String get playNextCountdownImmediate => 'すぐに再生';
+	@override String get skipIntroMode => 'イントロをスキップ';
+	@override String get skipIntroModeOffDescription => 'スキップボタンなしでイントロを通常どおり再生します';
+	@override String get skipIntroModeButtonDescription => 'イントロ開始時にスキップボタンを表示します';
+	@override String get skipIntroModeAutoDescription => '下記の遅延後にイントロを自動的にスキップします';
+	@override String get skipCreditsMode => 'クレジットをスキップ';
+	@override String get skipCreditsModeOffDescription => 'スキップボタンなしでクレジットを通常どおり再生します';
+	@override String get skipCreditsModeButtonDescription => 'クレジット開始時にスキップボタンを表示します';
+	@override String get skipCreditsModeAutoDescription => 'クレジットを自動的にスキップして次のエピソードを再生します';
+	@override String get skipMarkerModeOff => 'オフ';
+	@override String get skipMarkerModeButton => 'ボタンを表示';
+	@override String get skipMarkerModeAuto => '自動';
 	@override String get forceSkipMarkerFallback => 'フォールバックマーカーを強制';
 	@override String get forceSkipMarkerFallbackDescription => 'Plexにマーカーがある場合でもチャプタータイトルのパターンを使用します';
 	@override String get autoSkipDelay => '自動スキップの遅延';
@@ -416,6 +491,8 @@ class _Translations$settings$ja extends Translations$settings$en {
 	@override String get manageLibrariesDescription => 'ライブラリを並べ替えたり非表示にしたりできます';
 	@override String get companionRemoteServer => 'コンパニオンリモートサーバー';
 	@override String get companionRemoteServerDescription => 'ネットワーク上のモバイルデバイスからこのアプリを操作できるようにする';
+	@override String get companionRemoteServerStartFailed => 'コンパニオンリモートサーバーを開始できませんでした';
+	@override String get companionRemoteServerStopFailed => 'コンパニオンリモートサーバーを停止できませんでした';
 	@override String get autoPip => '自動ピクチャーインピクチャー';
 	@override String get autoPipDescription => '再生中にアプリを離れると、自動的にピクチャーインピクチャーに切り替えます';
 	@override String get matchContentFrameRate => 'コンテンツのフレームレートに合わせる';
@@ -428,12 +505,20 @@ class _Translations$settings$ja extends Translations$settings$en {
 	@override String get matchDynamicRangeDescription => 'HDRコンテンツではHDRに切り替え、その後SDRに戻します';
 	@override String get displaySwitchDelay => 'ディスプレイ切り替え遅延';
 	@override String get tunneledPlayback => 'トンネル再生';
-	@override String get tunneledPlaybackDescription => '動画トンネリングを使用します。HDR再生で画面が黒くなる場合は無効にしてください。';
+	@override String get tunneledPlaybackDescription => '動画トンネリングを使用します。HDR再生で画面が黒くなる場合や動きがカクつく場合は無効にしてください。';
 	@override String get audioPassthrough => 'オーディオパススルー';
 	@override String get audioPassthroughDescription => 'Dolby/DTS音声を再エンコードせずにレシーバーやテレビに送り、サラウンドを維持します。音が出ない場合は無効にしてください。';
-	@override String get audioPassthroughDescriptionAppleTv => 'Dolby Atmosを含むDolby Digital PlusにはApple標準のDolbyデコーダーを使用します。DTSとTrueHDは引き続きマルチチャンネルPCMで再生されます。音が出ない場合は無効にしてください。';
-	@override String get audioDownmix => 'ステレオにダウンミックス';
-	@override String get audioDownmixDescription => 'サラウンド音声をステレオスピーカーやヘッドホン用に2チャンネルへミックスします';
+	@override String get audioPassthroughDescriptionApple => 'Dolby Atmosを含むDolby Digital PlusにはApple標準のDolbyデコーダーを使用します。DTSとTrueHDは引き続きマルチチャンネルPCMで再生されます。音が出ない場合は無効にしてください。';
+	@override String get audioPassthroughDescriptionAppleSpatial => 'Dolby Atmosを含むDolby Digital PlusにはApple標準のDolbyデコーダーを使用します。iOS、iPadOS、tvOS 26以降では、TrueHD AtmosとDTS:Xが空間オーディオとして再生されます。その他のDTSとTrueHDのトラックはマルチチャンネルPCMで再生されます。音が出ない場合は無効にしてください。';
+	@override String get audioPassthroughOverriddenByNormalization => 'ラウドネス正規化がオンの間はオフ';
+	@override String get audioChannelLimit => '音声チャンネル';
+	@override String get audioChannelLimitDescription => 'すべてのチャンネルを再生できないスピーカー、ヘッドホン、HDMI環境に合わせて、デコードした音声をダウンミックスします';
+	@override String get audioChannelLimitOriginal => 'オリジナル';
+	@override String get audioChannelLimitOriginalDescription => 'トラックのすべてのチャンネルを再生します';
+	@override String get audioChannelLimitSurround51 => '最大5.1ch';
+	@override String get audioChannelLimitSurround51Description => '5.1chのPCMにしか対応していないテレビやレシーバー向けに、7.1chを5.1chにダウンミックスします。パススルーには影響しません。';
+	@override String get audioChannelLimitStereo => 'ステレオ';
+	@override String get audioChannelLimitStereoDescription => 'ステレオスピーカーやヘッドホン向けに2チャンネルにダウンミックスします。パススルーはオフになります。';
 	@override String get downmixCenterBoost => 'センターチャンネルブースト';
 	@override String downmixCenterBoostValue({required Object db}) => '${db} dB';
 	@override String get downmixCenterBoostLabel => 'ブースト (dB)';
@@ -441,7 +526,7 @@ class _Translations$settings$ja extends Translations$settings$en {
 	@override String get audioDownmixNormalize => 'ダウンミックス時の音量正規化';
 	@override String get audioDownmixNormalizeDescription => 'クリッピングを防ぐためにミックス音量を下げます。オフにすると元の音量を維持します（大音量シーンで歪む場合があります）。';
 	@override String get dvConversionMode => 'Dolby Vision 変換';
-	@override String get dvConversionModeDescription => 'ExoPlayer が Dolby Vision Profile 7 ファイルを処理する方法を選択します。';
+	@override String get dvConversionModeDescription => 'Dolby Vision Profile 7 ファイルの処理方法を選択します。';
 	@override String get dvConversionAuto => '自動';
 	@override String get dvConversionNative => 'ネイティブ / 無効';
 	@override String get dvConversionDv81 => 'P7 → P8.1';
@@ -450,8 +535,24 @@ class _Translations$settings$ja extends Translations$settings$en {
 	@override String get dvConversionNativeDescription => 'ネイティブ DV7 を強制し、DV 変換の再試行を抑制します';
 	@override String get dvConversionDv81Description => 'Dolby Vision プロファイル 8.1 へのインライン RPU 変換を強制します';
 	@override String get dvConversionHevcStripDescription => 'Dolby Vision の RPU/EL レイヤーを削除し、通常の HEVC として扱います';
+	@override String get disableDolbyVision => 'Dolby Vision を無効にする';
+	@override String get disableDolbyVisionDescription => 'ファイルに HDR10 または HLG レイヤーがある場合は、Dolby Vision の代わりにそれを再生します';
+	@override String get hdrSdrConversion => 'HDRからSDRへの変換';
+	@override String get hdrSdrConversionDescription => 'ディスプレイがHDRを表示できないときに、HDR映像を何で変換するかを選択します。';
+	@override String get hdrSdrConversionAuto => '自動';
+	@override String get hdrSdrConversionAutoDescription => 'Android 9以降はデバイス、それより前のバージョンではプレーヤー';
+	@override String get hdrSdrConversionDevice => 'デバイス';
+	@override String get hdrSdrConversionDeviceDescription => 'デバイスの映像ハードウェアで変換します。最も高速ですが、色はデバイスによって異なります';
+	@override String get hdrSdrConversionPlayer => 'プレーヤー';
+	@override String get hdrSdrConversionPlayerDescription => 'プレーヤーで変換します。色は一定ですが、低価格なTVボックスでは4Kがカクつくことがあります';
 	@override String get deinterlace => 'デインターレース';
 	@override String get deinterlaceDescription => 'インターレース映像のくし型ノイズを除去します（mpvプレーヤーのみ）';
+	@override String get deinterlaceOff => 'オフ';
+	@override String get deinterlaceOffDescription => 'インターレース映像をデコードされたまま表示します';
+	@override String get deinterlaceVideo => 'ビデオ';
+	@override String get deinterlaceVideoDescription => '各フィールドを1つのフレームに変換します。スポーツ、ニュース、コンサートなど、テレビ用に撮影された映像向けです';
+	@override String get deinterlaceFilm => 'フィルム';
+	@override String get deinterlaceFilmDescription => 'NTSC DVDによくある、29.97fpsにテレシネされた映画やアニメの元のフレームを復元します。テレビ用に撮影された映像はカクつきます。ライブTVでは「ビデオ」を使用します';
 	@override String get requireProfileSelectionOnOpen => 'アプリ起動時にプロフィールを確認';
 	@override String get requireProfileSelectionOnOpenDescription => 'アプリを開くたびにプロフィール選択を表示';
 	@override String get forceTvMode => 'TVモードを強制';
@@ -493,6 +594,8 @@ class _Translations$settings$ja extends Translations$settings$en {
 	@override String get gestureVolumeSwipeDescription => '右端を上下にスワイプして音量を調整します';
 	@override String get gesturePinchToZoom => 'ピンチでズーム';
 	@override String get gesturePinchToZoomDescription => '動画をピンチしてズームイン・アウト';
+	@override String get rememberBrightnessLevel => '明るさを記憶';
+	@override String get rememberBrightnessLevelDescription => '前回スワイプで設定した明るさで再生を開始します';
 	@override String get controls => 'コントロール';
 	@override String get rememberPlayerChanges => 'プレーヤーの変更を記憶';
 	@override String get rememberPlayerChangesDescription => '再生中に行った変更を保存し、再適用する場所';
@@ -507,6 +610,42 @@ class _Translations$settings$ja extends Translations$settings$en {
 	@override String get exportDialogTitle => 'Plezyの設定をエクスポート';
 }
 
+// Path: themeEditor
+class _Translations$themeEditor$ja extends Translations$themeEditor$en {
+	_Translations$themeEditor$ja._(TranslationsJa root) : this._root = root, super.internal(root);
+
+	final TranslationsJa _root; // ignore: unused_field
+
+	// Translations
+	@override String get builtIn => '標準';
+	@override String get presets => 'プリセット';
+	@override String get custom => 'カスタム';
+	@override String get customEmpty => '未作成';
+	@override String get editCustom => 'カスタムテーマを編集';
+	@override String get editCustomDescription => 'すべての色を自分で選択';
+	@override String get locked => 'Supporterでロック解除';
+	@override String get savedLocked => '保存済み — Supporterでロック解除';
+	@override String get title => 'カスタムテーマ';
+	@override String get startFrom => '元にするテーマ';
+	@override String get startFromDescription => '別のテーマからすべての色をコピー';
+	@override String get colors => '色';
+	@override String get preview => 'プレビュー';
+	@override late final _Translations$themeEditor$slots$ja slots = _Translations$themeEditor$slots$ja._(_root);
+	@override String get opacity => '不透明度';
+	@override String get hexHint => '#RRGGBB または #AARRGGBB';
+	@override String get fromOtherThemes => '他のテーマから';
+	@override String swatchLabel({required Object theme, required Object color}) => '${theme}の${color}';
+	@override late final _Translations$themeEditor$contrast$ja contrast = _Translations$themeEditor$contrast$ja._(_root);
+	@override String lowContrast({required Object pair, required Object ratio, required Object minimum}) => '${pair}: ${ratio}:1（推奨値の${minimum}:1未満）';
+	@override String get discardTitle => '変更を破棄しますか？';
+	@override String get discardMessage => '保存されていない色の変更は失われます。';
+	@override String get discard => '破棄';
+	@override String previewCardTitle({required Object number}) => 'エピソード${number}';
+	@override String previewCardSubtitle({required Object minutes}) => '残り${minutes}分';
+	@override String get previewSwitch => '自動再生';
+	@override String get previewMutedText => '補助テキストはこのように表示されます';
+}
+
 // Path: search
 class _Translations$search$ja extends Translations$search$en {
 	_Translations$search$ja._(TranslationsJa root) : this._root = root, super.internal(root);
@@ -518,6 +657,7 @@ class _Translations$search$ja extends Translations$search$en {
 	@override String get tryDifferentTerm => '別の検索語をお試しください';
 	@override String get searchYourMedia => 'メディアを検索';
 	@override String get enterTitleActorOrKeyword => 'タイトル、俳優、またはキーワードを入力';
+	@override String get people => '人物';
 }
 
 // Path: hotkeys
@@ -843,14 +983,15 @@ class _Translations$videoControls$ja extends Translations$videoControls$en {
 	@override String get rotationLockButton => '回転ロック';
 	@override String get lockScreen => '画面をロック';
 	@override String get screenLockButton => '画面ロック';
-	@override String get longPressToUnlock => '長押しでロック解除';
 	@override String get timelineSlider => '動画タイムライン';
 	@override String get volumeSlider => '音量レベル';
 	@override String endsAt({required Object time}) => '${time}に終了';
 	@override String get pipActive => 'ピクチャーインピクチャーで再生中';
 	@override String get pipFailed => 'ピクチャーインピクチャーの開始に失敗しました';
 	@override String get screenshotSaved => 'スクリーンショットを保存しました';
+	@override String get screenshotFailed => 'スクリーンショットを撮影できませんでした';
 	@override String zoomPercent({required Object percent}) => 'ズーム ${percent}%';
+	@override String volumePercent({required Object percent}) => '音量 ${percent}%';
 	@override late final _Translations$videoControls$pipErrors$ja pipErrors = _Translations$videoControls$pipErrors$ja._(_root);
 	@override String get chapters => 'チャプター';
 	@override String get noChaptersAvailable => 'チャプターがありません';
@@ -901,6 +1042,9 @@ class _Translations$messages$ja extends Translations$messages$en {
 	@override String get playbackDataInvalid => 'サーバーから無効な再生情報が返されました。';
 	@override String get playbackCancelled => '再生がキャンセルされました。';
 	@override String get playbackFailed => '再生を開始できませんでした。';
+	@override String playbackFailedDetail({required Object error}) => '再生を開始できませんでした: ${error}';
+	@override String get audioOutputFailed => 'オーディオ出力が応答しなくなりました。テレビやレシーバーの音声接続を確認してください。他のアプリでも音が出ない場合は、デバイスを再起動してください。';
+	@override String get mediaUnavailable => 'このコンテンツは利用できなくなりました。';
 	@override String errorLoadingFileInfo({required Object error}) => 'ファイル情報の読み込みエラー: ${error}';
 	@override String get errorLoadingSeries => 'シリーズの読み込みエラー';
 	@override String get musicNotSupported => '音楽の再生はまだサポートされていません';
@@ -935,6 +1079,8 @@ class _Translations$messages$ja extends Translations$messages$en {
 	@override String get mediaUnreadableBody => 'サーバーはこのアイテムを見つけましたが、そのファイルを読み取れませんでした（HTTP 404）。ファイルが移動・削除されたか、ストレージがオフラインの可能性があります。サーバーの管理者にファイルの確認とライブラリの再スキャンを依頼してください。';
 	@override String get serverBusyTitle => 'ストリームを利用できません';
 	@override String get serverBusyBody => 'サーバーがこのファイルのストリーミングを繰り返し拒否しました（HTTP 503）。サーバーが再起動中またはビジー状態か、ファイルのストレージがオフラインの可能性があります。しばらくしてからもう一度お試しください。問題が続く場合は、サーバーの所有者にサーバーとファイルのストレージを確認するよう依頼してください。';
+	@override String get playbackNotAllowedTitle => '再生が許可されていません';
+	@override String get playbackNotAllowedBody => 'サーバーがこのアイテムのストリーミングを拒否しました（HTTP 403）。お使いのアカウントに再生の権限がないか、サーバーがローカルネットワーク内での再生のみを許可している可能性があります。';
 	@override String get logsUploaded => 'ログをアップロードしました';
 	@override String get logsUploadFailed => 'ログのアップロードに失敗しました';
 	@override String get logId => 'ログID';
@@ -944,6 +1090,7 @@ class _Translations$messages$ja extends Translations$messages$en {
 	@override String get playbackDataNotPrepared => '再生データの準備が完了する前に再生が開始されました';
 	@override String get streamSelectionUnavailable => 'このソースではストリームを選択できません';
 	@override String get streamSelectionFailed => '選択したストリームを適用できませんでした';
+	@override String get trackSelectionNotRemembered => 'このトラック選択は現在の再生にのみ適用されます。';
 	@override String get serverUnavailableForProfile => '現在のプロフィールで利用可能なサーバーがありません';
 }
 
@@ -970,6 +1117,8 @@ class _Translations$subtitlingStyling$ja extends Translations$subtitlingStyling$
 	@override String get overrideStrip => 'スタイルを削除';
 	@override String get positionTop => '上';
 	@override String get positionBottom => '下';
+	@override String get useMargins => '余白を使用';
+	@override String get useMarginsDescription => 'テキスト字幕を動画の外側の領域に表示できるようにします。スタイル付き字幕は元の配置を維持する場合があります。';
 	@override String get anchorToScreen => '画面に固定';
 	@override String get anchorToScreenDescription => 'ワイドスクリーン映像の下にある黒帯にテキスト字幕を表示します';
 	@override String get bold => '太字';
@@ -1000,6 +1149,9 @@ class _Translations$mpvConfig$ja extends Translations$mpvConfig$en {
 	@override String get presetDeleted => 'プリセットを削除しました';
 	@override String get confirmDeletePreset => 'このプリセットを削除してもよろしいですか？';
 	@override String get configPlaceholder => 'gpu-api=vulkan\nhwdec=auto\n# comment';
+	@override String get lineHint => 'option=value';
+	@override String get addLine => '行を追加';
+	@override String get removeLine => '行を削除';
 	@override String get embeddedVoHint => 'Linux では vo、gpu-context、gpu-api は無視されます。埋め込み動画は常にビデオプレーン上で vo=libmpv を通してレンダリングされ、gpu-next（ArtCNN のようなコンピュートシェーダーに必要）は埋め込みでは実行できません。';
 }
 
@@ -1030,6 +1182,8 @@ class _Translations$profiles$ja extends Translations$profiles$en {
 	@override String get signOut => 'サインアウト';
 	@override String get signOutPlexTitle => 'Plexからサインアウトしますか？';
 	@override String signOutPlexMessage({required Object displayName}) => '${displayName}とすべてのPlex Homeユーザーを削除しますか？いつでも再度サインインできます。';
+	@override String get signOutPlexDeleteDownloads => 'ダウンロードも削除';
+	@override String get signOutPlexDeleteDownloadsDescription => '削除しない場合、ダウンロードはこのデバイスに残り、このアカウントに再度サインインすると再び利用できます。';
 	@override String get signedOutPlex => 'Plexからサインアウトしました。';
 	@override String get signOutFailed => 'サインアウトに失敗しました。';
 	@override String get sectionTitle => 'プロフィール';
@@ -1066,7 +1220,7 @@ class _Translations$profiles$ja extends Translations$profiles$en {
 	@override String borrowAddTo({required Object displayName}) => '${displayName}に追加';
 	@override String get borrowExplain => '別のプロフィールの接続を利用します。PINで保護されたプロフィールにはPINが必要です。';
 	@override String get borrowEmpty => '利用できる接続はまだありません。';
-	@override String get borrowEmptySubtitle => 'まず、別のプロフィールをPlexまたはJellyfinに接続してください。';
+	@override String get borrowEmptySubtitle => 'まず、別のプロフィールをPlex、JellyfinまたはEmbyに接続してください。';
 	@override String get borrowLoadFailed => '利用可能な接続を読み込めませんでした。もう一度お試しください。';
 	@override String borrowFromProfile({required Object displayName}) => '${displayName}から利用';
 	@override String get borrowConnectionBorrowed => '接続を追加しました。';
@@ -1094,10 +1248,12 @@ class _Translations$connections$ja extends Translations$connections$en {
 	// Translations
 	@override String get sectionTitle => '接続';
 	@override String get addConnection => '接続を追加';
-	@override String get addConnectionSubtitleNoProfile => 'Plexでサインインするか、Jellyfinサーバーに接続';
-	@override String addConnectionSubtitleScoped({required Object displayName}) => '${displayName}に追加：Plex、Jellyfin、または別のプロフィールの接続';
+	@override String get addConnectionSubtitleNoProfile => 'Plexでサインインするか、JellyfinまたはEmbyサーバーに接続';
+	@override String addConnectionSubtitleScoped({required Object displayName}) => '${displayName}に追加：Plex、Jellyfin、Emby、または別のプロフィールの接続';
 	@override String sessionExpiredOne({required Object name}) => '${name} のセッションの有効期限が切れました';
 	@override String sessionExpiredMany({required Object count}) => '${count} 台のサーバーのセッションの有効期限が切れました';
+	@override String accessDeniedOne({required Object name}) => '${name} がこのアカウントへのアクセスを拒否しました';
+	@override String accessDeniedMany({required Object count}) => '${count} 台のサーバーがこのアカウントへのアクセスを拒否しました';
 	@override String get signInAgain => '再度サインイン';
 	@override String editMediaBrowserTitle({required Object product}) => '${product}接続を編集';
 	@override String editMediaBrowserIntro({required Object serverName}) => '${serverName}のURLを追加または削除します。Plezyは到達可能なURLのうち、レイテンシーが最も低いものを使用します。';
@@ -1180,6 +1336,7 @@ class _Translations$discover$ja extends Translations$discover$en {
 	@override String titleCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ja'))(n,
 		other: '${n}作品',
 	);
+	@override late final _Translations$discover$person$ja person = _Translations$discover$person$ja._(_root);
 }
 
 // Path: errors
@@ -1201,6 +1358,13 @@ class _Translations$errors$ja extends Translations$errors$en {
 	@override String failedToSwitchProfile({required Object displayName}) => '${displayName}への切替に失敗しました';
 	@override String failedToDeleteProfile({required Object displayName}) => '${displayName}の削除に失敗しました';
 	@override String get failedToRate => '評価を更新できませんでした';
+	@override String get reasonTimedOut => '接続がタイムアウトしました';
+	@override String get reasonUnreachable => 'メディアサーバーに接続できませんでした';
+	@override String get reasonRefused => 'メディアサーバーがリクエストを拒否しました';
+	@override String get reasonNotFound => 'この項目はメディアサーバー上に存在しません';
+	@override String get reasonServerError => 'メディアサーバーでエラーが発生しました';
+	@override String get reasonCancelled => 'リクエストがキャンセルされました';
+	@override String get reasonUnexpected => '予期しないエラーが発生しました';
 }
 
 // Path: libraries
@@ -1255,6 +1419,7 @@ class _Translations$libraries$ja extends Translations$libraries$en {
 	@override late final _Translations$libraries$groupings$ja groupings = _Translations$libraries$groupings$ja._(_root);
 	@override late final _Translations$libraries$filterCategories$ja filterCategories = _Translations$libraries$filterCategories$ja._(_root);
 	@override late final _Translations$libraries$sortLabels$ja sortLabels = _Translations$libraries$sortLabels$ja._(_root);
+	@override late final _Translations$libraries$advancedFilters$ja advancedFilters = _Translations$libraries$advancedFilters$ja._(_root);
 }
 
 // Path: about
@@ -1267,7 +1432,7 @@ class _Translations$about$ja extends Translations$about$en {
 	@override String get title => 'アプリについて';
 	@override String get openSourceLicenses => 'オープンソースライセンス';
 	@override String versionLabel({required Object version}) => 'バージョン ${version}';
-	@override String get appDescription => 'Flutter製の美しいPlex・Jellyfinクライアント';
+	@override String get appDescription => 'Flutter製の美しいPlex・Jellyfin・Embyクライアント';
 	@override String get viewLicensesDescription => 'サードパーティライブラリのライセンスを表示';
 }
 
@@ -1399,6 +1564,9 @@ class _Translations$explore$ja extends Translations$explore$en {
 	@override String get notInLibrary => 'ライブラリにありません';
 	@override String get inTheseLibraries => 'これらのライブラリにあります';
 	@override String get checkingLibrary => 'ライブラリを確認中…';
+	@override String libraryCheckFailed({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ja'))(n,
+		other: '${n}台のサーバーを確認できませんでした',
+	);
 	@override String get emptyTitle => 'まだ何もありません';
 	@override String emptyMessage({required Object source}) => '${source}にコンテンツが追加されると、ここに表示されます。';
 	@override String searchHint({required Object source}) => '${source}を検索';
@@ -1500,7 +1668,9 @@ class _Translations$liveTv$ja extends Translations$liveTv$en {
 	@override String get editRuleAction => '編集';
 	@override String get recordingRuleUpdated => '録画ルールを更新しました';
 	@override String get guideReloadRequested => '番組表の更新をリクエストしました';
+	@override String get guideReloadFailed => '番組表を再読み込みできませんでした';
 	@override String get rulesProcessRequested => '録画ルールの再評価をリクエストしました';
+	@override String get rulesProcessFailed => '録画ルールを再適用できませんでした';
 	@override String get recordShow => '番組を録画';
 	@override late final _Translations$liveTv$recordSettings$ja recordSettings = _Translations$liveTv$recordSettings$ja._(_root);
 	@override String startingInMinutes({required Object minutes}) => '${minutes}分後に開始';
@@ -1508,6 +1678,8 @@ class _Translations$liveTv$ja extends Translations$liveTv$en {
 	@override String invalidPlaybackData({required Object product}) => '${product}から無効なライブTV再生データが返されました';
 	@override String get failedToStartChannel => 'ライブチャンネルを開始できませんでした';
 	@override String get failedToBuildStreamUrl => 'ストリームURLを生成できませんでした';
+	@override String playbackStartFailed({required Object reason}) => 'チャンネルを再生できませんでした: ${reason}';
+	@override String channelSwitchFailed({required Object reason}) => 'チャンネルを切り替えられませんでした: ${reason}';
 }
 
 // Path: collections
@@ -1621,71 +1793,112 @@ class _Translations$watchTogether$ja extends Translations$watchTogether$en {
 	// Translations
 	@override String get title => '一緒に見る';
 	@override String get description => '友達や家族と同期してコンテンツを視聴';
-	@override String get createSession => 'セッションを作成';
-	@override String get creating => '作成中…';
-	@override String get joinSession => 'セッションに参加';
-	@override String get joining => '参加中…';
-	@override String get controlMode => 'コントロールモード';
-	@override String get controlModeQuestion => '誰が再生を制御できますか？';
-	@override String get hostOnly => 'ホストのみ';
-	@override String get anyone => '全員';
-	@override String get hostingSession => 'セッションをホスト中';
-	@override String get inSession => 'セッション中';
-	@override String get sessionCode => 'セッションコード';
-	@override String get openSessionControls => '「一緒に見る」セッションのコントロールを開く';
-	@override String get copySessionCode => 'セッションコードをコピー';
-	@override String get hostControlsPlayback => 'ホストが再生を制御';
-	@override String get anyoneCanControl => '全員が再生を制御可能';
-	@override String get hostControls => 'ホストが制御';
-	@override String get anyoneControls => '全員が制御';
-	@override String get participants => '参加者';
-	@override String get host => 'ホスト';
-	@override String get hostBadge => 'ホスト';
-	@override String get youAreHost => 'あなたはホストです';
-	@override String get watchingWithOthers => '他の人と視聴中';
-	@override String get endSession => 'セッションを終了';
-	@override String get leaveSession => 'セッションを退出';
-	@override String get endSessionQuestion => 'セッションを終了しますか？';
-	@override String get leaveSessionQuestion => 'セッションを退出しますか？';
-	@override String get endSessionConfirm => 'すべての参加者のセッションが終了します。';
-	@override String get leaveSessionConfirm => 'セッションから退出されます。';
-	@override String get endSessionConfirmOverlay => 'すべての参加者の視聴セッションが終了します。';
-	@override String get leaveSessionConfirmOverlay => '視聴セッションから切断されます。';
-	@override String get end => '終了';
-	@override String get leave => '退出';
-	@override String get syncing => '同期中…';
-	@override String get joinWatchSession => '視聴セッションに参加';
-	@override String get enterCodeHint => '5文字のコードを入力';
-	@override String get pasteFromClipboard => 'クリップボードから貼り付け';
-	@override String get pleaseEnterCode => 'セッションコードを入力してください';
-	@override String get codeMustBe5Chars => 'セッションコードは5文字である必要があります';
-	@override String get joinInstructions => '参加するにはホストのセッションコードを入力してください。';
-	@override String get failedToCreate => 'セッションの作成に失敗しました';
-	@override String get failedToJoin => 'セッションへの参加に失敗しました';
-	@override String get sessionCodeCopied => 'セッションコードをクリップボードにコピーしました';
-	@override String get relayUnreachable => 'リレーサーバーに接続できません。ISPによるブロックのため「一緒に見る」を利用できない可能性があります。';
-	@override String get reconnectingToHost => 'ホストに再接続中…';
-	@override String get currentPlayback => '現在の再生';
-	@override String get joinCurrentPlayback => '現在の再生に参加';
-	@override String get joinCurrentPlaybackDescription => 'ホストが現在視聴中のコンテンツに戻る';
-	@override String get failedToOpenCurrentPlayback => '現在の再生を開けませんでした';
-	@override String participantJoined({required Object name}) => '${name}が参加しました';
-	@override String participantLeft({required Object name}) => '${name}が退出しました';
-	@override String participantPaused({required Object name}) => '${name}が一時停止しました';
-	@override String participantResumed({required Object name}) => '${name}が再開しました';
-	@override String participantSeeked({required Object name}) => '${name}が再生位置を変更しました';
-	@override String participantBuffering({required Object name}) => '${name}がバッファリング中';
-	@override String participantNeedsUpdate({required Object name}) => '${name}は古いバージョンのアプリを使用しているため、同期できません';
-	@override String resumingWithout({required Object name}) => '${name}抜きで再開';
-	@override String get waitingForParticipants => '他の参加者の読み込みを待っています…';
-	@override String waitingForName({required Object name}) => '${name}を待っています…';
+	@override String get createRoom => 'ルームを作成';
+	@override String get creatingRoom => 'ルームを作成中…';
+	@override String get joinRoom => 'ルームに参加';
+	@override String get joiningRoom => 'ルームに参加中…';
+	@override String get connecting => '接続中…';
+	@override String get relayPublic => 'ルームは公開のOpen Watch Partyリレーサーバーを使用します。';
+	@override String relayCustom({required Object url}) => 'ルームは${url}のリレーサーバーを使用します。';
 	@override String get recentRooms => '最近のルーム';
+	@override String get roomActions => 'ルームの操作';
 	@override String get renameRoom => 'ルーム名を変更';
 	@override String get removeRoom => '削除';
-	@override String get guestSwitchUnavailable => '切り替えられません — 同期に必要なサーバーを利用できません';
-	@override String get guestSwitchFailed => '切り替えられません — このサーバーにコンテンツが見つかりません';
-	@override String get defaultDisplayName => 'ユーザー';
+	@override String get enterRoomCode => 'ホストから共有された6文字のコードを入力してください。';
+	@override String get roomCode => 'ルームコード';
+	@override String get paste => '貼り付け';
+	@override String get noCodeInClipboard => 'クリップボードにルームコードがありません';
+	@override String get copyCode => 'コードをコピー';
+	@override String get codeCopied => 'ルームコードをコピーしました';
+	@override String get shareInvite => '招待を共有';
+	@override String get inviteCopied => '招待をコピーしました。メッセージに貼り付けてください。';
+	@override String inviteMessage({required Object code}) => 'Plezyの「一緒に見る」ルームに参加しませんか？「一緒に見る」を開いて「ルームに参加」を選び、${code}を入力してください。';
+	@override String get openSessionControls => '「一緒に見る」セッションのコントロールを開く';
+	@override String get reconnecting => '再接続中…';
+	@override String get reconnectingDescription => '接続が切断されました。自動的にルームに再参加します。';
+	@override String get connected => '接続済み';
+	@override String get disconnected => '切断されました';
+	@override String get youAreHost => 'あなたはホストです';
+	@override String hostedBy({required Object name}) => 'ホスト: ${name}';
+	@override String get hostControlsPlayback => 'ホストが再生を制御';
+	@override String get anyoneCanControl => '全員が再生を制御可能';
+	@override String get roomLocked => 'ルームはロック中';
+	@override String get nowPlaying => '再生中';
+	@override String get nothingPlaying => '再生中のコンテンツはありません';
+	@override String get nothingPlayingHost => 'いずれかのライブラリから再生すると、ルームで共有されます。';
+	@override String get nothingPlayingGuest => 'ホストが再生を始めると、ここに表示されます。';
+	@override String get notShareable => 'この動画はカタログ情報と一致しないため、同じサーバーにアクセスできる人しか再生できません。';
+	@override String get searching => 'ライブラリでこの動画を探しています…';
+	@override String get yourCopy => 'あなたのコピー';
+	@override String get sharingYourCopy => 'あなたのコピーを共有しています';
+	@override String playingOtherLength({required Object difference}) => 'あなたのコピーを再生中（${difference}）';
+	@override String get mismatchTitle => 'コピーの長さが異なります';
+	@override String mismatchDescription({required Object difference}) => '最も近いコピーはルームの動画より${difference}です。別の編集版やバージョンの可能性があります。';
+	@override String get playAnyway => 'このまま再生';
+	@override String get chooseAnotherCopy => '別のコピーを選択';
+	@override String get dontPlay => '再生しない';
+	@override String get unavailableTitle => 'この動画がありません';
+	@override String get unavailableDescription => 'Plezyはライブラリでこの動画を見つけられませんでした。自分でコピーを選ぶか、もう一度検索してください。';
+	@override String get chooseCopy => 'コピーを選択';
+	@override String get searchAgain => '再検索';
+	@override String get noCandidates => 'ライブラリにコピーが見つかりません。';
+	@override String get choiceFailed => 'このコピーをルームで再生できませんでした';
+	@override String lengthLonger({required Object duration}) => '${duration}長い';
+	@override String lengthShorter({required Object duration}) => '${duration}短い';
+	@override String get lengthSame => '同じ長さ';
+	@override String get lengthUnknown => '長さ不明';
+	@override String get joinCurrentPlayback => '現在の再生に参加';
+	@override String get joinCurrentPlaybackDescription => 'ホストが現在視聴中のコンテンツに戻る';
+	@override String get stopMedia => '全員の動画を停止';
+	@override String get syncOffset => '同期オフセット';
+	@override String get syncOffsetDescription => '動画がルームより進んでいる、または遅れている場合にずらします。';
+	@override String offsetHint({required Object difference}) => 'あなたのコピーはルームの動画より${difference}です。';
+	@override String applyDifference({required Object offset}) => '${offset}を適用';
+	@override String get offsetMinusSecond => '-1秒';
+	@override String get offsetMinusTenth => '-100ms';
+	@override String get offsetPlusTenth => '+100ms';
+	@override String get offsetPlusSecond => '+1秒';
+	@override String get participants => '参加者';
+	@override String participantCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ja'))(n,
+		other: '参加者${n}人',
+	);
+	@override String get hostBadge => 'ホスト';
+	@override String nameYou({required Object name}) => '${name}（あなた）';
+	@override String get playerIdle => '待機中';
+	@override String get playerLoading => '読み込み中';
+	@override String get playerReady => '準備完了';
+	@override String get playerBuffering => 'バッファリング中';
+	@override String get matchSearching => '検索中';
+	@override String get matchMatched => '動画あり';
+	@override String get matchMismatched => '長さが異なる';
+	@override String get matchUnavailable => '動画なし';
+	@override String participantOffset({required Object offset}) => 'オフセット ${offset}';
+	@override String get makeHost => 'ホストにする';
+	@override String get makeHostQuestion => 'ホストを移譲しますか？';
+	@override String makeHostConfirm({required Object name}) => '${name}が再生を制御し、全員のセッションを主導します。';
+	@override String get transfer => '移譲';
+	@override String get removeParticipant => 'ルームから削除';
+	@override String removeParticipantQuestion({required Object name}) => '${name}を削除しますか？';
+	@override String removeParticipantConfirm({required Object name}) => '${name}をルームから退出させます。ルームをロックしない限り、コードを使って再度参加できます。';
+	@override String get remove => '削除';
+	@override String get roomSettings => 'ルーム設定';
+	@override String get letEveryoneControl => '全員に再生の操作を許可';
+	@override String get lockRoom => 'ルームをロック';
+	@override String get lockRoomDescription => '新しい参加者は参加できなくなります';
+	@override String get leaveRoom => 'ルームを退出';
+	@override String get leaveRoomQuestion => 'ルームを退出しますか？';
+	@override String get leaveRoomConfirm => 'ルームコードを使って再度参加できます。';
+	@override String get leave => '退出';
+	@override String get endRoom => 'ルームを終了';
+	@override String get endRoomQuestion => 'ルームを終了しますか？';
+	@override String get endRoomConfirm => '参加者全員のルームが終了します。';
+	@override String get end => '終了';
+	@override String get playBlockedTitle => '再生が開始されませんでした';
+	@override String get playBlockedDescription => '再生を押して、ルームのみんなと一緒に視聴を始めてください。';
+	@override late final _Translations$watchTogether$notices$ja notices = _Translations$watchTogether$notices$ja._(_root);
+	@override late final _Translations$watchTogether$ended$ja ended = _Translations$watchTogether$ended$ja._(_root);
 	@override late final _Translations$watchTogether$errors$ja errors = _Translations$watchTogether$errors$ja._(_root);
+	@override String untitledEpisode({required Object number}) => 'エピソード${number}';
 }
 
 // Path: downloads
@@ -1709,10 +1922,14 @@ class _Translations$downloads$ja extends Translations$downloads$en {
 	@override String get downloadQueued => 'ダウンロードをキューに追加しました';
 	@override String get downloadResumed => 'ダウンロードを再開しました';
 	@override String get serverErrorBitrate => 'サーバーエラー: ファイルがリモートビットレート制限を超えている可能性があります';
-	@override String get storageFull => 'デバイスのストレージがいっぱいのため、ダウンロードを停止しました。空き容量を確保してから、もう一度お試しください。';
+	@override String get storageFull => '空き容量を確保するため、ダウンロードを停止しました。空き容量を確保するか、別のダウンロード先を選んでから、もう一度お試しください。';
+	@override String get storageUnavailable => '空き容量を確認できなかったため、ダウンロードを停止しました。ダウンロード先を確認してから、もう一度お試しください。';
 	@override String episodesQueued({required Object count}) => '${count}エピソードをダウンロードキューに追加しました';
 	@override String get downloadDeleted => 'ダウンロードを削除しました';
 	@override String deleteConfirm({required Object title}) => 'このデバイスから「${title}」を削除しますか？';
+	@override String get deleteCollectionDownloads => 'ダウンロードを削除';
+	@override String deleteCollectionDownloadsConfirm({required Object title}) => '「${title}」のすべてのダウンロードをこのデバイスから削除しますか？';
+	@override String get collectionDownloadsDeleted => 'ダウンロードを削除しました';
 	@override String get cancelledDownloadTitle => 'キャンセル済みのダウンロード';
 	@override String get cancelledDownloadMessage => 'このダウンロードはキャンセルされました。どうしますか？';
 	@override String get allEpisodesAlreadyDownloaded => 'すべてのエピソードはすでにダウンロード済みです';
@@ -1730,6 +1947,8 @@ class _Translations$downloads$ja extends Translations$downloads$en {
 	@override String get noDownloadsTree => 'ダウンロードなし';
 	@override String get pauseAll => 'すべて一時停止';
 	@override String get resumeAll => 'すべて再開';
+	@override String get retryAll => 'すべて再試行';
+	@override String get retryFailed => '失敗したダウンロードを再試行';
 	@override String get deleteAll => 'すべて削除';
 	@override String get selectVersion => 'バージョンを選択';
 	@override String get allEpisodes => 'すべてのエピソード';
@@ -1766,17 +1985,27 @@ class _Translations$downloads$ja extends Translations$downloads$en {
 	@override String get syncRuleAvailable => '利用可能';
 	@override String get syncRuleOffline => 'オフライン';
 	@override String get syncRuleSignInRequired => 'サインインが必要';
+	@override String get syncRuleAccessDenied => 'アクセスが拒否されました';
 	@override String get syncRuleNotAvailableForProfile => '現在のプロフィールでは利用できません';
 	@override String get syncRuleUnknownServer => '不明なサーバー';
 	@override String get syncRuleListCreated => '同期ルールを作成しました';
 	@override late final _Translations$downloads$backgroundWarning$ja backgroundWarning = _Translations$downloads$backgroundWarning$ja._(_root);
+	@override String get options => 'ダウンロードのオプション';
+	@override late final _Translations$downloads$groupings$ja groupings = _Translations$downloads$groupings$ja._(_root);
+	@override String get unknownLibrary => '不明なライブラリ';
 	@override String get unknownShow => '不明な番組';
 	@override String get unknownSeason => '不明なシーズン';
 	@override String get unknownAlbum => '不明なアルバム';
 	@override String completedOfTotal({required Object completed, required Object total}) => '${completed}/${total}完了';
 	@override String get errorFileNotFound => 'ファイルが見つかりません（404）';
+	@override String get errorDownloadNotAllowed => 'サーバーがダウンロードを許可していません（403）';
 	@override String get errorDownloadFailed => 'ダウンロードに失敗しました';
-	@override String errorPostProcessing({required Object error}) => '後処理に失敗しました: ${error}';
+	@override String errorDownloadFailedWithReason({required Object reason}) => 'ダウンロードに失敗しました: ${reason}';
+	@override String errorHttpStatus({required Object status}) => 'ダウンロードに失敗しました（HTTP ${status}）';
+	@override String errorPostProcessing({required Object reason}) => '後処理に失敗しました: ${reason}';
+	@override String get reasonFileNotSaved => 'このデバイスにファイルを保存できませんでした';
+	@override String get reasonCannotResume => '途中までのダウンロードを再開できませんでした';
+	@override String get reasonDeviceStorageFull => 'このデバイスのストレージが不足しています';
 	@override String get notificationDownloading => 'ダウンロード中…';
 	@override String get notificationComplete => 'ダウンロードが完了しました';
 	@override String get notificationPaused => 'ダウンロードを一時停止しました';
@@ -1853,7 +2082,7 @@ class _Translations$videoSettings$ja extends Translations$videoSettings$en {
 	@override String get audioOutputSpatial => '空間オーディオ';
 	@override String get audioOutputStereo => 'ステレオ';
 	@override String get audioNormalization => 'ラウドネス正規化';
-	@override String get audioDownmix => 'ステレオにダウンミックス';
+	@override String get audioNormalizationDisablesPassthrough => '音声をPCMにデコードします。オンの間はパススルーがオフになります';
 }
 
 // Path: performanceOverlay
@@ -1875,6 +2104,13 @@ class _Translations$performanceOverlay$ja extends Translations$performanceOverla
 	@override String get rotation => '回転';
 	@override String get dvSource => 'DV ソース';
 	@override String get dvPath => 'DV パス';
+	@override String get dvRouteDecoder => 'Dolby Vision デコーダー';
+	@override String get dvRouteDecoderP81 => 'Dolby Vision デコーダー（P7→8.1）';
+	@override String get dvRouteBaseLayer => 'ベースレイヤー';
+	@override String get dvRouteBaseLayerHdr10 => 'HDR10 ベースレイヤー';
+	@override String get dvRouteBaseLayerHlg => 'HLG ベースレイヤー';
+	@override String get dvRouteBaseLayerSdr => 'SDR ベースレイヤー';
+	@override String get dvRouteReshaped => 'RPU リシェイプ（gpu-next）';
 	@override String get p7Conversion => 'P7 変換';
 	@override String get sampleRate => 'サンプルレート';
 	@override String get pixelFormat => 'ピクセル形式';
@@ -2017,6 +2253,7 @@ class _Translations$metadataEdit$ja extends Translations$metadataEdit$en {
 	@override String get country => '国';
 	@override String get collection => 'コレクション';
 	@override String get label => 'ラベル';
+	@override String get quickTag => 'クイックタグ…';
 }
 
 // Path: matchScreen
@@ -2099,6 +2336,10 @@ class _Translations$seerr$ja extends Translations$seerr$en {
 	@override String get qualityProfile => '画質プロファイル';
 	@override String get rootFolder => 'ルートフォルダ';
 	@override String get languageProfile => '言語プロファイル';
+	@override String get tags => 'タグ';
+	@override String get noTags => 'タグなし';
+	@override String defaultOption({required Object name}) => '${name}（デフォルト）';
+	@override String get animeNote => 'このシリーズはアニメです。';
 	@override String get requestSubmitted => 'リクエストを送信しました';
 	@override String requestFailed({required Object error}) => 'リクエストに失敗しました: ${error}';
 	@override String get requestsLoadFailed => 'リクエストオプションを読み込めませんでした';
@@ -2110,6 +2351,7 @@ class _Translations$seerr$ja extends Translations$seerr$en {
 	@override String get statusBlocklisted => 'ブロックリスト登録済み';
 	@override String couldNotReach({required Object url, required Object error}) => '${url}に接続できませんでした: ${error}';
 	@override String noInstanceAtUrl({required Object url, required Object status}) => '${url}にSeerrインスタンスがありません（HTTP ${status}）';
+	@override String get behindAuthProxy => 'Seerrではなく、認証が必要なリバースプロキシ（SSOまたはHTTP認証）が応答しました。Plezyはこれを通じてサインインできません。このアプリではSeerrの/api/v1パスをプロキシから除外するか、Seerrに直接到達するアドレスを使用してください。';
 	@override String get invalidUrl => 'https://seerr.example.comのようなサーバーアドレスを入力してください';
 	@override String get quickConnectUnsupported => 'このSeerrインスタンスはQuick Connectに対応していません。Seerr 3.4以降が必要です。';
 	@override String get notInitialized => 'このSeerrインスタンスでは初回セットアップが完了していません';
@@ -2120,6 +2362,8 @@ class _Translations$seerr$ja extends Translations$seerr$en {
 	@override String get freshCookieRejected => 'Seerrが新しいセッションクッキーを拒否しました';
 	@override String get noUserInformation => 'Seerrからユーザー情報が返されませんでした';
 	@override String get sessionRejectedAfterReauth => '再サインイン後にセッションが拒否されました';
+	@override String get permissionDenied => 'Seerrがこの操作を拒否しました: アカウントに必要な権限がありません';
+	@override String get permissionRevoked => 'これをリクエストする権限がなくなりました';
 }
 
 // Path: services
@@ -2140,6 +2384,7 @@ class _Translations$services$ja extends Translations$services$en {
 	@override String disconnectConfirmBody({required Object service}) => 'Plezyは${service}の更新を停止します。いつでも再接続できます。';
 	@override String connectFailed({required Object service}) => '${service} に接続できませんでした。もう一度お試しください。';
 	@override late final _Translations$services$names$ja names = _Translations$services$names$ja._(_root);
+	@override late final _Translations$services$simklReconnect$ja simklReconnect = _Translations$services$simklReconnect$ja._(_root);
 	@override late final _Translations$services$deviceCode$ja deviceCode = _Translations$services$deviceCode$ja._(_root);
 	@override late final _Translations$services$oauthProxy$ja oauthProxy = _Translations$services$oauthProxy$ja._(_root);
 	@override late final _Translations$services$pendingAuth$ja pendingAuth = _Translations$services$pendingAuth$ja._(_root);
@@ -2202,6 +2447,38 @@ class _Translations$addServer$ja extends Translations$addServer$en {
 	@override String redirectUnsupportedEnterFinal({required Object product}) => 'サーバーからサポートされていないURLにリダイレクトされました。最終的な${product}のURLを直接入力してください。';
 }
 
+// Path: appIcon.names
+class _Translations$appIcon$names$ja extends Translations$appIcon$names$en {
+	_Translations$appIcon$names$ja._(TranslationsJa root) : this._root = root, super.internal(root);
+
+	final TranslationsJa _root; // ignore: unused_field
+
+	// Translations
+	@override String get midnight => 'ミッドナイト';
+	@override String get ember => '残り火';
+	@override String get paper => 'ペーパー';
+	@override String get oled => 'OLED';
+	@override String get line => 'ライン';
+	@override String get ocean => 'オーシャン';
+	@override String get ultraviolet => 'ウルトラバイオレット';
+	@override String get matcha => '抹茶';
+	@override String get sunset => 'サンセット';
+	@override String get gold => 'ゴールド';
+	@override String get titanium => 'チタニウム';
+	@override String get glass => 'ガラス';
+	@override String get crt => 'CRT';
+	@override String get vhs => 'VHS';
+	@override String get synthwave => 'シンセウェイブ';
+	@override String get pixel => 'ピクセル';
+	@override String get neon => 'ネオン';
+	@override String get sticker => 'ステッカー';
+	@override String get ticket => 'チケット';
+	@override String get pop => 'ポップ';
+	@override String get strata => '地層';
+	@override String get facet => 'ファセット';
+	@override String get tilde => 'チルダ';
+}
+
 // Path: common.ratingSource
 class _Translations$common$ratingSource$ja extends Translations$common$ratingSource$en {
 	_Translations$common$ratingSource$ja._(TranslationsJa root) : this._root = root, super.internal(root);
@@ -2220,6 +2497,8 @@ class _Translations$common$ratingSource$ja extends Translations$common$ratingSou
 	@override String get trakt => 'Trakt';
 	@override String get rottenTomatoesCritic => 'Rotten Tomatoes 批評家';
 	@override String get rottenTomatoesAudience => 'Rotten Tomatoes 観客';
+	@override String get metacritic => 'Metacritic';
+	@override String get letterboxd => 'Letterboxd';
 }
 
 // Path: common.mediaKind
@@ -2241,6 +2520,52 @@ class _Translations$common$mediaKind$ja extends Translations$common$mediaKind$en
 	@override String get clip => 'クリップ';
 	@override String get photo => '写真';
 	@override String get folder => 'フォルダ';
+}
+
+// Path: supporter.errors
+class _Translations$supporter$errors$ja extends Translations$supporter$errors$en {
+	_Translations$supporter$errors$ja._(TranslationsJa root) : this._root = root, super.internal(root);
+
+	final TranslationsJa _root; // ignore: unused_field
+
+	// Translations
+	@override String get storeUnavailable => '購入を利用できません。ストアにサインインしていること、およびこのデバイスで購入が許可されていることを確認してください。';
+	@override String get productNotFound => '現在、お使いのストアではSupporterを購入できません。';
+	@override String get productQueryFailed => '価格を読み込めませんでした。接続を確認してもう一度お試しください。';
+	@override String get purchaseFailed => '購入を完了できませんでした。もう一度お試しください。';
+	@override String get restoreFailed => '購入を復元するためにストアに接続できませんでした。もう一度お試しください。';
+	@override String get nothingToRestore => 'このストアアカウントではSupporterの購入が見つかりませんでした。';
+}
+
+// Path: themeEditor.slots
+class _Translations$themeEditor$slots$ja extends Translations$themeEditor$slots$en {
+	_Translations$themeEditor$slots$ja._(TranslationsJa root) : this._root = root, super.internal(root);
+
+	final TranslationsJa _root; // ignore: unused_field
+
+	// Translations
+	@override String get bg => '背景';
+	@override String get surface => 'サーフェス';
+	@override String get outline => '枠線';
+	@override String get text => 'テキスト';
+	@override String get textMuted => '補助テキスト';
+	@override String get accent => 'アクセント';
+}
+
+// Path: themeEditor.contrast
+class _Translations$themeEditor$contrast$ja extends Translations$themeEditor$contrast$en {
+	_Translations$themeEditor$contrast$ja._(TranslationsJa root) : this._root = root, super.internal(root);
+
+	final TranslationsJa _root; // ignore: unused_field
+
+	// Translations
+	@override String get textOnBg => '背景上のテキスト';
+	@override String get textOnSurface => 'サーフェス上のテキスト';
+	@override String get textMutedOnBg => '背景上の補助テキスト';
+	@override String get textMutedOnSurface => 'サーフェス上の補助テキスト';
+	@override String get accentOnBg => '背景上のアクセント';
+	@override String get accentOnSurface => 'サーフェス上のアクセント';
+	@override String get labelOnAccent => 'アクセント上のボタンラベル';
 }
 
 // Path: hotkeys.actions
@@ -2377,6 +2702,20 @@ class _Translations$accountPreferences$mediaReviewsOptions$ja extends Translatio
 	@override String get nobody => '非表示';
 }
 
+// Path: discover.person
+class _Translations$discover$person$ja extends Translations$discover$person$en {
+	_Translations$discover$person$ja._(TranslationsJa root) : this._root = root, super.internal(root);
+
+	final TranslationsJa _root; // ignore: unused_field
+
+	// Translations
+	@override String get born => '生年月日';
+	@override String get died => '没年月日';
+	@override String get birthplace => '出生地';
+	@override String dateWithAge({required Object date, required Object age}) => '${date}（${age}歳）';
+	@override String dateWithAgeAtDeath({required Object date, required Object age}) => '${date}（${age}歳没）';
+}
+
 // Path: libraries.tabs
 class _Translations$libraries$tabs$ja extends Translations$libraries$tabs$en {
 	_Translations$libraries$tabs$ja._(TranslationsJa root) : this._root = root, super.internal(root);
@@ -2423,6 +2762,7 @@ class _Translations$libraries$filterCategories$ja extends Translations$libraries
 	@override String get unwatched => '未視聴';
 	@override String get unplayed => '未再生';
 	@override String get favorites => 'お気に入り';
+	@override String get filePath => 'ファイルパス';
 }
 
 // Path: libraries.sortLabels
@@ -2452,6 +2792,44 @@ class _Translations$libraries$sortLabels$ja extends Translations$libraries$sortL
 	@override String get dateShared => '共有日';
 	@override String get latestEpisodeAirDate => '最新エピソード放送日';
 	@override String get lastEpisodeDateAdded => '最新エピソード追加日';
+	@override String get dateDownloaded => 'ダウンロード日';
+	@override String get size => 'サイズ';
+	@override String get library => 'ライブラリ';
+}
+
+// Path: libraries.advancedFilters
+class _Translations$libraries$advancedFilters$ja extends Translations$libraries$advancedFilters$en {
+	_Translations$libraries$advancedFilters$ja._(TranslationsJa root) : this._root = root, super.internal(root);
+
+	final TranslationsJa _root; // ignore: unused_field
+
+	// Translations
+	@override String get include => '含める';
+	@override String get exclude => '除外';
+	@override String get any => '指定なし';
+	@override String get yes => 'はい';
+	@override String get no => 'いいえ';
+	@override String not({required Object value}) => '${value}以外';
+	@override String valueCount({required Object count}) => '${count}件選択';
+	@override String valueCountExcluded({required Object count}) => '${count}件除外';
+	@override String get searchValues => '値を検索';
+	@override String get noValues => '値がありません';
+	@override String get matchContains => '含む';
+	@override String get matchNotContains => '含まない';
+	@override String get matchIs => '一致する';
+	@override String get matchIsNot => '一致しない';
+	@override String get matchBeginsWith => '前方一致';
+	@override String get matchEndsWith => '後方一致';
+	@override String get textHint => 'テキストを入力';
+	@override String get from => '下限';
+	@override String get to => '上限';
+	@override String range({required Object from, required Object to}) => '${from}〜${to}';
+	@override String atLeast({required Object value}) => '${value}以上';
+	@override String atMost({required Object value}) => '${value}以下';
+	@override String dateLastDays({required Object count}) => '過去${count}日間';
+	@override String get dateLastYear => '過去1年間';
+	@override String dateOlderThanDays({required Object count}) => '${count}日以上前';
+	@override String get dateOlderThanYear => '1年以上前';
 }
 
 // Path: explore.rows
@@ -2602,6 +2980,7 @@ class _Translations$explore$creditRole$ja extends Translations$explore$creditRol
 	final TranslationsJa _root; // ignore: unused_field
 
 	// Translations
+	@override String get actor => '俳優';
 	@override String get director => '監督';
 	@override String get writer => '脚本';
 	@override String get producer => 'プロデューサー';
@@ -2696,6 +3075,54 @@ class _Translations$music$discography$ja extends Translations$music$discography$
 	@override String get compilations => 'コンピレーション';
 }
 
+// Path: watchTogether.notices
+class _Translations$watchTogether$notices$ja extends Translations$watchTogether$notices$en {
+	_Translations$watchTogether$notices$ja._(TranslationsJa root) : this._root = root, super.internal(root);
+
+	final TranslationsJa _root; // ignore: unused_field
+
+	// Translations
+	@override String pressedPlay({required Object name}) => '${name}が再生しました';
+	@override String get playbackStarted => '再生が開始されました';
+	@override String paused({required Object name}) => '${name}が一時停止しました';
+	@override String get playbackPaused => '再生が一時停止されました';
+	@override String jumpedTo({required Object name, required Object position}) => '${name}が${position}にジャンプしました';
+	@override String roomJumpedTo({required Object position}) => '${position}にジャンプしました';
+	@override String changedSpeed({required Object name, required Object speed}) => '${name}が速度を${speed}に設定しました';
+	@override String speedChanged({required Object speed}) => '速度が${speed}に設定されました';
+	@override String startedMedia({required Object name, required Object title}) => '${name}が${title}を再生しました';
+	@override String mediaStarted({required Object title}) => '${title}を再生中';
+	@override String stoppedMedia({required Object name}) => '${name}が動画を停止しました';
+	@override String get mediaStopped => '動画が停止しました';
+	@override String waitingFor({required Object name}) => '${name}を待っています…';
+	@override String get waitingForSomeone => '他の参加者が追いつくのを待っています…';
+	@override String get finished => '再生終了';
+	@override String hostChangedTo({required Object name}) => '${name}がホストになりました';
+	@override String get youAreNowHost => 'あなたがホストになりました';
+	@override String joined({required Object name}) => '${name}が参加しました';
+	@override String left({required Object name}) => '${name}が退出しました';
+	@override String get controlRefused => '再生を操作できるのはホストのみです';
+	@override String get searchFailed => '一部のサーバーでルームの動画を検索できませんでした';
+	@override String get playBlocked => '再生を押して開始してください';
+	@override String get shareFailed => 'この動画をルームと共有できませんでした';
+	@override String get downloadNotShared => 'サーバーがオフラインの間、ダウンロードはルームと共有されません';
+	@override String get openFailed => 'ルームの動画を開けませんでした';
+}
+
+// Path: watchTogether.ended
+class _Translations$watchTogether$ended$ja extends Translations$watchTogether$ended$en {
+	_Translations$watchTogether$ended$ja._(TranslationsJa root) : this._root = root, super.internal(root);
+
+	final TranslationsJa _root; // ignore: unused_field
+
+	// Translations
+	@override String get ended => 'ホストがルームを終了しました';
+	@override String get kicked => 'ルームから削除されました';
+	@override String get expired => 'ルームの有効期限が切れました';
+	@override String get replaced => '別のデバイスでこのルームに参加しました';
+	@override String get lost => 'ルームとの接続が切れました';
+}
+
 // Path: watchTogether.errors
 class _Translations$watchTogether$errors$ja extends Translations$watchTogether$errors$en {
 	_Translations$watchTogether$errors$ja._(TranslationsJa root) : this._root = root, super.internal(root);
@@ -2703,10 +3130,20 @@ class _Translations$watchTogether$errors$ja extends Translations$watchTogether$e
 	final TranslationsJa _root; // ignore: unused_field
 
 	// Translations
-	@override String get timedOut => 'リレーサーバーが時間内に応答しませんでした';
-	@override String get connectionLost => 'セッションの準備が整う前に接続が閉じられました';
-	@override String get invalidRelayResponse => 'リレーサーバーから予期しない応答が返されました';
-	@override String get sessionEnded => 'ホストがセッションを終了しました';
+	@override String get invalidCode => 'ルームコードではありません。コードは0、1、I、L、Oを含まない6文字の英数字です。';
+	@override String get roomNotFound => 'そのコードのルームはありません。終了した可能性があります。';
+	@override String get roomFull => 'そのルームは満員です。';
+	@override String get roomLocked => 'ホストがそのルームをロックしています。';
+	@override String get relayFull => '「一緒に見る」は現在混み合っています。しばらくしてからもう一度お試しください。';
+	@override String get unreachable => '「一緒に見る」のリレーサーバーに接続できませんでした。接続を確認してください。';
+	@override String get rateLimited => '試行回数が多すぎます。しばらく待ってからもう一度お試しください。';
+	@override String get clientBlocked => 'このバージョンのPlezyではリレーサーバーを使用できません。アプリをアップデートしてください。';
+	@override String get forbidden => 'その操作はホストのみ可能です。';
+	@override String get notInRoom => 'ルームに参加していません。';
+	@override String get alreadyInRoom => 'すでにルームに参加しています。';
+	@override String get resumeFailed => 'ルームに再参加できませんでした。';
+	@override String get unsupported => 'リレーサーバーがこの操作に対応していません。';
+	@override String get generic => '問題が発生しました。もう一度お試しください。';
 }
 
 // Path: downloads.backgroundWarning
@@ -2742,6 +3179,17 @@ class _Translations$downloads$backgroundWarning$ja extends Translations$download
 	@override String get statusUnknown => '未確認';
 	@override String get settingsUnavailable => 'この端末ではシステム設定を開けませんでした';
 	@override String get linkUnavailable => 'この端末ではdontkillmyapp.comを開けませんでした';
+}
+
+// Path: downloads.groupings
+class _Translations$downloads$groupings$ja extends Translations$downloads$groupings$en {
+	_Translations$downloads$groupings$ja._(TranslationsJa root) : this._root = root, super.internal(root);
+
+	final TranslationsJa _root; // ignore: unused_field
+
+	// Translations
+	@override String get library => 'ライブラリ';
+	@override String get collections => 'コレクション';
 }
 
 // Path: companionRemote.session
@@ -2856,6 +3304,17 @@ class _Translations$services$names$ja extends Translations$services$names$en {
 	@override String get mdblist => 'MDBList';
 }
 
+// Path: services.simklReconnect
+class _Translations$services$simklReconnect$ja extends Translations$services$simklReconnect$en {
+	_Translations$services$simklReconnect$ja._(TranslationsJa root) : this._root = root, super.internal(root);
+
+	final TranslationsJa _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Simklに再接続';
+	@override String get subtitle => 'Simklはこの接続で使用しているサインイン方法を廃止します。再接続するとsimkl.comが開き、Plezyを承認できます。Plezyがパスワードを知ることはありません。視聴履歴はSimklに残ります。';
+}
+
 // Path: services.deviceCode
 class _Translations$services$deviceCode$ja extends Translations$services$deviceCode$en {
 	_Translations$services$deviceCode$ja._(TranslationsJa root) : this._root = root, super.internal(root);
@@ -2924,6 +3383,37 @@ extension on TranslationsJa {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
 			'app.title' => 'Plezy',
+			'appIcon.title' => 'アプリアイコン',
+			'appIcon.defaultIcon' => 'デフォルト',
+			'appIcon.current' => '現在のアイコン',
+			'appIcon.locked' => 'Supporter特典',
+			'appIcon.lockedHint' => '別のアイコンはSupporter特典です。',
+			'appIcon.changeFailed' => 'アプリアイコンを変更できませんでした',
+			'appIcon.launcherHint' => 'Plezyを離れると、ホーム画面に新しいアイコンが表示されます。',
+			'appIcon.tvLauncherHint' => 'Plezyを離れると、新しいバナーが表示されます。Android TVでは、テレビを再起動するまで古いバナーが表示され続ける場合があります。',
+			'appIcon.names.midnight' => 'ミッドナイト',
+			'appIcon.names.ember' => '残り火',
+			'appIcon.names.paper' => 'ペーパー',
+			'appIcon.names.oled' => 'OLED',
+			'appIcon.names.line' => 'ライン',
+			'appIcon.names.ocean' => 'オーシャン',
+			'appIcon.names.ultraviolet' => 'ウルトラバイオレット',
+			'appIcon.names.matcha' => '抹茶',
+			'appIcon.names.sunset' => 'サンセット',
+			'appIcon.names.gold' => 'ゴールド',
+			'appIcon.names.titanium' => 'チタニウム',
+			'appIcon.names.glass' => 'ガラス',
+			'appIcon.names.crt' => 'CRT',
+			'appIcon.names.vhs' => 'VHS',
+			'appIcon.names.synthwave' => 'シンセウェイブ',
+			'appIcon.names.pixel' => 'ピクセル',
+			'appIcon.names.neon' => 'ネオン',
+			'appIcon.names.sticker' => 'ステッカー',
+			'appIcon.names.ticket' => 'チケット',
+			'appIcon.names.pop' => 'ポップ',
+			'appIcon.names.strata' => '地層',
+			'appIcon.names.facet' => 'ファセット',
+			'appIcon.names.tilde' => 'チルダ',
 			'auth.signInWithPlex' => 'Plexでサインイン',
 			'auth.showQRCode' => 'QRコードを表示',
 			'auth.authenticate' => '認証',
@@ -2998,6 +3488,8 @@ extension on TranslationsJa {
 			'common.ratingSource.trakt' => 'Trakt',
 			'common.ratingSource.rottenTomatoesCritic' => 'Rotten Tomatoes 批評家',
 			'common.ratingSource.rottenTomatoesAudience' => 'Rotten Tomatoes 観客',
+			'common.ratingSource.metacritic' => 'Metacritic',
+			'common.ratingSource.letterboxd' => 'Letterboxd',
 			'common.notAvailable' => 'N/A',
 			'common.url' => 'URL',
 			'common.letterKeys' => 'ABC',
@@ -3025,6 +3517,29 @@ extension on TranslationsJa {
 			'update.viewRelease' => 'リリースを表示',
 			'update.latestVersion' => '最新バージョンです',
 			'update.checkFailed' => 'アップデートの確認に失敗しました',
+			'supporter.title' => 'Plezy Supporter',
+			'supporter.intro' => '1回限りの購入でPlezyの開発を支援し、次の見た目の特典をご利用いただけます：',
+			'supporter.presetThemes' => 'プリセットテーマ',
+			'supporter.presetThemesDescription' => '残り火、氷河、森、プラム、ペーパー',
+			'supporter.customTheme' => 'カスタムテーマ',
+			'supporter.customThemeDescription' => 'すべての色を自分で選択',
+			'supporter.appIcons' => 'アプリアイコン',
+			'supporter.appIconsDescription' => 'Plezyの別のアイコンを選択',
+			'supporter.buy' => ({required Object price}) => '${price}で購入',
+			'supporter.loadingPrice' => '価格を読み込み中…',
+			'supporter.restore' => '購入を復元',
+			'supporter.pending' => '購入は支払いまたは承認を待っています。ストアでの処理が完了すると、すぐに特典のロックが解除されます。',
+			'supporter.thankYouTitle' => 'Plezyをご支援いただきありがとうございます',
+			'supporter.thankYouBody' => 'Supporter特典のロックが解除されました。',
+			'supporter.tileSubtitle' => '1回限りの購入でテーマとアプリアイコンのロックを解除',
+			'supporter.tileSubtitleThemesOnly' => '1回限りの購入でテーマのロックを解除',
+			'supporter.tileUnlocked' => 'ご支援ありがとうございます',
+			'supporter.errors.storeUnavailable' => '購入を利用できません。ストアにサインインしていること、およびこのデバイスで購入が許可されていることを確認してください。',
+			'supporter.errors.productNotFound' => '現在、お使いのストアではSupporterを購入できません。',
+			'supporter.errors.productQueryFailed' => '価格を読み込めませんでした。接続を確認してもう一度お試しください。',
+			'supporter.errors.purchaseFailed' => '購入を完了できませんでした。もう一度お試しください。',
+			'supporter.errors.restoreFailed' => '購入を復元するためにストアに接続できませんでした。もう一度お試しください。',
+			'supporter.errors.nothingToRestore' => 'このストアアカウントではSupporterの購入が見つかりませんでした。',
 			'settings.title' => '設定',
 			'settings.supportDeveloper' => 'Plezyを支援',
 			'settings.supportDeveloperDescription' => 'Liberapayで寄付して開発を支援',
@@ -3048,6 +3563,11 @@ extension on TranslationsJa {
 			'settings.lightTheme' => 'ライト',
 			'settings.darkTheme' => 'ダーク',
 			'settings.oledTheme' => 'OLED',
+			'settings.emberTheme' => '残り火',
+			'settings.glacierTheme' => '氷河',
+			'settings.forestTheme' => '森',
+			'settings.plumTheme' => 'プラム',
+			'settings.paperTheme' => 'ペーパー',
 			'settings.libraryDensity' => 'ライブラリの密度',
 			'settings.displayScale' => '表示スケール',
 			'settings.compact' => 'コンパクト',
@@ -3078,6 +3598,8 @@ extension on TranslationsJa {
 			'settings.alwaysKeepSidebarOpenDescription' => 'サイドバーを展開したままにし、コンテンツ領域を幅に合わせて調整します',
 			'settings.showUnwatchedCount' => '未視聴数を表示',
 			'settings.showUnwatchedCountDescription' => '番組とシーズンに未視聴エピソード数を表示',
+			'settings.showWatchedIndicators' => '視聴済みマークを表示',
+			'settings.showWatchedIndicatorsDescription' => '視聴済みの映画、番組、エピソードにチェックマークを表示します',
 			'settings.showEpisodeNumberOnCards' => 'カードにエピソード番号を表示',
 			'settings.showEpisodeNumberOnCardsDescription' => 'エピソードカードにシーズン番号とエピソード番号を表示します',
 			'settings.showSeasonPostersOnTabs' => 'タブにシーズンポスターを表示',
@@ -3107,6 +3629,11 @@ extension on TranslationsJa {
 			'settings.defaultQualityTitle' => 'デフォルト画質',
 			'settings.cellularQualityTitle' => 'モバイルデータ通信時のデフォルト画質',
 			'settings.cellularQualitySameAsDefault' => 'デフォルト画質と同じ',
+			'settings.directPlayCoveredQuality' => '小さい動画をオリジナル画質で再生',
+			'settings.directPlayCoveredQualityDescription' => '画質制限内の動画はトランスコードせずにダイレクト再生します',
+			'settings.videoCodecs' => 'ビデオコーデック',
+			'settings.videoCodecsDescription' => 'チェックを外したコーデックはサーバーがトランスコードします',
+			'settings.videoCodecsAlwaysAccepted' => '常に許可',
 			'settings.musicQualityTitle' => '音楽の音質',
 			'settings.subtitleStyling' => '字幕スタイル',
 			'settings.subtitleStylingDescription' => '字幕の外観をカスタマイズ',
@@ -3118,6 +3645,7 @@ extension on TranslationsJa {
 			'settings.minutesUnit' => ({required Object minutes}) => '${minutes}分',
 			'settings.rememberTrackSelections' => '番組/映画ごとにトラック選択を記憶',
 			'settings.rememberTrackSelectionsDescription' => 'タイトルごとに音声と字幕の選択を記憶します',
+			'settings.rememberTrackSelectionsBackendRule' => 'Plexはファイルごとに選択をサーバーに保存します。Jellyfinはアカウントの「選択を記憶」も有効にします。Embyはサポートされていません',
 			'settings.followServerTrackSelections' => 'サーバーのエピソードごとのトラック選択を使用',
 			'settings.followServerTrackSelectionsDescription' => 'エピソード切り替え時に、現在の選択を引き継ぐ代わりにサーバーで選択された音声と字幕を適用します',
 			'settings.resumeMusicOnLaunch' => '音楽セッションを記憶',
@@ -3137,7 +3665,7 @@ extension on TranslationsJa {
 			'settings.videoPlayerNavigation' => '動画プレーヤーナビゲーション',
 			'settings.videoPlayerNavigationDescription' => '矢印キーで動画プレーヤーコントロールを操作',
 			'settings.watchTogetherRelay' => '一緒に視聴リレーサーバー',
-			'settings.watchTogetherRelayDescription' => 'カスタムリレーを設定します。全員が同じサーバーを使う必要があります。',
+			'settings.watchTogetherRelayDescription' => '独自のリレーサーバーを設定しない限り、公開のOpen Watch Partyリレーサーバーを使用します',
 			'settings.watchTogetherRelayHint' => 'https://my-relay.example.com',
 			'settings.watchTogetherRelayInvalid' => '有効なHTTPまたはHTTPSのリレーサーバーURLを入力してください。',
 			'settings.crashReporting' => 'クラッシュレポート',
@@ -3163,6 +3691,7 @@ extension on TranslationsJa {
 			'settings.importSettingsInvalidFile' => 'このファイルは有効なPlezyの設定エクスポートではありません',
 			'settings.importSettingsNoUser' => '設定をインポートする前にサインインしてください',
 			'settings.shortcutsReset' => 'ショートカットをデフォルトにリセットしました',
+			'settings.resetShortcutsConfirm' => 'カスタムショートカットがデフォルトに置き換えられます。続行しますか？',
 			'settings.about' => 'アプリについて',
 			'settings.aboutDescription' => 'アプリ情報とライセンス',
 			'settings.updates' => 'アップデート',
@@ -3178,8 +3707,21 @@ extension on TranslationsJa {
 			'settings.autoPlayAndSkip' => '自動再生とスキップ',
 			'settings.autoPlayNextEpisode' => '次のエピソードを自動再生',
 			'settings.autoPlayNextEpisodeDescription' => 'エピソードが終了すると、次のエピソードを自動的に再生します',
+			'settings.shuffleStartsFromBeginning' => 'シャッフルは最初から再生',
+			'settings.shuffleStartsFromBeginningDescription' => 'シャッフル時に各エピソードを再開位置ではなく最初から再生します',
 			'settings.playNextCountdown' => '次回再生のカウントダウン',
 			'settings.playNextCountdownImmediate' => 'すぐに再生',
+			'settings.skipIntroMode' => 'イントロをスキップ',
+			'settings.skipIntroModeOffDescription' => 'スキップボタンなしでイントロを通常どおり再生します',
+			'settings.skipIntroModeButtonDescription' => 'イントロ開始時にスキップボタンを表示します',
+			'settings.skipIntroModeAutoDescription' => '下記の遅延後にイントロを自動的にスキップします',
+			'settings.skipCreditsMode' => 'クレジットをスキップ',
+			'settings.skipCreditsModeOffDescription' => 'スキップボタンなしでクレジットを通常どおり再生します',
+			'settings.skipCreditsModeButtonDescription' => 'クレジット開始時にスキップボタンを表示します',
+			'settings.skipCreditsModeAutoDescription' => 'クレジットを自動的にスキップして次のエピソードを再生します',
+			'settings.skipMarkerModeOff' => 'オフ',
+			'settings.skipMarkerModeButton' => 'ボタンを表示',
+			'settings.skipMarkerModeAuto' => '自動',
 			'settings.forceSkipMarkerFallback' => 'フォールバックマーカーを強制',
 			'settings.forceSkipMarkerFallbackDescription' => 'Plexにマーカーがある場合でもチャプタータイトルのパターンを使用します',
 			'settings.autoSkipDelay' => '自動スキップの遅延',
@@ -3216,6 +3758,8 @@ extension on TranslationsJa {
 			'settings.manageLibrariesDescription' => 'ライブラリを並べ替えたり非表示にしたりできます',
 			'settings.companionRemoteServer' => 'コンパニオンリモートサーバー',
 			'settings.companionRemoteServerDescription' => 'ネットワーク上のモバイルデバイスからこのアプリを操作できるようにする',
+			'settings.companionRemoteServerStartFailed' => 'コンパニオンリモートサーバーを開始できませんでした',
+			'settings.companionRemoteServerStopFailed' => 'コンパニオンリモートサーバーを停止できませんでした',
 			'settings.autoPip' => '自動ピクチャーインピクチャー',
 			'settings.autoPipDescription' => '再生中にアプリを離れると、自動的にピクチャーインピクチャーに切り替えます',
 			'settings.matchContentFrameRate' => 'コンテンツのフレームレートに合わせる',
@@ -3228,12 +3772,20 @@ extension on TranslationsJa {
 			'settings.matchDynamicRangeDescription' => 'HDRコンテンツではHDRに切り替え、その後SDRに戻します',
 			'settings.displaySwitchDelay' => 'ディスプレイ切り替え遅延',
 			'settings.tunneledPlayback' => 'トンネル再生',
-			'settings.tunneledPlaybackDescription' => '動画トンネリングを使用します。HDR再生で画面が黒くなる場合は無効にしてください。',
+			'settings.tunneledPlaybackDescription' => '動画トンネリングを使用します。HDR再生で画面が黒くなる場合や動きがカクつく場合は無効にしてください。',
 			'settings.audioPassthrough' => 'オーディオパススルー',
 			'settings.audioPassthroughDescription' => 'Dolby/DTS音声を再エンコードせずにレシーバーやテレビに送り、サラウンドを維持します。音が出ない場合は無効にしてください。',
-			'settings.audioPassthroughDescriptionAppleTv' => 'Dolby Atmosを含むDolby Digital PlusにはApple標準のDolbyデコーダーを使用します。DTSとTrueHDは引き続きマルチチャンネルPCMで再生されます。音が出ない場合は無効にしてください。',
-			'settings.audioDownmix' => 'ステレオにダウンミックス',
-			'settings.audioDownmixDescription' => 'サラウンド音声をステレオスピーカーやヘッドホン用に2チャンネルへミックスします',
+			'settings.audioPassthroughDescriptionApple' => 'Dolby Atmosを含むDolby Digital PlusにはApple標準のDolbyデコーダーを使用します。DTSとTrueHDは引き続きマルチチャンネルPCMで再生されます。音が出ない場合は無効にしてください。',
+			'settings.audioPassthroughDescriptionAppleSpatial' => 'Dolby Atmosを含むDolby Digital PlusにはApple標準のDolbyデコーダーを使用します。iOS、iPadOS、tvOS 26以降では、TrueHD AtmosとDTS:Xが空間オーディオとして再生されます。その他のDTSとTrueHDのトラックはマルチチャンネルPCMで再生されます。音が出ない場合は無効にしてください。',
+			'settings.audioPassthroughOverriddenByNormalization' => 'ラウドネス正規化がオンの間はオフ',
+			'settings.audioChannelLimit' => '音声チャンネル',
+			'settings.audioChannelLimitDescription' => 'すべてのチャンネルを再生できないスピーカー、ヘッドホン、HDMI環境に合わせて、デコードした音声をダウンミックスします',
+			'settings.audioChannelLimitOriginal' => 'オリジナル',
+			'settings.audioChannelLimitOriginalDescription' => 'トラックのすべてのチャンネルを再生します',
+			'settings.audioChannelLimitSurround51' => '最大5.1ch',
+			'settings.audioChannelLimitSurround51Description' => '5.1chのPCMにしか対応していないテレビやレシーバー向けに、7.1chを5.1chにダウンミックスします。パススルーには影響しません。',
+			'settings.audioChannelLimitStereo' => 'ステレオ',
+			'settings.audioChannelLimitStereoDescription' => 'ステレオスピーカーやヘッドホン向けに2チャンネルにダウンミックスします。パススルーはオフになります。',
 			'settings.downmixCenterBoost' => 'センターチャンネルブースト',
 			'settings.downmixCenterBoostValue' => ({required Object db}) => '${db} dB',
 			'settings.downmixCenterBoostLabel' => 'ブースト (dB)',
@@ -3241,7 +3793,7 @@ extension on TranslationsJa {
 			'settings.audioDownmixNormalize' => 'ダウンミックス時の音量正規化',
 			'settings.audioDownmixNormalizeDescription' => 'クリッピングを防ぐためにミックス音量を下げます。オフにすると元の音量を維持します（大音量シーンで歪む場合があります）。',
 			'settings.dvConversionMode' => 'Dolby Vision 変換',
-			'settings.dvConversionModeDescription' => 'ExoPlayer が Dolby Vision Profile 7 ファイルを処理する方法を選択します。',
+			'settings.dvConversionModeDescription' => 'Dolby Vision Profile 7 ファイルの処理方法を選択します。',
 			'settings.dvConversionAuto' => '自動',
 			'settings.dvConversionNative' => 'ネイティブ / 無効',
 			'settings.dvConversionDv81' => 'P7 → P8.1',
@@ -3250,8 +3802,24 @@ extension on TranslationsJa {
 			'settings.dvConversionNativeDescription' => 'ネイティブ DV7 を強制し、DV 変換の再試行を抑制します',
 			'settings.dvConversionDv81Description' => 'Dolby Vision プロファイル 8.1 へのインライン RPU 変換を強制します',
 			'settings.dvConversionHevcStripDescription' => 'Dolby Vision の RPU/EL レイヤーを削除し、通常の HEVC として扱います',
+			'settings.disableDolbyVision' => 'Dolby Vision を無効にする',
+			'settings.disableDolbyVisionDescription' => 'ファイルに HDR10 または HLG レイヤーがある場合は、Dolby Vision の代わりにそれを再生します',
+			'settings.hdrSdrConversion' => 'HDRからSDRへの変換',
+			'settings.hdrSdrConversionDescription' => 'ディスプレイがHDRを表示できないときに、HDR映像を何で変換するかを選択します。',
+			'settings.hdrSdrConversionAuto' => '自動',
+			'settings.hdrSdrConversionAutoDescription' => 'Android 9以降はデバイス、それより前のバージョンではプレーヤー',
+			'settings.hdrSdrConversionDevice' => 'デバイス',
+			'settings.hdrSdrConversionDeviceDescription' => 'デバイスの映像ハードウェアで変換します。最も高速ですが、色はデバイスによって異なります',
+			'settings.hdrSdrConversionPlayer' => 'プレーヤー',
+			'settings.hdrSdrConversionPlayerDescription' => 'プレーヤーで変換します。色は一定ですが、低価格なTVボックスでは4Kがカクつくことがあります',
 			'settings.deinterlace' => 'デインターレース',
 			'settings.deinterlaceDescription' => 'インターレース映像のくし型ノイズを除去します（mpvプレーヤーのみ）',
+			'settings.deinterlaceOff' => 'オフ',
+			'settings.deinterlaceOffDescription' => 'インターレース映像をデコードされたまま表示します',
+			'settings.deinterlaceVideo' => 'ビデオ',
+			'settings.deinterlaceVideoDescription' => '各フィールドを1つのフレームに変換します。スポーツ、ニュース、コンサートなど、テレビ用に撮影された映像向けです',
+			'settings.deinterlaceFilm' => 'フィルム',
+			'settings.deinterlaceFilmDescription' => 'NTSC DVDによくある、29.97fpsにテレシネされた映画やアニメの元のフレームを復元します。テレビ用に撮影された映像はカクつきます。ライブTVでは「ビデオ」を使用します',
 			'settings.requireProfileSelectionOnOpen' => 'アプリ起動時にプロフィールを確認',
 			'settings.requireProfileSelectionOnOpenDescription' => 'アプリを開くたびにプロフィール選択を表示',
 			'settings.forceTvMode' => 'TVモードを強制',
@@ -3293,6 +3861,8 @@ extension on TranslationsJa {
 			'settings.gestureVolumeSwipeDescription' => '右端を上下にスワイプして音量を調整します',
 			'settings.gesturePinchToZoom' => 'ピンチでズーム',
 			'settings.gesturePinchToZoomDescription' => '動画をピンチしてズームイン・アウト',
+			'settings.rememberBrightnessLevel' => '明るさを記憶',
+			'settings.rememberBrightnessLevelDescription' => '前回スワイプで設定した明るさで再生を開始します',
 			'settings.controls' => 'コントロール',
 			'settings.rememberPlayerChanges' => 'プレーヤーの変更を記憶',
 			'settings.rememberPlayerChangesDescription' => '再生中に行った変更を保存し、再適用する場所',
@@ -3305,10 +3875,51 @@ extension on TranslationsJa {
 			'settings.playerScopeLibrary' => 'ライブラリごと',
 			'settings.playerScopeTitle' => '作品ごと',
 			'settings.exportDialogTitle' => 'Plezyの設定をエクスポート',
+			'themeEditor.builtIn' => '標準',
+			'themeEditor.presets' => 'プリセット',
+			'themeEditor.custom' => 'カスタム',
+			'themeEditor.customEmpty' => '未作成',
+			'themeEditor.editCustom' => 'カスタムテーマを編集',
+			'themeEditor.editCustomDescription' => 'すべての色を自分で選択',
+			'themeEditor.locked' => 'Supporterでロック解除',
+			'themeEditor.savedLocked' => '保存済み — Supporterでロック解除',
+			'themeEditor.title' => 'カスタムテーマ',
+			'themeEditor.startFrom' => '元にするテーマ',
+			'themeEditor.startFromDescription' => '別のテーマからすべての色をコピー',
+			'themeEditor.colors' => '色',
+			'themeEditor.preview' => 'プレビュー',
+			'themeEditor.slots.bg' => '背景',
+			'themeEditor.slots.surface' => 'サーフェス',
+			'themeEditor.slots.outline' => '枠線',
+			'themeEditor.slots.text' => 'テキスト',
+			'themeEditor.slots.textMuted' => '補助テキスト',
+			'themeEditor.slots.accent' => 'アクセント',
+			_ => null,
+		} ?? switch (path) {
+			'themeEditor.opacity' => '不透明度',
+			'themeEditor.hexHint' => '#RRGGBB または #AARRGGBB',
+			'themeEditor.fromOtherThemes' => '他のテーマから',
+			'themeEditor.swatchLabel' => ({required Object theme, required Object color}) => '${theme}の${color}',
+			'themeEditor.contrast.textOnBg' => '背景上のテキスト',
+			'themeEditor.contrast.textOnSurface' => 'サーフェス上のテキスト',
+			'themeEditor.contrast.textMutedOnBg' => '背景上の補助テキスト',
+			'themeEditor.contrast.textMutedOnSurface' => 'サーフェス上の補助テキスト',
+			'themeEditor.contrast.accentOnBg' => '背景上のアクセント',
+			'themeEditor.contrast.accentOnSurface' => 'サーフェス上のアクセント',
+			'themeEditor.contrast.labelOnAccent' => 'アクセント上のボタンラベル',
+			'themeEditor.lowContrast' => ({required Object pair, required Object ratio, required Object minimum}) => '${pair}: ${ratio}:1（推奨値の${minimum}:1未満）',
+			'themeEditor.discardTitle' => '変更を破棄しますか？',
+			'themeEditor.discardMessage' => '保存されていない色の変更は失われます。',
+			'themeEditor.discard' => '破棄',
+			'themeEditor.previewCardTitle' => ({required Object number}) => 'エピソード${number}',
+			'themeEditor.previewCardSubtitle' => ({required Object minutes}) => '残り${minutes}分',
+			'themeEditor.previewSwitch' => '自動再生',
+			'themeEditor.previewMutedText' => '補助テキストはこのように表示されます',
 			'search.hint' => '映画、番組、音楽を検索…',
 			'search.tryDifferentTerm' => '別の検索語をお試しください',
 			'search.searchYourMedia' => 'メディアを検索',
 			'search.enterTitleActorOrKeyword' => 'タイトル、俳優、またはキーワードを入力',
+			'search.people' => '人物',
 			'hotkeys.setShortcutFor' => ({required Object actionName}) => '${actionName}のショートカットを設定',
 			'hotkeys.clearShortcut' => 'ショートカットをクリア',
 			'hotkeys.noShortcutSet' => 'ショートカット未設定',
@@ -3435,8 +4046,6 @@ extension on TranslationsJa {
 			'fileInfo.optimizedVersion' => '最適化バージョン',
 			'fileInfo.optimizationTarget' => '最適化ターゲット',
 			'fileInfo.deletedAt' => '削除済み',
-			_ => null,
-		} ?? switch (path) {
 			'fileInfo.remoteSource' => 'リモートソース',
 			'fileInfo.infiniteStream' => '無限ストリーム',
 			'fileInfo.directPlay' => 'ダイレクト再生',
@@ -3582,14 +4191,15 @@ extension on TranslationsJa {
 			'videoControls.rotationLockButton' => '回転ロック',
 			'videoControls.lockScreen' => '画面をロック',
 			'videoControls.screenLockButton' => '画面ロック',
-			'videoControls.longPressToUnlock' => '長押しでロック解除',
 			'videoControls.timelineSlider' => '動画タイムライン',
 			'videoControls.volumeSlider' => '音量レベル',
 			'videoControls.endsAt' => ({required Object time}) => '${time}に終了',
 			'videoControls.pipActive' => 'ピクチャーインピクチャーで再生中',
 			'videoControls.pipFailed' => 'ピクチャーインピクチャーの開始に失敗しました',
 			'videoControls.screenshotSaved' => 'スクリーンショットを保存しました',
+			'videoControls.screenshotFailed' => 'スクリーンショットを撮影できませんでした',
 			'videoControls.zoomPercent' => ({required Object percent}) => 'ズーム ${percent}%',
+			'videoControls.volumePercent' => ({required Object percent}) => '音量 ${percent}%',
 			'videoControls.pipErrors.androidVersion' => 'Android 8.0以降が必要です',
 			'videoControls.pipErrors.iosVersion' => 'iOS 15.0以降が必要です',
 			'videoControls.pipErrors.permissionDisabled' => 'ピクチャーインピクチャーが無効です。システム設定で有効にしてください。',
@@ -3636,6 +4246,9 @@ extension on TranslationsJa {
 			'messages.playbackDataInvalid' => 'サーバーから無効な再生情報が返されました。',
 			'messages.playbackCancelled' => '再生がキャンセルされました。',
 			'messages.playbackFailed' => '再生を開始できませんでした。',
+			'messages.playbackFailedDetail' => ({required Object error}) => '再生を開始できませんでした: ${error}',
+			'messages.audioOutputFailed' => 'オーディオ出力が応答しなくなりました。テレビやレシーバーの音声接続を確認してください。他のアプリでも音が出ない場合は、デバイスを再起動してください。',
+			'messages.mediaUnavailable' => 'このコンテンツは利用できなくなりました。',
 			'messages.errorLoadingFileInfo' => ({required Object error}) => 'ファイル情報の読み込みエラー: ${error}',
 			'messages.errorLoadingSeries' => 'シリーズの読み込みエラー',
 			'messages.musicNotSupported' => '音楽の再生はまだサポートされていません',
@@ -3670,6 +4283,8 @@ extension on TranslationsJa {
 			'messages.mediaUnreadableBody' => 'サーバーはこのアイテムを見つけましたが、そのファイルを読み取れませんでした（HTTP 404）。ファイルが移動・削除されたか、ストレージがオフラインの可能性があります。サーバーの管理者にファイルの確認とライブラリの再スキャンを依頼してください。',
 			'messages.serverBusyTitle' => 'ストリームを利用できません',
 			'messages.serverBusyBody' => 'サーバーがこのファイルのストリーミングを繰り返し拒否しました（HTTP 503）。サーバーが再起動中またはビジー状態か、ファイルのストレージがオフラインの可能性があります。しばらくしてからもう一度お試しください。問題が続く場合は、サーバーの所有者にサーバーとファイルのストレージを確認するよう依頼してください。',
+			'messages.playbackNotAllowedTitle' => '再生が許可されていません',
+			'messages.playbackNotAllowedBody' => 'サーバーがこのアイテムのストリーミングを拒否しました（HTTP 403）。お使いのアカウントに再生の権限がないか、サーバーがローカルネットワーク内での再生のみを許可している可能性があります。',
 			'messages.logsUploaded' => 'ログをアップロードしました',
 			'messages.logsUploadFailed' => 'ログのアップロードに失敗しました',
 			'messages.logId' => 'ログID',
@@ -3679,6 +4294,7 @@ extension on TranslationsJa {
 			'messages.playbackDataNotPrepared' => '再生データの準備が完了する前に再生が開始されました',
 			'messages.streamSelectionUnavailable' => 'このソースではストリームを選択できません',
 			'messages.streamSelectionFailed' => '選択したストリームを適用できませんでした',
+			'messages.trackSelectionNotRemembered' => 'このトラック選択は現在の再生にのみ適用されます。',
 			'messages.serverUnavailableForProfile' => '現在のプロフィールで利用可能なサーバーがありません',
 			'subtitlingStyling.text' => 'テキスト',
 			'subtitlingStyling.border' => '枠線',
@@ -3696,6 +4312,8 @@ extension on TranslationsJa {
 			'subtitlingStyling.overrideStrip' => 'スタイルを削除',
 			'subtitlingStyling.positionTop' => '上',
 			'subtitlingStyling.positionBottom' => '下',
+			'subtitlingStyling.useMargins' => '余白を使用',
+			'subtitlingStyling.useMarginsDescription' => 'テキスト字幕を動画の外側の領域に表示できるようにします。スタイル付き字幕は元の配置を維持する場合があります。',
 			'subtitlingStyling.anchorToScreen' => '画面に固定',
 			'subtitlingStyling.anchorToScreenDescription' => 'ワイドスクリーン映像の下にある黒帯にテキスト字幕を表示します',
 			'subtitlingStyling.bold' => '太字',
@@ -3717,6 +4335,9 @@ extension on TranslationsJa {
 			'mpvConfig.presetDeleted' => 'プリセットを削除しました',
 			'mpvConfig.confirmDeletePreset' => 'このプリセットを削除してもよろしいですか？',
 			'mpvConfig.configPlaceholder' => 'gpu-api=vulkan\nhwdec=auto\n# comment',
+			'mpvConfig.lineHint' => 'option=value',
+			'mpvConfig.addLine' => '行を追加',
+			'mpvConfig.removeLine' => '行を削除',
 			'mpvConfig.embeddedVoHint' => 'Linux では vo、gpu-context、gpu-api は無視されます。埋め込み動画は常にビデオプレーン上で vo=libmpv を通してレンダリングされ、gpu-next（ArtCNN のようなコンピュートシェーダーに必要）は埋め込みでは実行できません。',
 			'dialog.confirmAction' => '操作の確認',
 			'profiles.addPlezyProfile' => 'Plezyプロフィールを追加',
@@ -3729,6 +4350,8 @@ extension on TranslationsJa {
 			'profiles.signOut' => 'サインアウト',
 			'profiles.signOutPlexTitle' => 'Plexからサインアウトしますか？',
 			'profiles.signOutPlexMessage' => ({required Object displayName}) => '${displayName}とすべてのPlex Homeユーザーを削除しますか？いつでも再度サインインできます。',
+			'profiles.signOutPlexDeleteDownloads' => 'ダウンロードも削除',
+			'profiles.signOutPlexDeleteDownloadsDescription' => '削除しない場合、ダウンロードはこのデバイスに残り、このアカウントに再度サインインすると再び利用できます。',
 			'profiles.signedOutPlex' => 'Plexからサインアウトしました。',
 			'profiles.signOutFailed' => 'サインアウトに失敗しました。',
 			'profiles.sectionTitle' => 'プロフィール',
@@ -3765,7 +4388,7 @@ extension on TranslationsJa {
 			'profiles.borrowAddTo' => ({required Object displayName}) => '${displayName}に追加',
 			'profiles.borrowExplain' => '別のプロフィールの接続を利用します。PINで保護されたプロフィールにはPINが必要です。',
 			'profiles.borrowEmpty' => '利用できる接続はまだありません。',
-			'profiles.borrowEmptySubtitle' => 'まず、別のプロフィールをPlexまたはJellyfinに接続してください。',
+			'profiles.borrowEmptySubtitle' => 'まず、別のプロフィールをPlex、JellyfinまたはEmbyに接続してください。',
 			'profiles.borrowLoadFailed' => '利用可能な接続を読み込めませんでした。もう一度お試しください。',
 			'profiles.borrowFromProfile' => ({required Object displayName}) => '${displayName}から利用',
 			'profiles.borrowConnectionBorrowed' => '接続を追加しました。',
@@ -3784,10 +4407,14 @@ extension on TranslationsJa {
 			'profiles.tokenIdentityMismatch' => 'Plexプロフィールのトークンから予期しないサーバーが特定されました',
 			'connections.sectionTitle' => '接続',
 			'connections.addConnection' => '接続を追加',
-			'connections.addConnectionSubtitleNoProfile' => 'Plexでサインインするか、Jellyfinサーバーに接続',
-			'connections.addConnectionSubtitleScoped' => ({required Object displayName}) => '${displayName}に追加：Plex、Jellyfin、または別のプロフィールの接続',
+			'connections.addConnectionSubtitleNoProfile' => 'Plexでサインインするか、JellyfinまたはEmbyサーバーに接続',
+			_ => null,
+		} ?? switch (path) {
+			'connections.addConnectionSubtitleScoped' => ({required Object displayName}) => '${displayName}に追加：Plex、Jellyfin、Emby、または別のプロフィールの接続',
 			'connections.sessionExpiredOne' => ({required Object name}) => '${name} のセッションの有効期限が切れました',
 			'connections.sessionExpiredMany' => ({required Object count}) => '${count} 台のサーバーのセッションの有効期限が切れました',
+			'connections.accessDeniedOne' => ({required Object name}) => '${name} がこのアカウントへのアクセスを拒否しました',
+			'connections.accessDeniedMany' => ({required Object count}) => '${count} 台のサーバーがこのアカウントへのアクセスを拒否しました',
 			'connections.signInAgain' => '再度サインイン',
 			'connections.editMediaBrowserTitle' => ({required Object product}) => '${product}接続を編集',
 			'connections.editMediaBrowserIntro' => ({required Object serverName}) => '${serverName}のURLを追加または削除します。Plezyは到達可能なURLのうち、レイテンシーが最も低いものを使用します。',
@@ -3873,6 +4500,11 @@ extension on TranslationsJa {
 			'discover.minutesLeft' => ({required Object minutes}) => '残り${minutes}分',
 			'discover.moreLikeThis' => '似ている作品',
 			'discover.titleCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ja'))(n, other: '${n}作品', ), 
+			'discover.person.born' => '生年月日',
+			'discover.person.died' => '没年月日',
+			'discover.person.birthplace' => '出生地',
+			'discover.person.dateWithAge' => ({required Object date, required Object age}) => '${date}（${age}歳）',
+			'discover.person.dateWithAgeAtDeath' => ({required Object date, required Object age}) => '${date}（${age}歳没）',
 			'errors.searchFailed' => ({required Object error}) => '検索に失敗しました: ${error}',
 			'errors.searchUnavailable' => '検索中にメディアサーバーへ接続できませんでした。',
 			'errors.connectionTimeout' => ({required Object context}) => '${context}の読み込み中に接続がタイムアウトしました',
@@ -3885,6 +4517,13 @@ extension on TranslationsJa {
 			'errors.failedToSwitchProfile' => ({required Object displayName}) => '${displayName}への切替に失敗しました',
 			'errors.failedToDeleteProfile' => ({required Object displayName}) => '${displayName}の削除に失敗しました',
 			'errors.failedToRate' => '評価を更新できませんでした',
+			'errors.reasonTimedOut' => '接続がタイムアウトしました',
+			'errors.reasonUnreachable' => 'メディアサーバーに接続できませんでした',
+			'errors.reasonRefused' => 'メディアサーバーがリクエストを拒否しました',
+			'errors.reasonNotFound' => 'この項目はメディアサーバー上に存在しません',
+			'errors.reasonServerError' => 'メディアサーバーでエラーが発生しました',
+			'errors.reasonCancelled' => 'リクエストがキャンセルされました',
+			'errors.reasonUnexpected' => '予期しないエラーが発生しました',
 			'libraries.title' => 'ライブラリ',
 			'libraries.fallbackTitle' => 'ライブラリ',
 			'libraries.scanLibraryFiles' => 'ライブラリファイルをスキャン',
@@ -3947,10 +4586,9 @@ extension on TranslationsJa {
 			'libraries.filterCategories.unwatched' => '未視聴',
 			'libraries.filterCategories.unplayed' => '未再生',
 			'libraries.filterCategories.favorites' => 'お気に入り',
+			'libraries.filterCategories.filePath' => 'ファイルパス',
 			'libraries.sortLabels.title' => 'タイトル',
 			'libraries.sortLabels.dateAdded' => '追加日',
-			_ => null,
-		} ?? switch (path) {
 			'libraries.sortLabels.releaseDate' => 'リリース日',
 			'libraries.sortLabels.rating' => '評価',
 			'libraries.sortLabels.communityRating' => 'コミュニティ評価',
@@ -3969,10 +4607,39 @@ extension on TranslationsJa {
 			'libraries.sortLabels.dateShared' => '共有日',
 			'libraries.sortLabels.latestEpisodeAirDate' => '最新エピソード放送日',
 			'libraries.sortLabels.lastEpisodeDateAdded' => '最新エピソード追加日',
+			'libraries.sortLabels.dateDownloaded' => 'ダウンロード日',
+			'libraries.sortLabels.size' => 'サイズ',
+			'libraries.sortLabels.library' => 'ライブラリ',
+			'libraries.advancedFilters.include' => '含める',
+			'libraries.advancedFilters.exclude' => '除外',
+			'libraries.advancedFilters.any' => '指定なし',
+			'libraries.advancedFilters.yes' => 'はい',
+			'libraries.advancedFilters.no' => 'いいえ',
+			'libraries.advancedFilters.not' => ({required Object value}) => '${value}以外',
+			'libraries.advancedFilters.valueCount' => ({required Object count}) => '${count}件選択',
+			'libraries.advancedFilters.valueCountExcluded' => ({required Object count}) => '${count}件除外',
+			'libraries.advancedFilters.searchValues' => '値を検索',
+			'libraries.advancedFilters.noValues' => '値がありません',
+			'libraries.advancedFilters.matchContains' => '含む',
+			'libraries.advancedFilters.matchNotContains' => '含まない',
+			'libraries.advancedFilters.matchIs' => '一致する',
+			'libraries.advancedFilters.matchIsNot' => '一致しない',
+			'libraries.advancedFilters.matchBeginsWith' => '前方一致',
+			'libraries.advancedFilters.matchEndsWith' => '後方一致',
+			'libraries.advancedFilters.textHint' => 'テキストを入力',
+			'libraries.advancedFilters.from' => '下限',
+			'libraries.advancedFilters.to' => '上限',
+			'libraries.advancedFilters.range' => ({required Object from, required Object to}) => '${from}〜${to}',
+			'libraries.advancedFilters.atLeast' => ({required Object value}) => '${value}以上',
+			'libraries.advancedFilters.atMost' => ({required Object value}) => '${value}以下',
+			'libraries.advancedFilters.dateLastDays' => ({required Object count}) => '過去${count}日間',
+			'libraries.advancedFilters.dateLastYear' => '過去1年間',
+			'libraries.advancedFilters.dateOlderThanDays' => ({required Object count}) => '${count}日以上前',
+			'libraries.advancedFilters.dateOlderThanYear' => '1年以上前',
 			'about.title' => 'アプリについて',
 			'about.openSourceLicenses' => 'オープンソースライセンス',
 			'about.versionLabel' => ({required Object version}) => 'バージョン ${version}',
-			'about.appDescription' => 'Flutter製の美しいPlex・Jellyfinクライアント',
+			'about.appDescription' => 'Flutter製の美しいPlex・Jellyfin・Embyクライアント',
 			'about.viewLicensesDescription' => 'サードパーティライブラリのライセンスを表示',
 			'serverSelection.noServersFoundForAccount' => ({required Object username, required Object email}) => '${username} (${email})のサーバーが見つかりません',
 			'serverSelection.failedToLoadServers' => ({required Object error}) => 'サーバーの読み込みに失敗しました: ${error}',
@@ -4055,6 +4722,7 @@ extension on TranslationsJa {
 			'explore.notInLibrary' => 'ライブラリにありません',
 			'explore.inTheseLibraries' => 'これらのライブラリにあります',
 			'explore.checkingLibrary' => 'ライブラリを確認中…',
+			'explore.libraryCheckFailed' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ja'))(n, other: '${n}台のサーバーを確認できませんでした', ), 
 			'explore.emptyTitle' => 'まだ何もありません',
 			'explore.emptyMessage' => ({required Object source}) => '${source}にコンテンツが追加されると、ここに表示されます。',
 			'explore.searchHint' => ({required Object source}) => '${source}を検索',
@@ -4119,6 +4787,7 @@ extension on TranslationsJa {
 			'explore.sourceMaterial.webComic' => 'Web漫画',
 			'explore.sourceMaterial.musicRelease' => '音楽',
 			'explore.sourceMaterial.otherMedia' => 'その他',
+			'explore.creditRole.actor' => '俳優',
 			'explore.creditRole.director' => '監督',
 			'explore.creditRole.writer' => '脚本',
 			'explore.creditRole.producer' => 'プロデューサー',
@@ -4238,7 +4907,9 @@ extension on TranslationsJa {
 			'liveTv.editRuleAction' => '編集',
 			'liveTv.recordingRuleUpdated' => '録画ルールを更新しました',
 			'liveTv.guideReloadRequested' => '番組表の更新をリクエストしました',
+			'liveTv.guideReloadFailed' => '番組表を再読み込みできませんでした',
 			'liveTv.rulesProcessRequested' => '録画ルールの再評価をリクエストしました',
+			'liveTv.rulesProcessFailed' => '録画ルールを再適用できませんでした',
 			'liveTv.recordShow' => '番組を録画',
 			'liveTv.recordSettings.startEarly' => '早めに開始（秒）',
 			'liveTv.recordSettings.endLate' => '遅めに終了（秒）',
@@ -4251,8 +4922,12 @@ extension on TranslationsJa {
 			'liveTv.startingInMinutes' => ({required Object minutes}) => '${minutes}分後に開始',
 			'liveTv.dayAtTime' => ({required Object day, required Object time}) => '${day} ${time}',
 			'liveTv.invalidPlaybackData' => ({required Object product}) => '${product}から無効なライブTV再生データが返されました',
+			_ => null,
+		} ?? switch (path) {
 			'liveTv.failedToStartChannel' => 'ライブチャンネルを開始できませんでした',
 			'liveTv.failedToBuildStreamUrl' => 'ストリームURLを生成できませんでした',
+			'liveTv.playbackStartFailed' => ({required Object reason}) => 'チャンネルを再生できませんでした: ${reason}',
+			'liveTv.channelSwitchFailed' => ({required Object reason}) => 'チャンネルを切り替えられませんでした: ${reason}',
 			'collections.title' => 'コレクション',
 			'collections.collection' => 'コレクション',
 			'collections.empty' => 'コレクションは空です',
@@ -4330,74 +5005,151 @@ extension on TranslationsJa {
 			'music.discography.compilations' => 'コンピレーション',
 			'watchTogether.title' => '一緒に見る',
 			'watchTogether.description' => '友達や家族と同期してコンテンツを視聴',
-			'watchTogether.createSession' => 'セッションを作成',
-			'watchTogether.creating' => '作成中…',
-			'watchTogether.joinSession' => 'セッションに参加',
-			'watchTogether.joining' => '参加中…',
-			'watchTogether.controlMode' => 'コントロールモード',
-			'watchTogether.controlModeQuestion' => '誰が再生を制御できますか？',
-			'watchTogether.hostOnly' => 'ホストのみ',
-			'watchTogether.anyone' => '全員',
-			'watchTogether.hostingSession' => 'セッションをホスト中',
-			'watchTogether.inSession' => 'セッション中',
-			'watchTogether.sessionCode' => 'セッションコード',
-			'watchTogether.openSessionControls' => '「一緒に見る」セッションのコントロールを開く',
-			'watchTogether.copySessionCode' => 'セッションコードをコピー',
-			'watchTogether.hostControlsPlayback' => 'ホストが再生を制御',
-			'watchTogether.anyoneCanControl' => '全員が再生を制御可能',
-			'watchTogether.hostControls' => 'ホストが制御',
-			'watchTogether.anyoneControls' => '全員が制御',
-			'watchTogether.participants' => '参加者',
-			'watchTogether.host' => 'ホスト',
-			'watchTogether.hostBadge' => 'ホスト',
-			'watchTogether.youAreHost' => 'あなたはホストです',
-			'watchTogether.watchingWithOthers' => '他の人と視聴中',
-			'watchTogether.endSession' => 'セッションを終了',
-			'watchTogether.leaveSession' => 'セッションを退出',
-			'watchTogether.endSessionQuestion' => 'セッションを終了しますか？',
-			'watchTogether.leaveSessionQuestion' => 'セッションを退出しますか？',
-			'watchTogether.endSessionConfirm' => 'すべての参加者のセッションが終了します。',
-			'watchTogether.leaveSessionConfirm' => 'セッションから退出されます。',
-			'watchTogether.endSessionConfirmOverlay' => 'すべての参加者の視聴セッションが終了します。',
-			'watchTogether.leaveSessionConfirmOverlay' => '視聴セッションから切断されます。',
-			'watchTogether.end' => '終了',
-			'watchTogether.leave' => '退出',
-			'watchTogether.syncing' => '同期中…',
-			'watchTogether.joinWatchSession' => '視聴セッションに参加',
-			'watchTogether.enterCodeHint' => '5文字のコードを入力',
-			'watchTogether.pasteFromClipboard' => 'クリップボードから貼り付け',
-			'watchTogether.pleaseEnterCode' => 'セッションコードを入力してください',
-			'watchTogether.codeMustBe5Chars' => 'セッションコードは5文字である必要があります',
-			'watchTogether.joinInstructions' => '参加するにはホストのセッションコードを入力してください。',
-			'watchTogether.failedToCreate' => 'セッションの作成に失敗しました',
-			'watchTogether.failedToJoin' => 'セッションへの参加に失敗しました',
-			'watchTogether.sessionCodeCopied' => 'セッションコードをクリップボードにコピーしました',
-			'watchTogether.relayUnreachable' => 'リレーサーバーに接続できません。ISPによるブロックのため「一緒に見る」を利用できない可能性があります。',
-			'watchTogether.reconnectingToHost' => 'ホストに再接続中…',
-			'watchTogether.currentPlayback' => '現在の再生',
-			'watchTogether.joinCurrentPlayback' => '現在の再生に参加',
-			'watchTogether.joinCurrentPlaybackDescription' => 'ホストが現在視聴中のコンテンツに戻る',
-			'watchTogether.failedToOpenCurrentPlayback' => '現在の再生を開けませんでした',
-			'watchTogether.participantJoined' => ({required Object name}) => '${name}が参加しました',
-			'watchTogether.participantLeft' => ({required Object name}) => '${name}が退出しました',
-			'watchTogether.participantPaused' => ({required Object name}) => '${name}が一時停止しました',
-			'watchTogether.participantResumed' => ({required Object name}) => '${name}が再開しました',
-			'watchTogether.participantSeeked' => ({required Object name}) => '${name}が再生位置を変更しました',
-			'watchTogether.participantBuffering' => ({required Object name}) => '${name}がバッファリング中',
-			'watchTogether.participantNeedsUpdate' => ({required Object name}) => '${name}は古いバージョンのアプリを使用しているため、同期できません',
-			'watchTogether.resumingWithout' => ({required Object name}) => '${name}抜きで再開',
-			'watchTogether.waitingForParticipants' => '他の参加者の読み込みを待っています…',
-			'watchTogether.waitingForName' => ({required Object name}) => '${name}を待っています…',
+			'watchTogether.createRoom' => 'ルームを作成',
+			'watchTogether.creatingRoom' => 'ルームを作成中…',
+			'watchTogether.joinRoom' => 'ルームに参加',
+			'watchTogether.joiningRoom' => 'ルームに参加中…',
+			'watchTogether.connecting' => '接続中…',
+			'watchTogether.relayPublic' => 'ルームは公開のOpen Watch Partyリレーサーバーを使用します。',
+			'watchTogether.relayCustom' => ({required Object url}) => 'ルームは${url}のリレーサーバーを使用します。',
 			'watchTogether.recentRooms' => '最近のルーム',
+			'watchTogether.roomActions' => 'ルームの操作',
 			'watchTogether.renameRoom' => 'ルーム名を変更',
 			'watchTogether.removeRoom' => '削除',
-			'watchTogether.guestSwitchUnavailable' => '切り替えられません — 同期に必要なサーバーを利用できません',
-			'watchTogether.guestSwitchFailed' => '切り替えられません — このサーバーにコンテンツが見つかりません',
-			'watchTogether.defaultDisplayName' => 'ユーザー',
-			'watchTogether.errors.timedOut' => 'リレーサーバーが時間内に応答しませんでした',
-			'watchTogether.errors.connectionLost' => 'セッションの準備が整う前に接続が閉じられました',
-			'watchTogether.errors.invalidRelayResponse' => 'リレーサーバーから予期しない応答が返されました',
-			'watchTogether.errors.sessionEnded' => 'ホストがセッションを終了しました',
+			'watchTogether.enterRoomCode' => 'ホストから共有された6文字のコードを入力してください。',
+			'watchTogether.roomCode' => 'ルームコード',
+			'watchTogether.paste' => '貼り付け',
+			'watchTogether.noCodeInClipboard' => 'クリップボードにルームコードがありません',
+			'watchTogether.copyCode' => 'コードをコピー',
+			'watchTogether.codeCopied' => 'ルームコードをコピーしました',
+			'watchTogether.shareInvite' => '招待を共有',
+			'watchTogether.inviteCopied' => '招待をコピーしました。メッセージに貼り付けてください。',
+			'watchTogether.inviteMessage' => ({required Object code}) => 'Plezyの「一緒に見る」ルームに参加しませんか？「一緒に見る」を開いて「ルームに参加」を選び、${code}を入力してください。',
+			'watchTogether.openSessionControls' => '「一緒に見る」セッションのコントロールを開く',
+			'watchTogether.reconnecting' => '再接続中…',
+			'watchTogether.reconnectingDescription' => '接続が切断されました。自動的にルームに再参加します。',
+			'watchTogether.connected' => '接続済み',
+			'watchTogether.disconnected' => '切断されました',
+			'watchTogether.youAreHost' => 'あなたはホストです',
+			'watchTogether.hostedBy' => ({required Object name}) => 'ホスト: ${name}',
+			'watchTogether.hostControlsPlayback' => 'ホストが再生を制御',
+			'watchTogether.anyoneCanControl' => '全員が再生を制御可能',
+			'watchTogether.roomLocked' => 'ルームはロック中',
+			'watchTogether.nowPlaying' => '再生中',
+			'watchTogether.nothingPlaying' => '再生中のコンテンツはありません',
+			'watchTogether.nothingPlayingHost' => 'いずれかのライブラリから再生すると、ルームで共有されます。',
+			'watchTogether.nothingPlayingGuest' => 'ホストが再生を始めると、ここに表示されます。',
+			'watchTogether.notShareable' => 'この動画はカタログ情報と一致しないため、同じサーバーにアクセスできる人しか再生できません。',
+			'watchTogether.searching' => 'ライブラリでこの動画を探しています…',
+			'watchTogether.yourCopy' => 'あなたのコピー',
+			'watchTogether.sharingYourCopy' => 'あなたのコピーを共有しています',
+			'watchTogether.playingOtherLength' => ({required Object difference}) => 'あなたのコピーを再生中（${difference}）',
+			'watchTogether.mismatchTitle' => 'コピーの長さが異なります',
+			'watchTogether.mismatchDescription' => ({required Object difference}) => '最も近いコピーはルームの動画より${difference}です。別の編集版やバージョンの可能性があります。',
+			'watchTogether.playAnyway' => 'このまま再生',
+			'watchTogether.chooseAnotherCopy' => '別のコピーを選択',
+			'watchTogether.dontPlay' => '再生しない',
+			'watchTogether.unavailableTitle' => 'この動画がありません',
+			'watchTogether.unavailableDescription' => 'Plezyはライブラリでこの動画を見つけられませんでした。自分でコピーを選ぶか、もう一度検索してください。',
+			'watchTogether.chooseCopy' => 'コピーを選択',
+			'watchTogether.searchAgain' => '再検索',
+			'watchTogether.noCandidates' => 'ライブラリにコピーが見つかりません。',
+			'watchTogether.choiceFailed' => 'このコピーをルームで再生できませんでした',
+			'watchTogether.lengthLonger' => ({required Object duration}) => '${duration}長い',
+			'watchTogether.lengthShorter' => ({required Object duration}) => '${duration}短い',
+			'watchTogether.lengthSame' => '同じ長さ',
+			'watchTogether.lengthUnknown' => '長さ不明',
+			'watchTogether.joinCurrentPlayback' => '現在の再生に参加',
+			'watchTogether.joinCurrentPlaybackDescription' => 'ホストが現在視聴中のコンテンツに戻る',
+			'watchTogether.stopMedia' => '全員の動画を停止',
+			'watchTogether.syncOffset' => '同期オフセット',
+			'watchTogether.syncOffsetDescription' => '動画がルームより進んでいる、または遅れている場合にずらします。',
+			'watchTogether.offsetHint' => ({required Object difference}) => 'あなたのコピーはルームの動画より${difference}です。',
+			'watchTogether.applyDifference' => ({required Object offset}) => '${offset}を適用',
+			'watchTogether.offsetMinusSecond' => '-1秒',
+			'watchTogether.offsetMinusTenth' => '-100ms',
+			'watchTogether.offsetPlusTenth' => '+100ms',
+			'watchTogether.offsetPlusSecond' => '+1秒',
+			'watchTogether.participants' => '参加者',
+			'watchTogether.participantCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ja'))(n, other: '参加者${n}人', ), 
+			'watchTogether.hostBadge' => 'ホスト',
+			'watchTogether.nameYou' => ({required Object name}) => '${name}（あなた）',
+			'watchTogether.playerIdle' => '待機中',
+			'watchTogether.playerLoading' => '読み込み中',
+			'watchTogether.playerReady' => '準備完了',
+			'watchTogether.playerBuffering' => 'バッファリング中',
+			'watchTogether.matchSearching' => '検索中',
+			'watchTogether.matchMatched' => '動画あり',
+			'watchTogether.matchMismatched' => '長さが異なる',
+			'watchTogether.matchUnavailable' => '動画なし',
+			'watchTogether.participantOffset' => ({required Object offset}) => 'オフセット ${offset}',
+			'watchTogether.makeHost' => 'ホストにする',
+			'watchTogether.makeHostQuestion' => 'ホストを移譲しますか？',
+			'watchTogether.makeHostConfirm' => ({required Object name}) => '${name}が再生を制御し、全員のセッションを主導します。',
+			'watchTogether.transfer' => '移譲',
+			'watchTogether.removeParticipant' => 'ルームから削除',
+			'watchTogether.removeParticipantQuestion' => ({required Object name}) => '${name}を削除しますか？',
+			'watchTogether.removeParticipantConfirm' => ({required Object name}) => '${name}をルームから退出させます。ルームをロックしない限り、コードを使って再度参加できます。',
+			'watchTogether.remove' => '削除',
+			'watchTogether.roomSettings' => 'ルーム設定',
+			'watchTogether.letEveryoneControl' => '全員に再生の操作を許可',
+			'watchTogether.lockRoom' => 'ルームをロック',
+			'watchTogether.lockRoomDescription' => '新しい参加者は参加できなくなります',
+			'watchTogether.leaveRoom' => 'ルームを退出',
+			'watchTogether.leaveRoomQuestion' => 'ルームを退出しますか？',
+			'watchTogether.leaveRoomConfirm' => 'ルームコードを使って再度参加できます。',
+			'watchTogether.leave' => '退出',
+			'watchTogether.endRoom' => 'ルームを終了',
+			'watchTogether.endRoomQuestion' => 'ルームを終了しますか？',
+			'watchTogether.endRoomConfirm' => '参加者全員のルームが終了します。',
+			'watchTogether.end' => '終了',
+			'watchTogether.playBlockedTitle' => '再生が開始されませんでした',
+			'watchTogether.playBlockedDescription' => '再生を押して、ルームのみんなと一緒に視聴を始めてください。',
+			'watchTogether.notices.pressedPlay' => ({required Object name}) => '${name}が再生しました',
+			'watchTogether.notices.playbackStarted' => '再生が開始されました',
+			'watchTogether.notices.paused' => ({required Object name}) => '${name}が一時停止しました',
+			'watchTogether.notices.playbackPaused' => '再生が一時停止されました',
+			'watchTogether.notices.jumpedTo' => ({required Object name, required Object position}) => '${name}が${position}にジャンプしました',
+			'watchTogether.notices.roomJumpedTo' => ({required Object position}) => '${position}にジャンプしました',
+			'watchTogether.notices.changedSpeed' => ({required Object name, required Object speed}) => '${name}が速度を${speed}に設定しました',
+			'watchTogether.notices.speedChanged' => ({required Object speed}) => '速度が${speed}に設定されました',
+			'watchTogether.notices.startedMedia' => ({required Object name, required Object title}) => '${name}が${title}を再生しました',
+			'watchTogether.notices.mediaStarted' => ({required Object title}) => '${title}を再生中',
+			'watchTogether.notices.stoppedMedia' => ({required Object name}) => '${name}が動画を停止しました',
+			'watchTogether.notices.mediaStopped' => '動画が停止しました',
+			'watchTogether.notices.waitingFor' => ({required Object name}) => '${name}を待っています…',
+			'watchTogether.notices.waitingForSomeone' => '他の参加者が追いつくのを待っています…',
+			'watchTogether.notices.finished' => '再生終了',
+			'watchTogether.notices.hostChangedTo' => ({required Object name}) => '${name}がホストになりました',
+			'watchTogether.notices.youAreNowHost' => 'あなたがホストになりました',
+			'watchTogether.notices.joined' => ({required Object name}) => '${name}が参加しました',
+			'watchTogether.notices.left' => ({required Object name}) => '${name}が退出しました',
+			'watchTogether.notices.controlRefused' => '再生を操作できるのはホストのみです',
+			'watchTogether.notices.searchFailed' => '一部のサーバーでルームの動画を検索できませんでした',
+			'watchTogether.notices.playBlocked' => '再生を押して開始してください',
+			'watchTogether.notices.shareFailed' => 'この動画をルームと共有できませんでした',
+			'watchTogether.notices.downloadNotShared' => 'サーバーがオフラインの間、ダウンロードはルームと共有されません',
+			'watchTogether.notices.openFailed' => 'ルームの動画を開けませんでした',
+			'watchTogether.ended.ended' => 'ホストがルームを終了しました',
+			'watchTogether.ended.kicked' => 'ルームから削除されました',
+			'watchTogether.ended.expired' => 'ルームの有効期限が切れました',
+			'watchTogether.ended.replaced' => '別のデバイスでこのルームに参加しました',
+			'watchTogether.ended.lost' => 'ルームとの接続が切れました',
+			'watchTogether.errors.invalidCode' => 'ルームコードではありません。コードは0、1、I、L、Oを含まない6文字の英数字です。',
+			'watchTogether.errors.roomNotFound' => 'そのコードのルームはありません。終了した可能性があります。',
+			'watchTogether.errors.roomFull' => 'そのルームは満員です。',
+			'watchTogether.errors.roomLocked' => 'ホストがそのルームをロックしています。',
+			'watchTogether.errors.relayFull' => '「一緒に見る」は現在混み合っています。しばらくしてからもう一度お試しください。',
+			'watchTogether.errors.unreachable' => '「一緒に見る」のリレーサーバーに接続できませんでした。接続を確認してください。',
+			'watchTogether.errors.rateLimited' => '試行回数が多すぎます。しばらく待ってからもう一度お試しください。',
+			'watchTogether.errors.clientBlocked' => 'このバージョンのPlezyではリレーサーバーを使用できません。アプリをアップデートしてください。',
+			'watchTogether.errors.forbidden' => 'その操作はホストのみ可能です。',
+			'watchTogether.errors.notInRoom' => 'ルームに参加していません。',
+			'watchTogether.errors.alreadyInRoom' => 'すでにルームに参加しています。',
+			'watchTogether.errors.resumeFailed' => 'ルームに再参加できませんでした。',
+			'watchTogether.errors.unsupported' => 'リレーサーバーがこの操作に対応していません。',
+			'watchTogether.errors.generic' => '問題が発生しました。もう一度お試しください。',
+			'watchTogether.untitledEpisode' => ({required Object number}) => 'エピソード${number}',
 			'downloads.title' => 'ダウンロード',
 			'downloads.manage' => '管理',
 			'downloads.tvShows' => 'テレビ番組',
@@ -4412,10 +5164,14 @@ extension on TranslationsJa {
 			'downloads.downloadQueued' => 'ダウンロードをキューに追加しました',
 			'downloads.downloadResumed' => 'ダウンロードを再開しました',
 			'downloads.serverErrorBitrate' => 'サーバーエラー: ファイルがリモートビットレート制限を超えている可能性があります',
-			'downloads.storageFull' => 'デバイスのストレージがいっぱいのため、ダウンロードを停止しました。空き容量を確保してから、もう一度お試しください。',
+			'downloads.storageFull' => '空き容量を確保するため、ダウンロードを停止しました。空き容量を確保するか、別のダウンロード先を選んでから、もう一度お試しください。',
+			'downloads.storageUnavailable' => '空き容量を確認できなかったため、ダウンロードを停止しました。ダウンロード先を確認してから、もう一度お試しください。',
 			'downloads.episodesQueued' => ({required Object count}) => '${count}エピソードをダウンロードキューに追加しました',
 			'downloads.downloadDeleted' => 'ダウンロードを削除しました',
 			'downloads.deleteConfirm' => ({required Object title}) => 'このデバイスから「${title}」を削除しますか？',
+			'downloads.deleteCollectionDownloads' => 'ダウンロードを削除',
+			'downloads.deleteCollectionDownloadsConfirm' => ({required Object title}) => '「${title}」のすべてのダウンロードをこのデバイスから削除しますか？',
+			'downloads.collectionDownloadsDeleted' => 'ダウンロードを削除しました',
 			'downloads.cancelledDownloadTitle' => 'キャンセル済みのダウンロード',
 			'downloads.cancelledDownloadMessage' => 'このダウンロードはキャンセルされました。どうしますか？',
 			'downloads.allEpisodesAlreadyDownloaded' => 'すべてのエピソードはすでにダウンロード済みです',
@@ -4433,6 +5189,8 @@ extension on TranslationsJa {
 			'downloads.noDownloadsTree' => 'ダウンロードなし',
 			'downloads.pauseAll' => 'すべて一時停止',
 			'downloads.resumeAll' => 'すべて再開',
+			'downloads.retryAll' => 'すべて再試行',
+			'downloads.retryFailed' => '失敗したダウンロードを再試行',
 			'downloads.deleteAll' => 'すべて削除',
 			'downloads.selectVersion' => 'バージョンを選択',
 			'downloads.allEpisodes' => 'すべてのエピソード',
@@ -4463,14 +5221,13 @@ extension on TranslationsJa {
 			'downloads.manageSyncRule' => '同期を管理',
 			'downloads.editEpisodeCount' => 'エピソード数',
 			'downloads.editSyncFilter' => '同期フィルター',
-			_ => null,
-		} ?? switch (path) {
 			'downloads.syncAllItems' => 'すべてのアイテムを同期中',
 			'downloads.syncUnwatchedItems' => '未視聴のアイテムを同期中',
 			'downloads.syncRuleServerContext' => ({required Object server, required Object status}) => 'サーバー: ${server} • ${status}',
 			'downloads.syncRuleAvailable' => '利用可能',
 			'downloads.syncRuleOffline' => 'オフライン',
 			'downloads.syncRuleSignInRequired' => 'サインインが必要',
+			'downloads.syncRuleAccessDenied' => 'アクセスが拒否されました',
 			'downloads.syncRuleNotAvailableForProfile' => '現在のプロフィールでは利用できません',
 			'downloads.syncRuleUnknownServer' => '不明なサーバー',
 			'downloads.syncRuleListCreated' => '同期ルールを作成しました',
@@ -4500,13 +5257,23 @@ extension on TranslationsJa {
 			'downloads.backgroundWarning.statusUnknown' => '未確認',
 			'downloads.backgroundWarning.settingsUnavailable' => 'この端末ではシステム設定を開けませんでした',
 			'downloads.backgroundWarning.linkUnavailable' => 'この端末ではdontkillmyapp.comを開けませんでした',
+			'downloads.options' => 'ダウンロードのオプション',
+			'downloads.groupings.library' => 'ライブラリ',
+			'downloads.groupings.collections' => 'コレクション',
+			'downloads.unknownLibrary' => '不明なライブラリ',
 			'downloads.unknownShow' => '不明な番組',
 			'downloads.unknownSeason' => '不明なシーズン',
 			'downloads.unknownAlbum' => '不明なアルバム',
 			'downloads.completedOfTotal' => ({required Object completed, required Object total}) => '${completed}/${total}完了',
 			'downloads.errorFileNotFound' => 'ファイルが見つかりません（404）',
+			'downloads.errorDownloadNotAllowed' => 'サーバーがダウンロードを許可していません（403）',
 			'downloads.errorDownloadFailed' => 'ダウンロードに失敗しました',
-			'downloads.errorPostProcessing' => ({required Object error}) => '後処理に失敗しました: ${error}',
+			'downloads.errorDownloadFailedWithReason' => ({required Object reason}) => 'ダウンロードに失敗しました: ${reason}',
+			'downloads.errorHttpStatus' => ({required Object status}) => 'ダウンロードに失敗しました（HTTP ${status}）',
+			'downloads.errorPostProcessing' => ({required Object reason}) => '後処理に失敗しました: ${reason}',
+			'downloads.reasonFileNotSaved' => 'このデバイスにファイルを保存できませんでした',
+			'downloads.reasonCannotResume' => '途中までのダウンロードを再開できませんでした',
+			'downloads.reasonDeviceStorageFull' => 'このデバイスのストレージが不足しています',
 			'downloads.notificationDownloading' => 'ダウンロード中…',
 			'downloads.notificationComplete' => 'ダウンロードが完了しました',
 			'downloads.notificationPaused' => 'ダウンロードを一時停止しました',
@@ -4614,7 +5381,7 @@ extension on TranslationsJa {
 			'videoSettings.audioOutputSpatial' => '空間オーディオ',
 			'videoSettings.audioOutputStereo' => 'ステレオ',
 			'videoSettings.audioNormalization' => 'ラウドネス正規化',
-			'videoSettings.audioDownmix' => 'ステレオにダウンミックス',
+			'videoSettings.audioNormalizationDisablesPassthrough' => '音声をPCMにデコードします。オンの間はパススルーがオフになります',
 			'performanceOverlay.color' => '色',
 			'performanceOverlay.performance' => 'パフォーマンス',
 			'performanceOverlay.buffer' => 'バッファ',
@@ -4627,6 +5394,13 @@ extension on TranslationsJa {
 			'performanceOverlay.rotation' => '回転',
 			'performanceOverlay.dvSource' => 'DV ソース',
 			'performanceOverlay.dvPath' => 'DV パス',
+			'performanceOverlay.dvRouteDecoder' => 'Dolby Vision デコーダー',
+			'performanceOverlay.dvRouteDecoderP81' => 'Dolby Vision デコーダー（P7→8.1）',
+			'performanceOverlay.dvRouteBaseLayer' => 'ベースレイヤー',
+			'performanceOverlay.dvRouteBaseLayerHdr10' => 'HDR10 ベースレイヤー',
+			'performanceOverlay.dvRouteBaseLayerHlg' => 'HLG ベースレイヤー',
+			'performanceOverlay.dvRouteBaseLayerSdr' => 'SDR ベースレイヤー',
+			'performanceOverlay.dvRouteReshaped' => 'RPU リシェイプ（gpu-next）',
 			'performanceOverlay.p7Conversion' => 'P7 変換',
 			'performanceOverlay.sampleRate' => 'サンプルレート',
 			'performanceOverlay.pixelFormat' => 'ピクセル形式',
@@ -4662,6 +5436,8 @@ extension on TranslationsJa {
 			'performanceOverlay.tunnelingActive' => '有効',
 			'performanceOverlay.dvRpuFailed' => ({required Object converted, required Object failures}) => '${converted}（${failures}件失敗）',
 			'externalPlayer.title' => '外部プレーヤー',
+			_ => null,
+		} ?? switch (path) {
 			'externalPlayer.useExternalPlayer' => '外部プレーヤーを使用',
 			'externalPlayer.useExternalPlayerDescription' => '動画を別のアプリで開きます',
 			'externalPlayer.selectPlayer' => 'プレーヤーを選択',
@@ -4751,6 +5527,7 @@ extension on TranslationsJa {
 			'metadataEdit.country' => '国',
 			'metadataEdit.collection' => 'コレクション',
 			'metadataEdit.label' => 'ラベル',
+			'metadataEdit.quickTag' => 'クイックタグ…',
 			'matchScreen.match' => '照合…',
 			'matchScreen.fixMatch' => '照合を修正…',
 			'matchScreen.unmatch' => '照合を解除',
@@ -4797,6 +5574,10 @@ extension on TranslationsJa {
 			'seerr.qualityProfile' => '画質プロファイル',
 			'seerr.rootFolder' => 'ルートフォルダ',
 			'seerr.languageProfile' => '言語プロファイル',
+			'seerr.tags' => 'タグ',
+			'seerr.noTags' => 'タグなし',
+			'seerr.defaultOption' => ({required Object name}) => '${name}（デフォルト）',
+			'seerr.animeNote' => 'このシリーズはアニメです。',
 			'seerr.requestSubmitted' => 'リクエストを送信しました',
 			'seerr.requestFailed' => ({required Object error}) => 'リクエストに失敗しました: ${error}',
 			'seerr.requestsLoadFailed' => 'リクエストオプションを読み込めませんでした',
@@ -4808,6 +5589,7 @@ extension on TranslationsJa {
 			'seerr.statusBlocklisted' => 'ブロックリスト登録済み',
 			'seerr.couldNotReach' => ({required Object url, required Object error}) => '${url}に接続できませんでした: ${error}',
 			'seerr.noInstanceAtUrl' => ({required Object url, required Object status}) => '${url}にSeerrインスタンスがありません（HTTP ${status}）',
+			'seerr.behindAuthProxy' => 'Seerrではなく、認証が必要なリバースプロキシ（SSOまたはHTTP認証）が応答しました。Plezyはこれを通じてサインインできません。このアプリではSeerrの/api/v1パスをプロキシから除外するか、Seerrに直接到達するアドレスを使用してください。',
 			'seerr.invalidUrl' => 'https://seerr.example.comのようなサーバーアドレスを入力してください',
 			'seerr.quickConnectUnsupported' => 'このSeerrインスタンスはQuick Connectに対応していません。Seerr 3.4以降が必要です。',
 			'seerr.notInitialized' => 'このSeerrインスタンスでは初回セットアップが完了していません',
@@ -4818,6 +5600,8 @@ extension on TranslationsJa {
 			'seerr.freshCookieRejected' => 'Seerrが新しいセッションクッキーを拒否しました',
 			'seerr.noUserInformation' => 'Seerrからユーザー情報が返されませんでした',
 			'seerr.sessionRejectedAfterReauth' => '再サインイン後にセッションが拒否されました',
+			'seerr.permissionDenied' => 'Seerrがこの操作を拒否しました: アカウントに必要な権限がありません',
+			'seerr.permissionRevoked' => 'これをリクエストする権限がなくなりました',
 			'services.title' => 'サービス',
 			'services.hubSubtitle' => '視聴の進捗を同期して、新しいタイトルをリクエストします。',
 			'services.integrations' => 'インテグレーション',
@@ -4833,6 +5617,8 @@ extension on TranslationsJa {
 			'services.names.simkl' => 'Simkl',
 			'services.names.seerr' => 'Seerr',
 			'services.names.mdblist' => 'MDBList',
+			'services.simklReconnect.title' => 'Simklに再接続',
+			'services.simklReconnect.subtitle' => 'Simklはこの接続で使用しているサインイン方法を廃止します。再接続するとsimkl.comが開き、Plezyを承認できます。Plezyがパスワードを知ることはありません。視聴履歴はSimklに残ります。',
 			'services.deviceCode.title' => ({required Object service}) => '${service} で Plezy を有効化',
 			'services.deviceCode.instructions' => 'QRコードをスキャンするか、以下のアドレスにアクセスしてこのコードを入力してください:',
 			'services.deviceCode.openToActivate' => ({required Object service}) => '${service} を開いて有効化',
