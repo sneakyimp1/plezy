@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -82,16 +81,11 @@ class VisualEffectsController {
     return w / h;
   }
 
-  /// Enable ambient lighting for the current video/player geometry.
-  /// Returns false when the aspect ratios cannot be determined yet.
+  /// Enable ambient lighting for the current picture.
+  /// Returns false when the picture aspect cannot be determined yet.
   Future<bool> _enableAmbientLighting(AmbientLightingService ambientLighting, ShaderProvider shaderProvider) async {
     final videoAspect = await _readVideoAspect();
     if (videoAspect == null) return false;
-
-    // Get player widget aspect ratio
-    final playerSize = _filterManager()?.playerSize;
-    if (playerSize == null || playerSize.height == 0) return false;
-    final outputAspect = playerSize.width / playerSize.height;
 
     // Clear shaders — ambient lighting and shaders are mutually exclusive
     if (shaderProvider.isShaderEnabled) {
@@ -102,7 +96,7 @@ class VisualEffectsController {
     // Force contain mode when enabling ambient lighting
     _filterManager()?.resetToContain();
 
-    await ambientLighting.enable(videoAspect, outputAspect);
+    await ambientLighting.enable(videoAspect);
     return true;
   }
 
@@ -197,10 +191,14 @@ class VisualEffectsController {
     _requestRebuild();
   }
 
-  /// Also used by the pinch-zoom gesture, which mutates the filter
-  /// manager directly during the gesture and toasts once on gesture end.
-  void showZoomToast(double zoomScale) {
+  void _showZoomToast(double zoomScale) {
     _toast.show(Symbols.zoom_in_rounded, t.videoControls.zoomPercent(percent: (zoomScale * 100).round()));
+  }
+
+  /// Reads the item at call time so a change after an in-place episode swap
+  /// keys against the item actually on screen.
+  void _persistZoom(double zoomScale) {
+    unawaited(ScopedPlayerPrefs.write(ScopedPlayerPrefs.videoZoom, _metadata(), zoomScale));
   }
 
   double setZoom(double zoomScale, {bool showToast = true}) {
@@ -209,9 +207,19 @@ class VisualEffectsController {
 
     _ambientLighting()?.disable();
     final next = filterManager.setZoomScale(zoomScale);
-    if (showToast) showZoomToast(next);
+    _persistZoom(next);
+    if (showToast) _showZoomToast(next);
     if (_isMounted()) _requestRebuild();
     return next;
+  }
+
+  /// End of a pinch. The gesture mutates the filter manager directly on
+  /// every tick, so it toasts and persists once, here.
+  void commitPinchZoom() {
+    final zoomScale = _filterManager()?.zoomScale;
+    if (zoomScale == null) return;
+    _showZoomToast(zoomScale);
+    _persistZoom(zoomScale);
   }
 
   void zoomIn() {
@@ -228,16 +236,6 @@ class VisualEffectsController {
     setZoom(1.0);
   }
 
-  /// Update video-aspect-override when player size changes.
-  /// The shader adapts automatically via built-in target_size uniform.
-  void onResize(Size newSize) {
-    final ambientLighting = _ambientLighting();
-    if (ambientLighting == null || !ambientLighting.isEnabled) return;
-    if (newSize.height == 0) return;
-
-    ambientLighting.updateOutputAspect(newSize.width / newSize.height);
-  }
-
   /// Toggle ambient lighting effect on/off
   Future<void> toggleAmbientLighting() async {
     final ambientLighting = _ambientLighting();
@@ -246,7 +244,6 @@ class VisualEffectsController {
 
     if (ambientLighting.isEnabled) {
       await ambientLighting.disable();
-      unawaited(_filterManager()?.updateVideoFilter());
     } else {
       if (!await _enableAmbientLighting(ambientLighting, shaderProvider)) return;
     }

@@ -10,6 +10,7 @@ import '../mpv/mpv.dart';
 import 'settings_binding_owner.dart';
 import 'settings_service.dart';
 import 'shortcut_action.dart';
+import '../utils/app_logger.dart';
 import '../utils/platform_detector.dart';
 import '../utils/player_utils.dart';
 
@@ -116,16 +117,20 @@ class KeyboardShortcutsService extends ChangeNotifier {
 
   Future<void> setHotkey(String action, HotKey? hotkey) {
     return _serializeShortcutMutation(() async {
+      if (ShortcutAction.fromId(action) == null) throw const FormatException('Unknown shortcut action');
       final conflict = hotkey == null ? null : getActionForHotkey(hotkey);
       if (conflict != null && conflict != action) throw HotkeyConflictException(conflict);
-      final next = <String, HotKey?>{..._hotkeys, action: hotkey};
-      validateHotkeys(next);
+      // Only the edited binding is validated. The saved map can already hold
+      // a duplicate (a default added later that matches a custom binding) or
+      // an action a later build retired, and neither may block every edit.
+      // Retired actions bind nothing, so they are dropped here.
+      final next = <String, HotKey?>{
+        for (final MapEntry(:key, :value) in _hotkeys.entries)
+          if (ShortcutAction.fromId(key) != null) key: value,
+        action: hotkey,
+      };
       await _settingsService.write(SettingsService.keyboardHotkeys, next);
     });
-  }
-
-  Future<void> refreshFromStorage() async {
-    _settingsBinding.refresh();
   }
 
   Future<void> resetToDefaults({void Function()? checkCurrent}) {
@@ -244,6 +249,23 @@ class KeyboardShortcutsService extends ChangeNotifier {
     return modifiers.isEmpty ? keyName : '${modifiers.join(' + ')} + $keyName';
   }
 
+  /// Whether [event] presses the key bound to [action] with exactly the
+  /// binding's modifiers held.
+  bool isBoundTo(KeyEvent event, ShortcutAction action) {
+    final hotkey = _hotkeys[action.id];
+    return hotkey != null && _eventMatchesHotkey(event, hotkey);
+  }
+
+  static bool _eventMatchesHotkey(KeyEvent event, HotKey hotkey) {
+    if (event.physicalKey != hotkey.key) return false;
+    final keyboard = HardwareKeyboard.instance;
+    final required = hotkey.modifiers ?? const <HotKeyModifier>[];
+    return keyboard.isShiftPressed == required.contains(HotKeyModifier.shift) &&
+        keyboard.isControlPressed == required.contains(HotKeyModifier.control) &&
+        keyboard.isAltPressed == required.contains(HotKeyModifier.alt) &&
+        keyboard.isMetaPressed == required.contains(HotKeyModifier.meta);
+  }
+
   KeyEventResult handleVideoPlayerKeyEvent(
     KeyEvent event,
     Player player,
@@ -261,13 +283,16 @@ class KeyboardShortcutsService extends ChangeNotifier {
     VoidCallback? onNextEpisode,
     VoidCallback? onPreviousEpisode,
     VoidCallback? onScreenshot,
+
+    /// Called instead of [onScreenshot] when mpv could not take or save the
+    /// screenshot.
+    VoidCallback? onScreenshotFailed,
     VoidCallback? onZoomIn,
     VoidCallback? onZoomOut,
     VoidCallback? onZoomReset,
     VoidCallback? onVolumeUp,
     VoidCallback? onVolumeDown,
     VoidCallback? onToggleMute,
-    ValueChanged<int>? onLiveSeekBy,
 
     /// Persists a speed changed by the speed shortcuts. Supplied by the
     /// player surface so the write can honor the configured persistence
@@ -289,151 +314,118 @@ class KeyboardShortcutsService extends ChangeNotifier {
     final isRepeat = event is KeyRepeatEvent;
     if (event is! KeyDownEvent && !isRepeat) return KeyEventResult.ignored;
 
-    final physicalKey = event.physicalKey;
-    final isShiftPressed = HardwareKeyboard.instance.isShiftPressed;
-    final isControlPressed = HardwareKeyboard.instance.isControlPressed;
-    final isAltPressed = HardwareKeyboard.instance.isAltPressed;
-    final isMetaPressed = HardwareKeyboard.instance.isMetaPressed;
-
     for (final entry in _hotkeys.entries) {
       final hotkey = entry.value;
-      if (hotkey == null) continue;
-
-      if (physicalKey != hotkey.key) continue;
+      if (hotkey == null || !_eventMatchesHotkey(event, hotkey)) continue;
 
       // Null for an id this build does not know: the event is still consumed so
       // a stale binding never leaks through to another handler.
       final action = ShortcutAction.fromId(entry.key);
 
-      final requiredModifiers = hotkey.modifiers ?? [];
-      bool modifiersMatch = true;
-
-      for (final modifier in requiredModifiers) {
-        switch (modifier) {
-          case HotKeyModifier.shift:
-            if (!isShiftPressed) modifiersMatch = false;
-            break;
-          case HotKeyModifier.control:
-            if (!isControlPressed) modifiersMatch = false;
-            break;
-          case HotKeyModifier.alt:
-            if (!isAltPressed) modifiersMatch = false;
-            break;
-          case HotKeyModifier.meta:
-            if (!isMetaPressed) modifiersMatch = false;
-            break;
-          case HotKeyModifier.capsLock:
-            break;
-          case HotKeyModifier.fn:
-            break;
-        }
-        if (!modifiersMatch) break;
-      }
-
-      if (modifiersMatch) {
-        final hasShift = requiredModifiers.contains(HotKeyModifier.shift);
-        final hasControl = requiredModifiers.contains(HotKeyModifier.control);
-        final hasAlt = requiredModifiers.contains(HotKeyModifier.alt);
-        final hasMeta = requiredModifiers.contains(HotKeyModifier.meta);
-
-        if (isShiftPressed != hasShift ||
-            isControlPressed != hasControl ||
-            isAltPressed != hasAlt ||
-            isMetaPressed != hasMeta) {
-          continue;
-        }
-
-        if (isRepeat && !(action?.repeatable ?? false)) {
-          return KeyEventResult.handled;
-        }
-
-        if (action == null ||
-            (action.requiresPlayback && !canControlPlayback) ||
-            (action.requiresMediaNavigation && !canNavigateMediaItems)) {
-          return KeyEventResult.handled;
-        }
-
-        void performSeek(int offsetSeconds) {
-          if (onSeekBy != null) {
-            onSeekBy(offsetSeconds);
-            return;
-          }
-          // Relative live-TV skip: route through the parent accumulator, which
-          // coalesces a rapid burst into one transcode re-open (#1253).
-          if (onLiveSeekBy != null) {
-            onLiveSeekBy(offsetSeconds);
-          } else {
-            final target = clampSeekPosition(player, player.state.position + Duration(seconds: offsetSeconds));
-            unawaited((onSeekRequested ?? player.seek)(target));
-          }
-        }
-
-        switch (action) {
-          case ShortcutAction.playPause:
-            (onPlayPause ?? player.playOrPause).call();
-          case ShortcutAction.volumeUp:
-            onVolumeUp?.call();
-          case ShortcutAction.volumeDown:
-            onVolumeDown?.call();
-          case ShortcutAction.seekForward:
-            performSeek(_seekTimeSmall);
-          case ShortcutAction.seekBackward:
-            performSeek(-_seekTimeSmall);
-          case ShortcutAction.seekForwardLarge:
-            performSeek(_seekTimeLarge);
-          case ShortcutAction.seekBackwardLarge:
-            performSeek(-_seekTimeLarge);
-          case ShortcutAction.fullscreenToggle:
-            onToggleFullscreen?.call();
-          case ShortcutAction.muteToggle:
-            onToggleMute?.call();
-          case ShortcutAction.subtitleToggle:
-            onToggleSubtitles?.call();
-          case ShortcutAction.audioTrackNext:
-            onNextAudioTrack?.call();
-          case ShortcutAction.subtitleTrackNext:
-            onNextSubtitleTrack?.call();
-          case ShortcutAction.chapterNext:
-            onNextChapter?.call();
-          case ShortcutAction.chapterPrevious:
-            onPreviousChapter?.call();
-          case ShortcutAction.episodeNext:
-            onNextEpisode?.call();
-          case ShortcutAction.episodePrevious:
-            onPreviousEpisode?.call();
-          case ShortcutAction.speedIncrease:
-            final newRateUp = (player.state.rate + 0.25).clamp(minimumPlaybackRate, maximumPlaybackRate);
-            unawaited((onRateRequested ?? player.setRate)(newRateUp));
-            onSpeedPersist?.call(newRateUp);
-          case ShortcutAction.speedDecrease:
-            final newRateDown = (player.state.rate - 0.25).clamp(minimumPlaybackRate, maximumPlaybackRate);
-            unawaited((onRateRequested ?? player.setRate)(newRateDown));
-            onSpeedPersist?.call(newRateDown);
-          case ShortcutAction.speedReset:
-            unawaited((onRateRequested ?? player.setRate)(1.0));
-            onSpeedPersist?.call(1.0);
-          case ShortcutAction.subSeekNext:
-            player.command(['sub-seek', '1']);
-          case ShortcutAction.subSeekPrev:
-            player.command(['sub-seek', '-1']);
-          case ShortcutAction.shaderToggle:
-            onToggleShader?.call();
-          case ShortcutAction.skipMarker:
-            onSkipMarker?.call();
-          case ShortcutAction.screenshot:
-            unawaited(player.command(['screenshot', 'subtitles']).then((_) => onScreenshot?.call()));
-          case ShortcutAction.zoomIn:
-            onZoomIn?.call();
-          case ShortcutAction.zoomOut:
-            onZoomOut?.call();
-          case ShortcutAction.zoomReset:
-            onZoomReset?.call();
-        }
+      if (isRepeat && !(action?.repeatable ?? false)) {
         return KeyEventResult.handled;
       }
+
+      if (action == null ||
+          (action.requiresPlayback && !canControlPlayback) ||
+          (action.requiresMediaNavigation && !canNavigateMediaItems)) {
+        return KeyEventResult.handled;
+      }
+
+      void performSeek(int offsetSeconds) {
+        if (onSeekBy != null) {
+          onSeekBy(offsetSeconds);
+          return;
+        }
+        final target = clampSeekPosition(player, player.state.position + Duration(seconds: offsetSeconds));
+        unawaited((onSeekRequested ?? player.seek)(target));
+      }
+
+      void applyRate(double rate) {
+        unawaited((onRateRequested ?? player.setRate)(rate));
+        onSpeedPersist?.call(rate);
+      }
+
+      void stepRate(double delta) {
+        applyRate((player.state.rate + delta).clamp(minimumPlaybackRate, maximumPlaybackRate));
+      }
+
+      switch (action) {
+        case ShortcutAction.playPause:
+          (onPlayPause ?? player.playOrPause).call();
+        case ShortcutAction.volumeUp:
+          onVolumeUp?.call();
+        case ShortcutAction.volumeDown:
+          onVolumeDown?.call();
+        case ShortcutAction.seekForward:
+          performSeek(_seekTimeSmall);
+        case ShortcutAction.seekBackward:
+          performSeek(-_seekTimeSmall);
+        case ShortcutAction.seekForwardLarge:
+          performSeek(_seekTimeLarge);
+        case ShortcutAction.seekBackwardLarge:
+          performSeek(-_seekTimeLarge);
+        case ShortcutAction.fullscreenToggle:
+          onToggleFullscreen?.call();
+        case ShortcutAction.muteToggle:
+          onToggleMute?.call();
+        case ShortcutAction.subtitleToggle:
+          onToggleSubtitles?.call();
+        case ShortcutAction.audioTrackNext:
+          onNextAudioTrack?.call();
+        case ShortcutAction.subtitleTrackNext:
+          onNextSubtitleTrack?.call();
+        case ShortcutAction.chapterNext:
+          onNextChapter?.call();
+        case ShortcutAction.chapterPrevious:
+          onPreviousChapter?.call();
+        case ShortcutAction.episodeNext:
+          onNextEpisode?.call();
+        case ShortcutAction.episodePrevious:
+          onPreviousEpisode?.call();
+        case ShortcutAction.speedIncrease:
+          stepRate(0.25);
+        case ShortcutAction.speedDecrease:
+          stepRate(-0.25);
+        case ShortcutAction.speedReset:
+          applyRate(1.0);
+        case ShortcutAction.subSeekNext:
+          player.command(['sub-seek', '1']);
+        case ShortcutAction.subSeekPrev:
+          player.command(['sub-seek', '-1']);
+        case ShortcutAction.shaderToggle:
+          onToggleShader?.call();
+        case ShortcutAction.skipMarker:
+          onSkipMarker?.call();
+        case ShortcutAction.screenshot:
+          unawaited(_takeScreenshot(player, onSaved: onScreenshot, onFailed: onScreenshotFailed));
+        case ShortcutAction.zoomIn:
+          onZoomIn?.call();
+        case ShortcutAction.zoomOut:
+          onZoomOut?.call();
+        case ShortcutAction.zoomReset:
+          onZoomReset?.call();
+      }
+      return KeyEventResult.handled;
     }
 
     return KeyEventResult.ignored;
+  }
+
+  /// mpv answers a screenshot it could not capture (no frame on the video
+  /// output) or write (unwritable screenshot directory, failed encode) with
+  /// MPV_ERROR_COMMAND, which the native channel raises as a
+  /// [PlatformException]. That is an outcome of the shortcut, not a crash: log
+  /// it and let the surface tell the viewer.
+  static Future<void> _takeScreenshot(Player player, {VoidCallback? onSaved, VoidCallback? onFailed}) async {
+    try {
+      await player.command(['screenshot', 'subtitles']);
+    } on PlatformException catch (error, stackTrace) {
+      appLogger.w('Screenshot command failed', error: error, stackTrace: stackTrace);
+      onFailed?.call();
+      return;
+    }
+    onSaved?.call();
   }
 
   String getActionDisplayName(String action) {
@@ -444,6 +436,7 @@ class KeyboardShortcutsService extends ChangeNotifier {
 
   String? getActionForHotkey(HotKey hotkey) {
     for (final entry in _hotkeys.entries) {
+      if (ShortcutAction.fromId(entry.key) == null) continue;
       final assignedHotkey = entry.value;
       if (assignedHotkey != null && _hotkeyEquals(assignedHotkey, hotkey)) {
         return entry.key;

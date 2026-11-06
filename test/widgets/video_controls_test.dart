@@ -574,6 +574,7 @@ void main() {
       bool physicalEscapeExitsFullscreen = true,
       bool Function()? physicalEscapeExitsFullscreenProvider,
       bool Function()? exitPlayerBeforeChrome,
+      bool Function()? backLeavesPrompt,
       VoidCallback? exitPlayer,
       VoidCallback? navigateHome,
       bool Function()? isActive,
@@ -586,6 +587,7 @@ void main() {
         exitFullscreenIfActive: exitFullscreenIfActive ?? () async => false,
         physicalEscapeExitsFullscreen: physicalEscapeExitsFullscreenProvider ?? () => physicalEscapeExitsFullscreen,
         exitPlayerBeforeChrome: exitPlayerBeforeChrome,
+        backLeavesPrompt: backLeavesPrompt,
         exitPlayer: exitPlayer ?? () {},
         navigateHome: navigateHome ?? () {},
         isActive: isActive,
@@ -676,6 +678,37 @@ void main() {
       expect(promptDismissals, 1, reason: 'prompts keep priority over the mobile exit policy');
       expect(exits, 0);
     });
+
+    for (final (label, key, escapeOwnsFullscreen, leaves) in [
+      ('Back', LogicalKeyboardKey.gameButtonB, true, true),
+      ('a windowed physical Escape', LogicalKeyboardKey.escape, false, true),
+      ('a fullscreen physical Escape', LogicalKeyboardKey.escape, true, false),
+    ]) {
+      testWidgets('$label on a finished-item prompt ${leaves ? 'leaves the player' : 'only dismisses it'} (#2686)', (
+        tester,
+      ) async {
+        final chromeController = PlayerChromeController();
+        addTearDown(chromeController.dispose);
+        var promptDismissals = 0;
+        var exits = 0;
+        final coordinator = coordinatorFor(
+          chromeController,
+          isPromptOpen: () => true,
+          backLeavesPrompt: () => true,
+          dismissPrompt: () => promptDismissals++,
+          physicalEscapeExitsFullscreen: escapeOwnsFullscreen,
+          exitPlayer: () => exits++,
+        );
+        await pumpNavigationFocus(tester, coordinator);
+
+        await tester.sendKeyEvent(key);
+        await tester.pump();
+
+        expect(exits, leaves ? 1 : 0, reason: 'nothing is left to watch behind Play Next');
+        expect(promptDismissals, leaves ? 0 : 1, reason: 'an Escape that owns fullscreen keeps its staged role');
+        expect(chromeController.controlsVisible, isTrue, reason: 'no staged chrome hide on the way out');
+      });
+    }
 
     testWidgets('Back exits on the first press when the route opened with no chrome', (tester) async {
       final chromeController = PlayerChromeController(initiallyVisible: false);
@@ -1250,6 +1283,77 @@ void main() {
       expect(startAutoHide, 1);
       expect(cancelAutoHide, 0);
       expect(player.commandLog.where((entry) => entry == 'play' || entry == 'pause'), isEmpty);
+    });
+  });
+
+  group('desktop timeline key seeking', () {
+    testWidgets('a press at the start of the item commits no seek on release', (tester) async {
+      // The focused timeline coalesces a held arrow into one seek on release.
+      // A first press back while already at 0:00 has nothing to preview and
+      // nothing to commit: it used to seek to the position already occupied.
+      // The forward press proves the same keys do reach the accumulator.
+      LocaleSettings.setLocaleSync(AppLocale.en);
+      await initializeDateFormatting('en');
+      tester.view.physicalSize = const Size(1200, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      resetSharedPreferencesForTest();
+      SettingsService.resetForTesting();
+      final settings = await SettingsService.getInstance();
+      final player = FakeSyncPlayer();
+      addTearDown(player.dispose);
+      final volume = VideoVolumeController(player: player, settings: settings, initialVolume: 100);
+      addTearDown(volume.dispose);
+      final seekEnds = <Duration>[];
+
+      final watchTogether = WatchTogetherProvider();
+      addTearDown(watchTogether.dispose);
+      await tester.pumpWidget(
+        ChangeNotifierProvider<WatchTogetherProvider>.value(
+          value: watchTogether,
+          child: MaterialApp(
+            theme: ThemeData(extensions: const [testMonoTokens]),
+            home: Scaffold(
+              body: SizedBox(
+                width: 1000,
+                height: 700,
+                child: DesktopVideoControls(
+                  useDpadNavigation: true,
+                  player: player,
+                  volumeController: volume,
+                  metadata: testMediaItem(id: 'desktop-timeline'),
+                  onPlayPause: () {},
+                  chapters: const [],
+                  chaptersLoaded: true,
+                  seekTimeSmall: 10,
+                  onSeekToPreviousChapter: () {},
+                  onSeekToNextChapter: () {},
+                  onSeek: (_) {},
+                  onSeekEnd: seekEnds.add,
+                  getReplayIcon: (_) => Icons.replay,
+                  getForwardIcon: (_) => Icons.forward_10,
+                  trackControlsState: const TrackControlsState(canControl: true),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      tester.widget<VideoTimelineBar>(find.byType(VideoTimelineBar)).focusNode!.requestFocus();
+      await tester.pump();
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.arrowLeft);
+      await tester.pump();
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.arrowLeft);
+      await tester.pump();
+      expect(seekEnds, isEmpty, reason: 'nothing to rewind through, so nothing to commit');
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pump();
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pump();
+      expect(seekEnds, [const Duration(seconds: 10)]);
     });
   });
 
@@ -1884,37 +1988,38 @@ void main() {
   });
 
   group('SyncOffsetControl', () {
-    testWidgets('uses 50ms slider steps across ±10s without rendering tick marks', (tester) async {
-      LocaleSettings.setLocaleSync(AppLocale.en);
+    for (final (property, step) in [('audio-delay', 10), ('sub-delay', 50)]) {
+      testWidgets('$property uses ${step}ms slider steps across ±10s without tick marks', (tester) async {
+        LocaleSettings.setLocaleSync(AppLocale.en);
 
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: ThemeData(extensions: const [testMonoTokens]),
-          home: Scaffold(
-            body: SizedBox(
-              width: 700,
-              child: SyncOffsetControl(
-                player: _FakeSyncPlayer(),
-                propertyName: 'sub-delay',
-                initialOffset: 0,
-                onOffsetChanged: (_) async {},
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: ThemeData(extensions: const [testMonoTokens]),
+            home: Scaffold(
+              body: SizedBox(
+                width: 700,
+                child: SyncOffsetControl(
+                  player: _FakeSyncPlayer(),
+                  propertyName: property,
+                  initialOffset: 0,
+                  onOffsetChanged: (_) async {},
+                ),
               ),
             ),
           ),
-        ),
-      );
+        );
 
-      final slider = tester.widget<Slider>(find.byType(Slider));
-      final sliderTheme = tester.widget<SliderTheme>(
-        find.ancestor(of: find.byType(Slider), matching: find.byType(SliderTheme)).first,
-      );
+        final slider = tester.widget<Slider>(find.byType(Slider));
+        final sliderTheme = tester.widget<SliderTheme>(
+          find.ancestor(of: find.byType(Slider), matching: find.byType(SliderTheme)).first,
+        );
 
-      expect(slider.min, -10000);
-      expect(slider.max, 10000);
-      expect(slider.divisions, 400);
-      expect((slider.max - slider.min) / slider.divisions!, 50);
-      expect(sliderTheme.data.tickMarkShape, same(SliderTickMarkShape.noTickMark));
-    });
+        expect(slider.min, -10000);
+        expect(slider.max, 10000);
+        expect((slider.max - slider.min) / slider.divisions!, step);
+        expect(sliderTheme.data.tickMarkShape, same(SliderTickMarkShape.noTickMark));
+      });
+    }
 
     testWidgets('reconciles a failed current write without persisting it', (tester) async {
       final propertyWrite = Completer<void>();
@@ -2092,7 +2197,7 @@ void main() {
       expect(persistedOffsets, [100]);
     });
 
-    testWidgets('step buttons move by 50ms per tap', (tester) async {
+    testWidgets('audio step buttons move by 10ms per tap', (tester) async {
       final persistedOffsets = <int>[];
 
       await tester.pumpWidget(
@@ -2114,15 +2219,15 @@ void main() {
 
       await tester.tap(find.byIcon(Symbols.add_rounded));
       await tester.pump();
-      expect(tester.widget<Slider>(find.byType(Slider)).value, 50);
+      expect(tester.widget<Slider>(find.byType(Slider)).value, 10);
 
       await tester.tap(find.byIcon(Symbols.remove_rounded));
       await tester.pump();
       await tester.tap(find.byIcon(Symbols.remove_rounded));
       await tester.pump();
 
-      expect(tester.widget<Slider>(find.byType(Slider)).value, -50);
-      expect(persistedOffsets, [50, 0, -50]);
+      expect(tester.widget<Slider>(find.byType(Slider)).value, -10);
+      expect(persistedOffsets, [10, 0, -10]);
     });
 
     testWidgets('long-press steps by 1s per tick', (tester) async {

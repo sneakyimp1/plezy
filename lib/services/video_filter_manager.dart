@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:rate_limiter/rate_limiter.dart';
 
+import '../media/video_zoom.dart';
 import '../mpv/mpv.dart';
 
 import '../utils/app_logger.dart';
@@ -17,8 +18,6 @@ import 'ambient_lighting_service.dart';
 /// - Debounced video filter updates on resize events
 /// - Ambient-lighting-friendly reset to contain mode
 class VideoFilterManager {
-  static const double minZoomScale = 0.5;
-  static const double maxZoomScale = 2.0;
   static const double zoomStep = 0.01;
 
   /// How close a pinch has to get to 100%, in whole percent, before it snaps
@@ -47,7 +46,7 @@ class VideoFilterManager {
   final Player player;
 
   /// Whether [Player.setVideoZoom] scales the native video layer itself, so
-  /// the mpv `video-zoom` property must stay 0. On iOS/tvOS the avfoundation
+  /// the mpv `video-zoom` property must stay 0. On iOS/tvOS/macOS the avfoundation
   /// VO re-renders zoomed frames through Core Image, which destroys HDR and
   /// Dolby Vision passthrough — zoom must stay out of mpv's pipeline there.
   final bool nativeVideoZoom;
@@ -64,11 +63,11 @@ class VideoFilterManager {
   /// Store whether ambient lighting was active before entering PiP
   bool? _prePipAmbientLighting;
 
-  /// Ambient lighting service reference - when active, video-aspect-override is managed by ambient lighting
+  /// Ambient lighting service reference, disabled for PiP and restored after it.
   AmbientLightingService? ambientLightingService;
 
   /// Custom video zoom layered on top of the selected fit mode.
-  double _zoomScale = 1.0;
+  double _zoomScale;
 
   /// Current player viewport size
   Size? _playerSize;
@@ -93,9 +92,11 @@ class VideoFilterManager {
     required this.player,
     this.nativeVideoZoom = false,
     int initialBoxFitMode = 0,
+    double initialZoomScale = 1.0,
     Size? initialPlayerSize,
     this.onBoxFitModeChanged,
   }) : _boxFitMode = initialBoxFitMode,
+       _zoomScale = normalizeZoomScale(initialZoomScale),
        _playerSize = initialPlayerSize {
     _debouncedUpdateVideoFilter = debounce(
       updateVideoFilter,
@@ -113,7 +114,7 @@ class VideoFilterManager {
   Size? get playerSize => _playerSize;
 
   static double normalizeZoomScale(double scale) {
-    final clamped = scale.clamp(minZoomScale, maxZoomScale).toDouble();
+    final clamped = scale.clamp(minimumVideoZoom, maximumVideoZoom).toDouble();
     final percent = (clamped * 100).round();
     if (percent == 100) return 1.0;
     return percent / 100;
@@ -216,7 +217,8 @@ class VideoFilterManager {
   /// Writes are diffed against the last applied values and serialized: while a
   /// run is in flight, further calls coalesce into one trailing re-run instead
   /// of interleaving stale writes (pinch zoom calls this per gesture tick).
-  /// When ambient lighting is active, video-aspect-override is managed by ambient lighting.
+  /// Owns `video-aspect-override` (the stretch of fill mode); ambient lighting
+  /// fills through `keepaspect` instead and never writes it.
   Future<void> updateVideoFilter() {
     final running = _updateLoop;
     if (running != null) {
@@ -244,7 +246,6 @@ class VideoFilterManager {
       final boxFitMode = _boxFitMode;
       final zoomScale = _zoomScale;
       final playerSize = _playerSize;
-      final ambientActive = ambientLightingService?.isEnabled == true;
       final coverMode = boxFitMode == 1;
 
       // ExoPlayer handles scaling via AspectRatioFrameLayout (no-op on mpv
@@ -263,7 +264,7 @@ class VideoFilterManager {
 
       // Compute final target values up-front: each mpv write takes effect
       // immediately, so transient intermediate values would flash on screen.
-      String? aspectOverride = ambientActive ? null : 'no';
+      var aspectOverride = 'no';
       if (boxFitMode == 2) {
         // Fill/stretch mode - override aspect ratio to match player (stretches video)
         if (playerSize != null && playerSize.width > 0 && playerSize.height > 0) {
@@ -275,14 +276,7 @@ class VideoFilterManager {
         }
       }
 
-      if (aspectOverride != null) {
-        await _applyProperty('video-aspect-override', aspectOverride);
-      }
-      if (ambientActive) {
-        // Ambient lighting writes video-aspect-override out-of-band, so any
-        // cached value is unreliable; forget it so the next run rewrites it.
-        _appliedProps.remove('video-aspect-override');
-      }
+      await _applyProperty('video-aspect-override', aspectOverride);
       await _applyProperty('sub-ass-force-margins', coverMode || zoomScale > 1.0001 ? 'yes' : 'no');
       await _applyProperty('panscan', coverMode ? '1.0' : '0');
       await _applyProperty('video-zoom', nativeVideoZoom ? '0.0' : videoZoomPropertyForScale(zoomScale).toString());

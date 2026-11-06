@@ -6,12 +6,14 @@ import 'package:provider/provider.dart';
 import '../connection/connection.dart';
 import '../connection/connection_registry.dart';
 import '../media/ids.dart';
+import '../media/library_query.dart';
 import '../media/media_filter.dart';
 import '../media/media_item.dart';
 import '../media/media_kind.dart';
 import '../media/media_library.dart';
 import '../media/media_server_client.dart';
 import '../media/playback_rate.dart';
+import '../media/video_zoom.dart';
 import '../models/player_setting_scope.dart';
 import '../profiles/active_profile_binder.dart';
 import '../profiles/active_profile_provider.dart';
@@ -31,7 +33,6 @@ import 'agent_control_protocol.dart';
 import 'plex_client.dart';
 import 'scoped_player_prefs.dart';
 import 'settings_service.dart';
-import 'shader_service.dart';
 import 'storage_service.dart';
 
 typedef _ApplySetting = Future<Map<String, dynamic>> Function();
@@ -191,8 +192,7 @@ class AgentScopedSettingsCommands {
         type: 'string',
         defaultValue: SettingsService.globalShaderPreset.defaultValue,
         choices: shaderProvider.allPresets.map((p) => p.id).toList(),
-        isSupported: () =>
-            ShaderService.isPlatformSupported && !(Platform.isAndroid && settings.read(SettingsService.useExoPlayer)),
+        isSupported: () => !(Platform.isAndroid && settings.read(SettingsService.useExoPlayer)),
         decode: (v) {
           if (v is! String || shaderProvider.findPresetById(v) == null) _invalid('Select an available shader preset.');
           return v;
@@ -209,6 +209,23 @@ class AgentScopedSettingsCommands {
         defaultValue: SettingsService.defaultBoxFitMode.defaultValue,
         choices: const [0, 1, 2],
         decode: (v) => _integer(v, min: 0, max: 2),
+      ),
+      _playerValue(
+        ScopedPlayerPrefs.videoZoom,
+        settings,
+        guard,
+        item,
+        library,
+        persistence,
+        type: 'number',
+        defaultValue: SettingsService.defaultVideoZoom.defaultValue,
+        constraints: {'minimum': minimumVideoZoom, 'maximum': maximumVideoZoom},
+        decode: (v) {
+          if (v is! num || !v.isFinite || v < minimumVideoZoom || v > maximumVideoZoom) {
+            _invalid('Video zoom is outside the supported range.');
+          }
+          return (v).toDouble();
+        },
       ),
       _playerValue(
         ScopedPlayerPrefs.audioSyncOffset,
@@ -249,6 +266,7 @@ class AgentScopedSettingsCommands {
       SettingsService.playbackSpeedScope,
       SettingsService.shaderPresetScope,
       SettingsService.boxFitScope,
+      SettingsService.videoZoomScope,
       SettingsService.syncOffsetScope,
     ]) {
       entries.add(
@@ -628,62 +646,29 @@ class AgentScopedSettingsCommands {
       ),
     );
     entries.add(
-      _valueEntry(
+      _libraryPrefEntry(
         guard,
-        'grouping',
-        'string',
-        'nextLibraryOpen',
+        storage,
+        globalKey,
+        LibraryPreference.grouping,
         defaultValue: defaultGrouping,
         choices: groupingOptions,
-        read: () => {
-          'value': normalizeLibraryBrowseGrouping(
-            library,
-            storage.getLibraryGrouping(globalKey),
-            canGroupByFolders: folders,
-          ),
-          'storedOverride': storage.getLibraryPreferenceOverride(
-            globalKey,
-            LibraryPreference.grouping,
-            profileId: guard.profileId,
-          ),
-        },
-        normalize: (v) => _choice(v, groupingOptions),
-        write: (v, reset) => reset
-            ? storage.resetLibraryPreference(
-                globalKey,
-                LibraryPreference.grouping,
-                profileId: guard.profileId,
-                checkCurrent: guard.check,
-              )
-            : storage.saveLibraryGrouping(globalKey, v as String, profileId: guard.profileId),
+        current: () =>
+            normalizeLibraryBrowseGrouping(library, storage.getLibraryGrouping(globalKey), canGroupByFolders: folders),
+        save: (v) => storage.saveLibraryGrouping(globalKey, v, profileId: guard.profileId),
       ),
     );
     final tabs = visibleLibraryTabs(library).map((t) => t.name).toList();
     entries.add(
-      _valueEntry(
+      _libraryPrefEntry(
         guard,
-        'tab',
-        'string',
-        'nextLibraryOpen',
+        storage,
+        globalKey,
+        LibraryPreference.tab,
         defaultValue: tabs.first,
         choices: tabs,
-        read: () => {
-          'value': storage.getLibraryTab(globalKey) ?? tabs.first,
-          'storedOverride': storage.getLibraryPreferenceOverride(
-            globalKey,
-            LibraryPreference.tab,
-            profileId: guard.profileId,
-          ),
-        },
-        normalize: (v) => _choice(v, tabs),
-        write: (v, reset) => reset
-            ? storage.resetLibraryPreference(
-                globalKey,
-                LibraryPreference.tab,
-                profileId: guard.profileId,
-                checkCurrent: guard.check,
-              )
-            : storage.saveLibraryTab(globalKey, v as String, profileId: guard.profileId),
+        current: () => storage.getLibraryTab(globalKey) ?? tabs.first,
+        save: (v) => storage.saveLibraryTab(globalKey, v, profileId: guard.profileId),
       ),
     );
     if (requested == null || requested == 'sort') {
@@ -762,8 +747,13 @@ class AgentScopedSettingsCommands {
       guard.check();
       final choices = <String, List<String>>{};
       for (final filter in result.filters) {
-        if (filter.filterType == 'boolean') {
+        if (filter.isBoolean) {
           choices[filter.filter] = const ['1'];
+        } else if (!filter.hasValueList) {
+          // Free text, sizes, durations and dates have no value endpoint;
+          // listing them would GET the server root and fill the advertised
+          // domain with whatever that returns.
+          choices[filter.filter] = const [];
         } else {
           final values =
               result.cachedValues[filter.filter] ??
@@ -772,8 +762,17 @@ class AgentScopedSettingsCommands {
           choices[filter.filter] = values.map((v) => libraryFilterValueId(v.key, filter.filter)).toList();
         }
       }
-      List<Map<String, dynamic>> domain(Map<String, String> values) => [
-        for (final entry in values.entries) {'filterId': entry.key, 'valueId': entry.value},
+      // The operator is part of the clause, not decoration: a range is two
+      // clauses on one field, so projecting it away would make `read` output
+      // that `normalize` rejects as a duplicate, and would silently rewrite
+      // "2000 or later" as "exactly 2000".
+      List<Map<String, dynamic>> domain(List<LibraryFilter> clauses) => [
+        for (final clause in clauses)
+          {
+            'filterId': clause.field,
+            'valueIds': clause.values,
+            if (clause.op != LibraryFilterOperator.is_) 'op': clause.op.id,
+          },
       ];
       entries.add(
         _valueEntry(
@@ -783,7 +782,12 @@ class AgentScopedSettingsCommands {
           'nextLibraryOpen',
           defaultValue: const [],
           choices: [
-            for (final filter in result.filters) {'filterId': filter.filter, 'valueIds': choices[filter.filter]},
+            for (final filter in result.filters)
+              {
+                'filterId': filter.filter,
+                'valueIds': choices[filter.filter],
+                'operators': [for (final op in filter.operators) op.id],
+              },
           ],
           read: () {
             final resolved = domain(storage.getLibraryFilters(sectionId: globalKey));
@@ -792,25 +796,50 @@ class AgentScopedSettingsCommands {
               LibraryPreference.filters,
               profileId: guard.profileId,
             );
-            final override = stored is Map
-                ? domain({for (final entry in stored.entries) entry.key.toString(): entry.value.toString()})
-                : null;
+            final override = stored is List<LibraryFilter> ? domain(stored) : null;
             return {'value': resolved, 'storedOverride': override, 'resolvedValue': resolved};
           },
           normalize: (v) {
-            if (v is! List || v.length > result.filters.length) {
-              _invalid('Filters must be a bounded array of filter/value pairs.');
+            if (v is! List || v.length > result.filters.length * 2) {
+              _invalid('Filters must be a bounded array of filter clauses.');
             }
-            final selected = <String, String>{};
+            final selected = <LibraryFilter>[];
+            // A field may carry two clauses — a lower and an upper bound —
+            // so identity is the field plus its comparison, not the field.
+            final seen = <String>{};
             for (final raw in v) {
               final value = agentObject(raw, 'filter');
-              _only(value, const {'filterId', 'valueId'});
+              _only(value, const {'filterId', 'valueIds', 'op'});
               final id = agentString(value, 'filterId');
-              final valueId = agentString(value, 'valueId');
-              if (selected.containsKey(id) || !(choices[id]?.contains(valueId) ?? false)) {
+              final rawValues = value['valueIds'];
+              if (rawValues is! List || rawValues.isEmpty || rawValues.length > 32) {
+                _invalid('Each filter needs between one and thirty-two value ids.');
+              }
+              final rawOp = value['op'];
+              if (rawOp != null && rawOp is! String) _invalid('The op must be an operator id.');
+              final op = rawOp == null ? LibraryFilterOperator.is_ : LibraryFilterOperator.fromId(rawOp as String);
+              if (op == null) _invalid('An unknown filter operator was selected.');
+              final filter = result.filters.where((f) => f.filter == id).firstOrNull;
+              if (filter == null || !seen.add('$id\u0000${op.id}')) {
                 _invalid('An unavailable or duplicate filter was selected.');
               }
-              selected[id] = valueId;
+              if (!filter.operators.contains(op)) {
+                _invalid('This server cannot evaluate that comparison for the filter.');
+              }
+              final allowed = choices[id] ?? const [];
+              final valueIds = <String>[];
+              for (final rawValue in rawValues) {
+                if (rawValue is! String || rawValue.isEmpty) {
+                  _invalid('Each filter value must be a nonempty string.');
+                }
+                // Fields with no enumerable values (free text, sizes, dates)
+                // take arbitrary input; the rest are held to the listing.
+                if ((filter.isBoolean || filter.hasValueList) && !allowed.contains(rawValue)) {
+                  _invalid('An unavailable filter value was selected.');
+                }
+                valueIds.add(rawValue);
+              }
+              selected.add(LibraryFilter(field: id, op: op, values: valueIds));
             }
             return selected;
           },
@@ -821,7 +850,7 @@ class AgentScopedSettingsCommands {
                   profileId: guard.profileId,
                   checkCurrent: guard.check,
                 )
-              : storage.saveLibraryFilters(v as Map<String, String>, sectionId: globalKey, profileId: guard.profileId),
+              : storage.saveLibraryFilters(v as List<LibraryFilter>, sectionId: globalKey, profileId: guard.profileId),
         ),
       );
     }
@@ -1098,6 +1127,35 @@ class AgentScopedSettingsCommands {
     },
   );
 
+  /// A per-library string choice keyed by [preference]'s name. `value` is the
+  /// effective choice, `storedOverride` the raw per-profile override (null
+  /// when the library follows the default); reset removes only that override.
+  _ScopedSetting _libraryPrefEntry(
+    _ScopedGuard guard,
+    StorageService storage,
+    String globalKey,
+    LibraryPreference preference, {
+    required String defaultValue,
+    required List<String> choices,
+    required String Function() current,
+    required Future<void> Function(String value) save,
+  }) => _valueEntry(
+    guard,
+    preference.name,
+    'string',
+    'nextLibraryOpen',
+    defaultValue: defaultValue,
+    choices: choices,
+    read: () => {
+      'value': current(),
+      'storedOverride': storage.getLibraryPreferenceOverride(globalKey, preference, profileId: guard.profileId),
+    },
+    normalize: (v) => _choice(v, choices),
+    write: (v, reset) => reset
+        ? storage.resetLibraryPreference(globalKey, preference, profileId: guard.profileId, checkCurrent: guard.check)
+        : save(v as String),
+  );
+
   _ScopedSetting _readOnly(
     String key,
     String type,
@@ -1170,7 +1228,7 @@ class _ScopedGuard {
       multi.hasExplicitVisibleServerFilter &&
       multi.serverIds.contains(id) &&
       multi.expectedServerIds.contains(id) &&
-      !multi.authErrorServerIds.contains(id);
+      !multi.refusedServerIds.contains(id);
 
   void checkProfileIdentity() {
     context.checkCurrent(requireProfile: true);

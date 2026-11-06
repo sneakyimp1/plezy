@@ -6,8 +6,9 @@ import '../../models/trackers/anime_lists_mapping.dart';
 import '../../models/trackers/fribb_mapping_row.dart';
 import '../../utils/external_ids.dart';
 import 'anime_episode_progress_resolver.dart';
-import 'anime_lists_mapping_store.dart';
-import 'fribb_mapping_store.dart';
+import 'anime_lists_index.dart';
+import 'anime_mappings_store.dart';
+import 'fribb_index.dart';
 import 'future_coalescer.dart';
 
 /// Paired ID output: always-present Plex external IDs (tvdb/imdb/tmdb) plus
@@ -62,8 +63,8 @@ class TrackerRatingContext {
 /// external IDs (used by Trakt and by Simkl for non-anime matches) and Fribb
 /// anime IDs (used by MAL/AniList, and by Simkl for anime precision).
 /// Episodes resolve against the show's GUIDs because Fribb only maps
-/// show-level external IDs. Anime-Lists XML is used when available to
-/// disambiguate same-season split-cour episode ranges by AniDB id.
+/// show-level external IDs. Anime-Lists' episode mappings disambiguate
+/// same-season split-cour episode ranges by AniDB id.
 ///
 /// A HAMA-matched Plex library supplies an AniDB id and nothing else. That is
 /// Fribb's own primary key, so it resolves an anime directly — but Anime-Lists
@@ -73,7 +74,7 @@ class TrackerRatingContext {
 ///
 /// The Fribb lookup is skipped when [needsFribb] returns false — set this way
 /// for Trakt (which never uses anime IDs) and for a Simkl-only configuration,
-/// so those users don't pay the 5.6 MB mapping download they'll never need.
+/// so those users don't pay the anime mappings download they'll never need.
 class TrackerIdResolver {
   final MediaServerClient _client;
   final FribbMappingLookup _store;
@@ -94,8 +95,8 @@ class TrackerIdResolver {
     AnimeEpisodeProgressLookup? animeProgress,
   }) : _client = client,
        _needsFribb = needsFribb ?? _returnTrue,
-       _store = store ?? FribbMappingStore.instance,
-       _animeLists = animeLists ?? AnimeListsMappingStore.instance,
+       _store = store ?? AnimeMappingsStore.instance,
+       _animeLists = animeLists ?? AnimeMappingsStore.instance,
        _animeProgress = animeProgress ?? AnimeEpisodeProgressResolver(client);
 
   static bool _returnTrue() => true;
@@ -107,7 +108,6 @@ class TrackerIdResolver {
   Future<ExternalIds> _fetchExternalIds(String itemId) =>
       _externalIdLoads.run(itemId, () => _client.fetchExternalIds(itemId));
 
-  /// Resolve IDs for a movie.
   Future<TrackerIds?> resolveForMovie(String itemId) async {
     if (_cache.containsKey(itemId)) return _cache[itemId];
 
@@ -212,6 +212,7 @@ class TrackerIdResolver {
     if (!_needsFribb()) return _withoutAnimeMapping(external);
     final anidbId = _usableAnidbId(external, season: isMovie ? null : isEpisodeSeason);
     final rows = await _store.lookup(
+      movie: isMovie,
       anidbId: anidbId,
       tvdbId: external.tvdb,
       tmdbId: external.tmdb,
@@ -220,7 +221,14 @@ class TrackerIdResolver {
     final animeMatch = isMovie || isEpisodeSeason == null || episodeNumber == null
         ? null
         : await _lookupAnimeEpisodeMatchByCoordinate(external, isEpisodeSeason, episodeNumber);
-    final row = isMovie ? _pickMovieRow(rows) : _pickShowRow(rows, season: isEpisodeSeason, animeMatch: animeMatch);
+    // An AniDB special (anidbseason 0) is numbered S1, S2… beside its entry's
+    // regular episodes, and the list trackers have nowhere to count it: its
+    // number written as progress would rewind or complete the main series.
+    // Trackers that address the episode by its external ids still get it.
+    if (animeMatch != null && animeMatch.anidbSeason == 0) return _withoutAnimeMapping(external);
+    final row = isMovie
+        ? _pickMovieRow(rows)
+        : _pickShowRow(rows, season: isEpisodeSeason, anidbId: anidbId, animeMatch: animeMatch);
     final anime = row == null ? null : AnimeIds.fromFribb(row);
     return TrackerIds(
       external: external,
@@ -237,7 +245,8 @@ class TrackerIdResolver {
     );
   }
 
-  /// The id set with no Fribb mapping attached, for trackers that never use one.
+  /// The id set with no Fribb mapping attached, for trackers that never use one
+  /// and for an episode no anime entry counts.
   ///
   /// Null for an AniDB-only item: Trakt and Simkl are the only trackers that
   /// report `needsFribb == false`, and neither speaks AniDB, so handing them a
@@ -262,8 +271,10 @@ class TrackerIdResolver {
   Future<TrackerIds?> _buildShowRating(ExternalIds external, {int? season}) async {
     if (!external.hasAny) return null;
     if (!_needsFribb()) return _withoutAnimeMapping(external);
+    final anidbId = _usableAnidbId(external, season: season);
     final rows = await _store.lookup(
-      anidbId: _usableAnidbId(external, season: season),
+      movie: false,
+      anidbId: anidbId,
       tvdbId: external.tvdb,
       tmdbId: external.tmdb,
       imdbId: external.imdb,
@@ -276,7 +287,7 @@ class TrackerIdResolver {
     if (animeIds.length == 1) {
       row = _rowForAnidb(rows, animeIds.single);
     } else if (animeIds.isEmpty) {
-      row = _pickShowRow(rows, season: season, animeMatch: null);
+      row = _pickShowRow(rows, season: season, anidbId: anidbId, animeMatch: null);
     }
 
     return TrackerIds(external: external, anime: row == null ? null : AnimeIds.fromFribb(row));
@@ -327,8 +338,9 @@ class TrackerIdResolver {
     if (rows.isEmpty) return null;
     final movies = rows.where((r) => r.isMovie);
     if (movies.isNotEmpty) return movies.first;
-    // Fall back to any row if no explicit MOVIE row matches — some rows have
-    // no type field.
+    // Fall back to any row if no explicit MOVIE row matches: the lookup only
+    // searched movie-namespace ids, and some rows have no type field while TMDB
+    // lists some OVAs and specials as films.
     return rows.first;
   }
 
@@ -336,28 +348,53 @@ class TrackerIdResolver {
   /// sharing the same show-level external ID (split-cour anime), prefer the
   /// one whose `season.tvdb` or `season.tmdb` matches the Plex episode's
   /// season; otherwise prefer regular TV/ONA rows.
-  FribbMappingRow? _pickShowRow(List<FribbMappingRow> rows, {int? season, AnimeEpisodeMatch? animeMatch}) {
+  FribbMappingRow? _pickShowRow(
+    List<FribbMappingRow> rows, {
+    int? season,
+    int? anidbId,
+    AnimeEpisodeMatch? animeMatch,
+  }) {
     if (rows.isEmpty) return null;
 
     final match = animeMatch;
     if (match != null) return _rowForAnidb(rows, match.anidbId);
 
+    // A usable AniDB id names its entry outright: HAMA numbers that entry as
+    // season 1 whatever season Fribb places it in.
+    if (anidbId != null) {
+      final row = _rowForAnidb(rows, anidbId);
+      if (row != null) return row;
+    }
+
+    var candidates = rows;
     if (season != null) {
       for (final row in rows) {
         if (row.tvdbSeason == season || row.tmdbSeason == season) return row;
       }
+      // A row mapped to a season describes that season alone, so a season
+      // Fribb has not mapped yet (a new cour, typically) must not land on
+      // another one — every episode would rewrite a finished season 1 entry
+      // as a rewatch. An unmapped row covers the show in absolute numbering
+      // and still applies, but never to specials, which that numbering leaves
+      // out.
+      if (season <= 0) return null;
+      candidates = [
+        for (final row in rows)
+          if (!_hasSeasonMapping(row)) row,
+      ];
+      if (candidates.isEmpty) return null;
     }
 
     // No season match — prefer regular TV/ONA rows over movies/OVAs/specials.
-    for (final row in rows) {
+    for (final row in candidates) {
       if (_isRegularSeriesRow(row)) return row;
     }
 
     // Fall back to the first non-MOVIE row (prefer series-like entries).
-    for (final row in rows) {
+    for (final row in candidates) {
       if (!row.isMovie) return row;
     }
-    return rows.first;
+    return candidates.first;
   }
 
   FribbMappingRow? _rowForAnidb(List<FribbMappingRow> rows, int anidbId) {

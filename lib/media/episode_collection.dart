@@ -140,10 +140,10 @@ MediaItem? firstUnwatchedEpisode(List<MediaItem> episodes) {
   return null;
 }
 
-/// Orders episodes into the **aired watch order** — the sequence they're meant
-/// to be played in: primarily by air date ([MediaItem.originallyAvailableAt]),
-/// so a Special that aired between two regular episodes is played between them,
-/// the way Plex's own play queue and clients do (#1416).
+/// Orders episodes into the **aired watch order**: primarily by air date
+/// ([MediaItem.originallyAvailableAt]), so a Special that aired between two
+/// regular episodes is played between them, as Plex orders an `/allLeaves`
+/// play queue (#1416). Mis-dated regular episodes move with their dates.
 ///
 /// Episodes without a usable air date sort *after* dated ones, falling back to
 /// [compareEpisodesSpecialsLast]. So undated Specials never wedge into the
@@ -212,9 +212,10 @@ SpecialsOrdering effectiveSpecialsOrdering() =>
 ///   ([compareEpisodesSpecialsLast], #1952);
 /// - [SpecialsOrdering.respectServer] — this function has no server order to
 ///   respect, so it falls back to Specials-last: the safe order for "next N"
-///   cuts (#1414) and offline auto-advance. Online queue builders implement
-///   the mode themselves: `createShowPlayQueue` picks the Plex source URI and
-///   the Jellyfin/Plex `fetchClientSideEpisodeQueue` overrides decide between
+///   cuts (#1414) and offline auto-advance, and the order of Plex's own
+///   sequential show queue. Online queue builders implement the mode
+///   themselves: `createShowPlayQueue` picks the Plex queue source and the
+///   Jellyfin `fetchClientSideEpisodeQueue` override decides between
 ///   preserving the response order and calling back into this sort.
 void sortEpisodesByWatchOrder(List<MediaItem> episodes, {SpecialsOrdering? ordering}) {
   final mode = ordering ?? effectiveSpecialsOrdering();
@@ -328,19 +329,22 @@ List<MediaItem> normalizeSeasonEpisodes(
   required MediaItem show,
   required MediaItem season,
 }) {
+  final fallback = season.libraryId != null ? season : show;
+  final fallbackIsSeason = fallback.kind == MediaKind.season;
+  final fallbackGrandparentTitle = _fallbackGrandparentTitle(fallback, isShow: fallback.kind == MediaKind.show);
   return episodes
       .where((episode) => episode.kind == MediaKind.episode)
       .map(
-        (episode) => _withFallbackLibrary(
-          episode.copyWith(
-            serverId: show.serverId ?? episode.serverId,
-            serverName: show.serverName ?? episode.serverName,
-            grandparentId: show.id,
-            grandparentTitle: show.title ?? episode.grandparentTitle,
-            parentId: episode.parentId ?? season.id,
-            parentIndex: episode.parentIndex ?? season.index,
-          ),
-          season.libraryId != null ? season : show,
+        (episode) => episode.copyWith(
+          serverId: show.serverId ?? episode.serverId ?? fallback.serverId,
+          serverName: show.serverName ?? episode.serverName ?? fallback.serverName,
+          libraryId: episode.libraryId ?? fallback.libraryId,
+          libraryTitle: episode.libraryTitle ?? fallback.libraryTitle,
+          grandparentId: show.id,
+          grandparentTitle: show.title ?? episode.grandparentTitle ?? fallbackGrandparentTitle,
+          parentId: episode.parentId ?? season.id,
+          parentTitle: episode.parentTitle ?? (fallbackIsSeason ? fallback.title : null),
+          parentIndex: episode.parentIndex ?? season.index,
         ),
       )
       .toList();

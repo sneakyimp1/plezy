@@ -77,6 +77,7 @@ class _FakeAggregationService extends DataAggregationService {
   Set<String> onDeckFailedServerIds = const {};
   Set<String> hubFailedServerIds = const {};
   List<MediaItem> Function() onDeckResult = () => const [];
+  Map<String, List<MediaItem>> onDeckCopies = const {};
   List<MediaHub> Function() hubsResult = () => const [];
   Future<void>? onDeckGate;
   Future<void>? hubGate;
@@ -98,6 +99,7 @@ class _FakeAggregationService extends DataAggregationService {
     final items = onDeckResult();
     return (
       items: limit != null && items.length > limit ? items.sublist(0, limit) : items,
+      copies: onDeckCopies,
       observedItems: [for (final item in items) (item: item, clientScope: null)],
       succeededServerIds: onDeckSucceededServerIds ?? serverIds ?? const {'server_1'},
       cancelledServerIds: onDeckCancelledServerIds,
@@ -456,6 +458,52 @@ void main() {
     expect(shelfSyncs.single.$2.first.viewOffsetMs, 30000);
   });
 
+  group('copies behind a merged Continue Watching row', () {
+    final hd = _item('movie-hd', kind: MediaKind.movie).copyWith(durationMs: 100000, viewOffsetMs: 10000);
+    final uhd = _item('movie-uhd', kind: MediaKind.movie).copyWith(durationMs: 100000, viewOffsetMs: 20000);
+
+    setUp(() {
+      aggregation.onDeckResult = () => [hd, _item('other')];
+      aggregation.onDeckCopies = {
+        hd.globalKey: [uhd, hd],
+      };
+    });
+
+    test('progress on an absorbed copy swaps it into the row without refetching', () async {
+      await provider.load();
+      await pumpEventQueue();
+      final onDeckCallsBefore = aggregation.onDeckCalls;
+
+      WatchStateNotifier().notifyProgress(item: uhd, viewOffset: 40000, duration: 100000);
+      await pumpEventQueue();
+
+      // The row shows the copy last played on this device, as the next
+      // fetch's dedup would; the copy it replaced stays one pick away.
+      expect(provider.onDeck.map((item) => item.id), ['movie-uhd', 'other']);
+      expect(provider.onDeck.first.viewOffsetMs, 40000);
+      expect(provider.continueWatchingCopiesOf(provider.onDeck.first).map((copy) => (copy.id, copy.viewOffsetMs)), [
+        ('movie-uhd', 40000),
+        ('movie-hd', 10000),
+      ]);
+      expect(aggregation.onDeckCalls, onDeckCallsBefore);
+    });
+
+    test('deleting an absorbed copy takes it out of the row\'s choices at once', () async {
+      await provider.load();
+      expect(provider.continueWatchingCopiesOf(hd).map((copy) => copy.id), ['movie-uhd', 'movie-hd']);
+      // Hold the follow-up refetch so only the immediate reaction is observed.
+      final refetch = Completer<void>();
+      aggregation.onDeckGate = refetch.future;
+
+      DeletionNotifier().notifyDeletedItem(item: uhd);
+      await pumpEventQueue();
+
+      expect(provider.onDeck.map((item) => item.id), ['movie-hd', 'other']);
+      expect(provider.continueWatchingCopiesOf(hd), isEmpty);
+      refetch.complete();
+    });
+  });
+
   test('watched-threshold progress refreshes continue watching only', () async {
     final playing = _item('ep-1').copyWith(durationMs: 100000, viewOffsetMs: 80000);
     aggregation.onDeckResult = () => [playing];
@@ -713,6 +761,24 @@ void main() {
     expect(provider.hubs.single.items.map((i) => i.serverId), ['server_1']);
   });
 
+  test('a watched event evicts only the emitting server\'s copy of a colliding id', () async {
+    aggregation.onDeckResult = () => [_item('42', serverId: 'server_1'), _item('42', serverId: 'server_2')];
+    await provider.load();
+
+    // Hold the trailing refresh open so the immediate eviction is observable.
+    final gate = Completer<void>();
+    aggregation.onDeckGate = gate.future;
+    aggregation.onDeckStarted = Completer<void>();
+
+    WatchStateNotifier().notifyWatched(item: _item('42', serverId: 'server_1'));
+    await aggregation.onDeckStarted!.future;
+
+    expect(provider.onDeck.map((item) => item.globalKey), ['server_2:42']);
+
+    gate.complete();
+    await pumpEventQueue();
+  });
+
   test('library order change re-sorts hubs without any refetch', () async {
     aggregation.hubsResult = () => [_hub('hub-lib2', libraryId: 'lib-2'), _hub('hub-lib1', libraryId: 'lib-1')];
     await provider.load();
@@ -786,6 +852,47 @@ void main() {
     expect(binderProvider.errorMessage, isNotNull);
   });
 
+  test('nothing is fetched while the profile binder runs (#2599)', () async {
+    // A profile switch mounts the new session while the shared Plex client
+    // still carries the previous user's token: a fetch here returns that
+    // user's rows, and a pass still in flight at settle swallows the prime.
+    isBinding = true;
+    await provider.load();
+    await provider.refreshContinueWatching();
+
+    expect(aggregation.onDeckCalls, 0);
+    expect(aggregation.hubCalls, 0);
+    expect(provider.isLoading, isTrue);
+    expect(provider.areHubsLoading, isTrue);
+    expect(provider.isLoadInFlight, isFalse, reason: 'the settle prime must not ride along with a skipped pass');
+    expect(shelfSyncs, isEmpty);
+
+    isBinding = false;
+    aggregation.onDeckResult = () => [_item('rebound')];
+    aggregation.hubsResult = () => [_hub('rebound-hub')];
+    await provider.load();
+
+    expect(provider.onDeck.map((i) => i.id), ['rebound']);
+    expect(provider.hubs.map((h) => h.id), ['rebound-hub']);
+  });
+
+  test('a rebind of the active profile keeps loaded content on screen', () async {
+    aggregation.onDeckResult = () => [_item('a')];
+    aggregation.hubsResult = () => [_hub('hub-1')];
+    await provider.load();
+
+    isBinding = true;
+    await provider.load();
+    await provider.refreshContinueWatching();
+
+    expect(aggregation.onDeckCalls, 1);
+    expect(aggregation.hubCalls, 1);
+    expect(provider.isLoading, isFalse);
+    expect(provider.areHubsLoading, isFalse);
+    expect(provider.onDeck.map((i) => i.id), ['a']);
+    expect(provider.hubs.map((h) => h.id), ['hub-1']);
+  });
+
   // A pass in which zero servers succeeded is never authoritative: it must
   // not wipe existing content, and it may only commit "loaded, empty" when
   // the failure is settled (no cancellations, binder not running). The
@@ -822,13 +929,20 @@ void main() {
   });
 
   test('zero-success pass during profile binding stays loading (no cancellations)', () async {
-    // Covers the timeout-during-bind window: every fetch failed while the
-    // binder was still wiring servers, with no cancellation marker.
-    isBinding = true;
+    // A bind that starts mid-pass: every fetch failed while the binder was
+    // wiring servers, with no cancellation marker.
+    final gate = Completer<void>();
+    aggregation.onDeckGate = gate.future;
+    aggregation.hubGate = gate.future;
+    aggregation.onDeckStarted = Completer<void>();
     aggregation.onDeckSucceededServerIds = const {};
     aggregation.hubSucceededServerIds = const {};
 
-    await provider.load();
+    final pass = provider.load();
+    await aggregation.onDeckStarted!.future;
+    isBinding = true;
+    gate.complete();
+    await pass;
 
     expect(provider.isLoading, isTrue);
     expect(provider.areHubsLoading, isTrue);

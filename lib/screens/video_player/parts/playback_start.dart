@@ -5,14 +5,7 @@ extension _VideoPlayerPlaybackStartMethods on VideoPlayerScreenState {
     final currentPlayer = player;
     if (!mounted || _shuttingDown || currentPlayer == null) return;
     final attempt = _beginPlaybackAttempt(currentPlayer);
-    final watchTogether = _activeWatchTogetherSession();
-    final watchTogetherLease = widget.watchTogetherLease;
-    _watchTogetherLease = watchTogetherLease;
-    if (watchTogether != null && watchTogetherLease != null && watchTogetherLease.isCurrent) {
-      _watchTogetherProvider = watchTogether;
-      watchTogether.onPlayerMediaSwitched = _handlePlayerMediaSwitch;
-    }
-    bool isCurrentStart() => attempt.isCurrent && (watchTogetherLease == null || watchTogetherLease.isCurrent);
+    bool isCurrentStart() => attempt.isCurrent;
     _firstFrame.resetRenderedForAttempt();
     _hasFatalPlaybackError = false;
     _dismissPlaybackFailure();
@@ -21,6 +14,15 @@ extension _VideoPlayerPlaybackStartMethods on VideoPlayerScreenState {
 
     // Live TV mode: bypass standard playback initialization
     if (widget.isLive) {
+      // Owned until the start commits or fails: a zap from a source that
+      // does not wait for the on-screen controls (OS media session, companion
+      // remote) would otherwise tune alongside it, and whichever adopted last
+      // would orphan the other's session. The attempt above idled the gate.
+      final startLease = _transitionGate.tryAcquire(PlaybackTransition.startingLive);
+      final replacement = _live.beginReplacement();
+      var committed = false;
+      _FrameRateStartupPlan? frameRatePlan;
+      int? openedStream;
       try {
         _firstFrame.resetUiForOpen();
         await currentPlayer.requestAudioFocus();
@@ -59,10 +61,19 @@ extension _VideoPlayerPlaybackStartMethods on VideoPlayerScreenState {
             'beginsAt=$programBeginsAt, elapsed=${elapsed}s (need >60 for dialog)',
           );
           if (elapsed > 60) {
-            widget.launchObserver?.mark('blocked', blocker: 'confirmationRequired');
-            final watchFromStart = await _showWatchFromStartDialog(effectiveStart, nowEpoch);
-            widget.launchObserver?.mark('opening');
-            if (!mounted || !attempt.isCurrent) return;
+            // A launcher/automation deep link may pre-answer the prompt.
+            final bool? watchFromStart;
+            switch (widget.live!.startPosition) {
+              case LiveTvStartPosition.beginning:
+                watchFromStart = true;
+              case LiveTvStartPosition.live:
+                watchFromStart = false;
+              case LiveTvStartPosition.ask:
+                widget.launchObserver?.mark('blocked', blocker: 'confirmationRequired');
+                watchFromStart = await _showWatchFromStartDialog(effectiveStart, nowEpoch);
+                widget.launchObserver?.mark('opening');
+                if (!mounted || !attempt.isCurrent) return;
+            }
             if (watchFromStart == true) {
               offsetSeconds = useProgramStart ? offsetProgramStart : captureBuffer.seekStartSeconds.round();
             }
@@ -90,16 +101,17 @@ extension _VideoPlayerPlaybackStartMethods on VideoPlayerScreenState {
           targetEpoch = captureBuffer == null ? null : _live.streamStartEpoch.round();
         }
 
-        await _openLiveStream(
+        frameRatePlan = _armLiveDisplayNegotiation(currentPlayer, attempt.outcome);
+        final holdPlaybackStart = frameRatePlan?.holdPlaybackStart ?? false;
+        final opened = await _openLiveStream(
           currentPlayer,
           streamUrl,
           targetEpoch: targetEpoch,
-          play: !PlatformDetector.isAutomotive(),
+          play: !holdPlaybackStart && !PlatformDetector.isAutomotive(),
           timeShifted: offsetSeconds != null,
         );
+        if (opened) openedStream = _live.streamGeneration;
         if (!attempt.isCurrent) return;
-
-        _trackManager?.cacheExternalSubtitles(const []);
 
         await _initVideoFilterAndPip();
         if (!mounted || !attempt.isCurrent) return;
@@ -112,16 +124,25 @@ extension _VideoPlayerPlaybackStartMethods on VideoPlayerScreenState {
           });
           _trackManager?.mediaInfo = null;
         }
-        if (PlatformDetector.isAutomotive()) {
+        // A held start is resumed by the display gate, which applies the
+        // same vehicle check.
+        if (PlatformDetector.isAutomotive() && !holdPlaybackStart) {
           await _playWithPlaybackIntent(currentPlayer);
         }
+        committed = attempt.isCurrent;
       } catch (e, st) {
         appLogger.e('Failed to start live TV playback', error: e, stackTrace: st);
         unawaited(_sendLiveTimeline('stopped'));
         widget.launchObserver?.mark('failed', failure: 'playbackFailed');
         if (mounted && !_shuttingDown) {
-          showErrorSnackBar(context, e.toString());
+          showErrorSnackBar(context, t.liveTv.playbackStartFailed(reason: localizedErrorReason(e)));
           unawaited(_handleBackButton());
+        }
+      } finally {
+        if (startLease != null) _finishLiveReplacement(startLease, replacement, committed: committed);
+        final plan = frameRatePlan;
+        if (plan != null) {
+          await _releaseLiveDisplayNegotiation(currentPlayer, plan, stream: committed ? openedStream : null);
         }
       }
       return;
@@ -154,6 +175,15 @@ extension _VideoPlayerPlaybackStartMethods on VideoPlayerScreenState {
           serverManager: context.read<MultiServerProvider>().serverManager,
           database: context.read<AppDatabase>(),
         );
+        // The resume the open will land on, so a stacked download opens the
+        // file holding it.
+        final startPosition = await _resolveOpenResumePosition(
+          metadata: _currentMetadata,
+          isOffline: true,
+          offlineWatchService: offlineWatchService,
+          requested: widget.initialPosition,
+        );
+        if (!attempt.isCurrent) return;
         playbackContext = await playbackResolver.resolve(
           PlaybackInitializationOptions(
             metadata: _currentMetadata,
@@ -165,6 +195,7 @@ extension _VideoPlayerPlaybackStartMethods on VideoPlayerScreenState {
             preferredSubtitleTrack: _preferredSubtitleTrack,
             sessionIdentifier: _playbackSessionIdentifier,
             transcodeSessionId: _playbackTranscodeSessionId,
+            startPosition: startPosition,
           ),
           offlineLibraryMode: true,
         );
@@ -252,10 +283,9 @@ extension _VideoPlayerPlaybackStartMethods on VideoPlayerScreenState {
         isLocalMedia: _isOfflinePlayback,
         isCurrent: isCurrentStart,
         outcome: attempt.outcome,
-        // When a Watch Together session is active the sync layer owns the
-        // start: open paused everywhere and let the host coordinate one
-        // simultaneous group start.
-        watchTogetherOwnsStart: () => watchTogetherLease != null && _watchTogetherOwnsPlaybackStart(),
+        // In a Watch Together room the room owns the start: open paused and
+        // let the room start everyone together.
+        watchTogetherOwnsStart: _watchTogetherOwnsPlaybackStart,
         resolveShouldAutoStart: (wtOwnsStart) => !wtOwnsStart,
         resumePosition: () => resumePosition,
         mediaClient: () => mediaClientForTracks,
@@ -282,18 +312,12 @@ extension _VideoPlayerPlaybackStartMethods on VideoPlayerScreenState {
           return mounted && player == currentPlayer;
         },
         afterMediaOpened: (shouldAutoPlay, holdPlaybackStart, wtOwnsStart) async {
-          // Attach player to Watch Together session for sync (if in session).
-          // With a frame-rate startup gate pending, sync readiness waits for
+          // Hand the opened file to the Watch Together room (a host shares
+          // it). With a frame-rate startup gate pending, the room waits for
           // its release so the group start can't fire mid display switch.
-          if (isCurrentStart() && !_isOfflinePlayback && watchTogetherLease != null) {
-            _commitWatchTogetherSelection(
-              watchTogether,
-              watchTogetherLease,
-              _currentMetadata,
-              resumePosition ?? Duration.zero,
-            );
+          if (isCurrentStart()) {
             if (wtOwnsStart && holdPlaybackStart) wtStartupHold = Completer<void>();
-            _attachToWatchTogetherSession(lease: watchTogetherLease, startupHold: wtStartupHold?.future);
+            _bindWatchTogether(startupHold: wtStartupHold?.future);
           }
           if (shouldAutoPlay && PlatformDetector.isAutomotive()) {
             await _playWithPlaybackIntent(currentPlayer);
@@ -393,6 +417,7 @@ extension _VideoPlayerPlaybackStartMethods on VideoPlayerScreenState {
       return;
     }
     _hasFatalPlaybackError = true;
+    _detachWatchTogetherAfterFailure();
     if (_playbackFailureMessage == null) _presentPlaybackFailure(message);
   }
 }

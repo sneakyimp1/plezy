@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:plezy/i18n/strings.g.dart';
+import 'package:plezy/models/audio_channel_limit.dart';
 import 'package:plezy/models/audio_quality_preset.dart';
 import 'package:plezy/models/transcode_quality_preset.dart';
 import 'package:plezy/services/base_shared_preferences_service.dart';
@@ -231,6 +231,71 @@ void main() {
     });
   });
 
+  group('SettingsService audio channel limit', () {
+    for (final (downmix, limit) in [(true, AudioChannelLimit.stereo), (false, AudioChannelLimit.original)]) {
+      test('migrates the legacy downmix toggle=$downmix to ${limit.name} (#2442)', () async {
+        resetSharedPreferencesForTest(initialAsync: {'audio_downmix': downmix});
+        final settings = await SettingsService.getInstance();
+
+        expect(settings.read(SettingsService.audioChannelLimit), limit);
+        expect(settings.prefs.containsKey('audio_downmix'), isFalse, reason: 'migrated once, then forgotten');
+      });
+    }
+
+    test('reset clears an unread legacy stereo downmix instead of restoring it', () async {
+      resetSharedPreferencesForTest(initialAsync: const {'audio_downmix': true});
+      var settings = await SettingsService.getInstance();
+
+      await settings.resetAllSettings();
+      expect(settings.read(SettingsService.audioChannelLimit), AudioChannelLimit.original);
+
+      BaseSharedPreferencesService.resetForTesting();
+      SettingsService.resetForTesting();
+      settings = await SettingsService.getInstance();
+      expect(settings.read(SettingsService.audioChannelLimit), AudioChannelLimit.original);
+    });
+  });
+
+  group('SettingsService deinterlace mode', () {
+    for (final (enabled, mode) in [(true, DeinterlaceMode.video), (false, DeinterlaceMode.off)]) {
+      test('migrates the legacy deinterlace toggle=$enabled to ${mode.name} (#2710)', () async {
+        resetSharedPreferencesForTest(initialAsync: {'deinterlace': enabled});
+        final settings = await SettingsService.getInstance();
+
+        expect(settings.read(SettingsService.deinterlaceMode), mode);
+        expect(settings.prefs.containsKey('deinterlace'), isFalse, reason: 'migrated once, then forgotten');
+      });
+    }
+  });
+
+  group('SettingsService player setting scopes', () {
+    test('a keyed scope chosen before #2722 drops its stale Everywhere value once', () async {
+      resetSharedPreferencesForTest(
+        initialAsync: {
+          SettingsService.playbackSpeedScope.key: 'library',
+          SettingsService.defaultPlaybackSpeed.key: 1.5,
+          SettingsService.shaderPresetScope.key: 'off',
+          SettingsService.globalShaderPreset.key: 'nvscaler',
+        },
+      );
+      var settings = await SettingsService.getInstance();
+
+      expect(settings.read(SettingsService.defaultPlaybackSpeed), 1.0);
+      expect(
+        settings.read(SettingsService.globalShaderPreset),
+        'nvscaler',
+        reason: "Don't save applies the Everywhere value to every playback",
+      );
+
+      // A later fallback write (an item without a library) survives restarts.
+      await settings.write(SettingsService.defaultPlaybackSpeed, 1.25);
+      BaseSharedPreferencesService.resetForTesting();
+      SettingsService.resetForTesting();
+      settings = await SettingsService.getInstance();
+      expect(settings.read(SettingsService.defaultPlaybackSpeed), 1.25);
+    });
+  });
+
   group('SettingsService music quality', () {
     test('defaults to original and persists changes by enum name', () async {
       var settings = await SettingsService.getInstance();
@@ -310,16 +375,6 @@ void main() {
   });
 
   group('SettingsService platform gates', () {
-    test('audio passthrough stays available on Apple TV and non-macOS desktop, never macOS', () {
-      // Platform.is* is unmockable, so the desktop expectation follows the
-      // test host: hidden on a macOS host (#1964), available elsewhere.
-      expect(PlatformDetector.supportsAudioPassthrough(), Platform.isMacOS ? isFalse : isTrue);
-
-      TvDetectionService.debugSetAppleTVOverride(true);
-
-      expect(PlatformDetector.supportsAudioPassthrough(), isTrue);
-    });
-
     test('audio passthrough defaults off on a non-TV host and honors explicit writes', () async {
       final settings = await SettingsService.getInstance();
       // The Android-TV default-on branch depends on Platform.isAndroid, which
@@ -341,15 +396,6 @@ void main() {
 
       await settings.write(SettingsService.audioPassthrough, false);
       expect(settings.read(SettingsService.audioPassthrough), isFalse);
-    });
-
-    test('forces external player off on Apple TV even when stored enabled', () async {
-      final settings = await SettingsService.getInstance();
-      await settings.write(SettingsService.useExternalPlayer, true);
-
-      TvDetectionService.debugSetAppleTVOverride(true);
-
-      expect(settings.read(SettingsService.useExternalPlayer), isFalse);
     });
 
     test('forces auto PiP off on Apple TV even when stored enabled', () async {
@@ -406,33 +452,50 @@ void main() {
     test('typed writes canonicalize valid bases and reject invalid replacement', () async {
       final settings = await SettingsService.getInstance();
 
-      await settings.write(SettingsService.customRelayUrl, '  HTTPS://Relay.Example.Test/path///  ');
-      expect(settings.read(SettingsService.customRelayUrl), 'https://relay.example.test/path');
+      await settings.write(SettingsService.watchPartyRelayUrl, '  HTTPS://Relay.Example.Test/path///  ');
+      expect(settings.read(SettingsService.watchPartyRelayUrl), 'https://relay.example.test/path');
 
       await expectLater(
-        settings.write(SettingsService.customRelayUrl, 'ws://relay.example.test'),
+        settings.write(SettingsService.watchPartyRelayUrl, 'ws://relay.example.test'),
         throwsFormatException,
       );
-      expect(settings.read(SettingsService.customRelayUrl), 'https://relay.example.test/path');
+      expect(settings.read(SettingsService.watchPartyRelayUrl), 'https://relay.example.test/path');
 
-      await settings.write(SettingsService.customRelayUrl, '   ');
-      expect(settings.read(SettingsService.customRelayUrl), isNull);
+      await settings.write(SettingsService.watchPartyRelayUrl, '   ');
+      expect(settings.read(SettingsService.watchPartyRelayUrl), isNull);
     });
 
     test('startup canonicalizes valid history and removes invalid history', () async {
       resetSharedPreferencesForTest(
-        initialAsync: {SettingsService.customRelayUrl.key: '  http://Relay.Example.Test:8080/prefix// '},
+        initialAsync: {SettingsService.watchPartyRelayUrl.key: '  http://Relay.Example.Test:8080/prefix// '},
       );
       SettingsService.resetForTesting();
       var settings = await SettingsService.getInstance();
-      expect(settings.read(SettingsService.customRelayUrl), 'http://relay.example.test:8080/prefix');
+      expect(settings.read(SettingsService.watchPartyRelayUrl), 'http://relay.example.test:8080/prefix');
 
       resetSharedPreferencesForTest(
-        initialAsync: {SettingsService.customRelayUrl.key: 'https://relay.example.test/path?wrong=route'},
+        initialAsync: {SettingsService.watchPartyRelayUrl.key: 'https://relay.example.test/path?wrong=route'},
       );
       SettingsService.resetForTesting();
       settings = await SettingsService.getInstance();
-      expect(settings.read(SettingsService.customRelayUrl), isNull);
+      expect(settings.read(SettingsService.watchPartyRelayUrl), isNull);
+    });
+
+    test('startup removes the former Watch Together relay without adopting it', () async {
+      resetSharedPreferencesForTest(initialAsync: {'custom_relay_url': 'https://relay.example.test/legacy'});
+      SettingsService.resetForTesting();
+      final settings = await SettingsService.getInstance();
+
+      expect(settings.prefs.containsKey('custom_relay_url'), isFalse);
+      expect(settings.read(SettingsService.watchPartyRelayUrl), isNull);
+    });
+
+    test('the relay setting persists under its own key', () async {
+      final settings = await SettingsService.getInstance();
+      await settings.write(SettingsService.watchPartyRelayUrl, 'https://relay.example.test');
+
+      expect(SettingsService.watchPartyRelayUrl.key, 'watch_party_relay_url');
+      expect(settings.prefs.getString('watch_party_relay_url'), 'https://relay.example.test');
     });
   });
 

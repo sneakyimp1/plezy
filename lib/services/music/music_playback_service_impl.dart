@@ -12,12 +12,15 @@ import '../../media/ids.dart';
 import '../../media/lyrics.dart';
 import '../../media/media_item.dart';
 import '../../media/media_server_client.dart';
+import '../../models/companion_remote/remote_command.dart';
 import '../../mpv/models.dart';
 import '../../mpv/player/player.dart';
+import '../../mpv/player/player_native.dart';
 import '../../utils/app_logger.dart';
 import '../../utils/notification_permission.dart';
 import '../../utils/platform_detector.dart';
 import '../car_ux_restrictions_service.dart';
+import '../companion_remote/companion_remote_receiver.dart';
 import '../discord_rpc_service.dart';
 import '../driver_distraction.dart';
 import '../media_control_router.dart';
@@ -28,6 +31,7 @@ import '../playback_coordinator.dart';
 import '../playback_launch_observer.dart';
 import '../playback_initialization_service.dart';
 import '../playback_progress_tracker.dart';
+import '../preferred_audio_device.dart';
 import '../settings_service.dart';
 import 'music_hardware_transport.dart';
 import 'music_playback_service.dart';
@@ -163,6 +167,10 @@ class MusicPlaybackServiceImpl extends MusicPlaybackService with WidgetsBindingO
   /// lifecycle as [_mediaControls]; routes to the same methods as
   /// [_mediaControlRouter].
   MusicHardwareTransportHandler? _hardwareTransport;
+
+  /// Companion-remote transport buttons (a paired phone), installed on
+  /// [CompanionRemoteReceiver] for the same lifecycle as [_hardwareTransport].
+  late final bool Function(RemoteCommandType type) _remoteTransport = _handleRemoteTransport;
 
   MusicPlaybackStatus _status = MusicPlaybackStatus.idle;
   MediaItem? _currentTrack;
@@ -745,7 +753,38 @@ class MusicPlaybackServiceImpl extends MusicPlaybackService with WidgetsBindingO
     if (isNew && _player == player && !player.disposed && _volume != 100.0) {
       unawaited(player.setVolume(_volume));
     }
+    if (isNew && _player == player && !player.disposed) await _applyAudioPassthrough(player);
+    if (isNew && _player == player && !player.disposed) await _applyAudioOutputDevice(player);
     return player;
+  }
+
+  /// Apple platforms hand AC3/EAC3 to the system Dolby decoder, the only path
+  /// that keeps Atmos in music (#2595). It shares the video Audio Passthrough
+  /// setting, honoring the same normalization override the settings tile shows,
+  /// and lands before the first open so the audio output starts on it rather
+  /// than reloading mid-track; like video, a changed setting takes effect on
+  /// the next player. Elsewhere passthrough claims the output device (exclusive
+  /// WASAPI, IEC 61937 AudioTrack), which music playback does not opt into.
+  Future<void> _applyAudioPassthrough(Player player) async {
+    if (!PlayerNative.usesAppleAudioOutput) return;
+    final settings = SettingsService.instanceOrNull;
+    if (settings == null) return;
+    if (!settings.read(SettingsService.audioPassthrough) || settings.read(SettingsService.audioNormalization)) return;
+    try {
+      await player.setAudioPassthrough(true);
+    } catch (error, stackTrace) {
+      appLogger.w('Music: audio passthrough not applied; decoding instead', error: error, stackTrace: stackTrace);
+    }
+  }
+
+  /// The output picked in the video player's Audio Output menu, before the
+  /// first open so the track starts there instead of moving mid-play. A pick
+  /// made while this core is alive lands on the next one: video playback
+  /// disposes it when it claims the session.
+  Future<void> _applyAudioOutputDevice(Player player) async {
+    final settings = SettingsService.instanceOrNull;
+    if (settings == null) return;
+    await applyPreferredAudioDevice(player, settings.read(SettingsService.audioOutputDevice));
   }
 
   void _wirePlayerStreams(Player player) {
@@ -1097,6 +1136,25 @@ class MusicPlaybackServiceImpl extends MusicPlaybackService with WidgetsBindingO
       onSkipForward: () => unawaited(_seekRelative(_defaultSkipInterval)),
       onSkipBackward: () => unawaited(_seekRelative(-_defaultSkipInterval)),
     )..register();
+    CompanionRemoteReceiver.instance.musicTransport = _remoteTransport;
+  }
+
+  bool _handleRemoteTransport(RemoteCommandType type) {
+    if (_disposed || _currentTrack == null) return false;
+    final Future<void> Function()? action = switch (type) {
+      RemoteCommandType.play => play,
+      RemoteCommandType.pause => pause,
+      RemoteCommandType.playPause => togglePlayPause,
+      RemoteCommandType.nextTrack => next,
+      RemoteCommandType.previousTrack => previous,
+      RemoteCommandType.stop => stop,
+      RemoteCommandType.seekForward => () => _seekRelative(_defaultSkipInterval),
+      RemoteCommandType.seekBackward => () => _seekRelative(-_defaultSkipInterval),
+      _ => null,
+    };
+    if (action == null) return false;
+    unawaited(action());
+    return true;
   }
 
   void _syncControlsAvailability() {
@@ -1561,20 +1619,14 @@ class MusicPlaybackServiceImpl extends MusicPlaybackService with WidgetsBindingO
   void setRepeatMode(MusicRepeatMode mode) {
     if (_queue.repeatMode == mode) return;
     _queue.repeatMode = mode;
-    _rearmIfNeeded();
-    _syncControlsAvailability();
-    _persistSessionSnapshot();
-    notifyListeners();
+    _afterQueueEdit();
   }
 
   @override
   void toggleShuffle() {
     if (_queue.isEmpty) return;
     _queue.toggleShuffle();
-    _rearmIfNeeded();
-    _syncControlsAvailability();
-    _persistSessionSnapshot();
-    notifyListeners();
+    _afterQueueEdit();
   }
 
   @override
@@ -1591,20 +1643,14 @@ class MusicPlaybackServiceImpl extends MusicPlaybackService with WidgetsBindingO
       unawaited(_advanceTo(_queue.cursor));
       return;
     }
-    _rearmIfNeeded();
-    _syncControlsAvailability();
-    _persistSessionSnapshot();
-    notifyListeners();
+    _afterQueueEdit();
   }
 
   @override
   void reorder(int from, int to) {
     if (from == to) return;
     _queue.move(from, to);
-    _rearmIfNeeded();
-    _syncControlsAvailability();
-    _persistSessionSnapshot();
-    notifyListeners();
+    _afterQueueEdit();
   }
 
   @override
@@ -1637,16 +1683,17 @@ class MusicPlaybackServiceImpl extends MusicPlaybackService with WidgetsBindingO
     } else {
       _queue.addToEnd(tracks);
     }
-    _rearmIfNeeded();
-    _syncControlsAvailability();
-    _persistSessionSnapshot();
-    notifyListeners();
+    _afterQueueEdit();
   }
 
   @override
   void clearUpcoming() {
     if (_queue.isEmpty) return;
     _queue.clearUpcoming();
+    _afterQueueEdit();
+  }
+
+  void _afterQueueEdit() {
     _rearmIfNeeded();
     _syncControlsAvailability();
     _persistSessionSnapshot();
@@ -1758,6 +1805,8 @@ class MusicPlaybackServiceImpl extends MusicPlaybackService with WidgetsBindingO
     // that tears the session down.
     _hardwareTransport?.unregister();
     _hardwareTransport = null;
+    final receiver = CompanionRemoteReceiver.instance;
+    if (identical(receiver.musicTransport, _remoteTransport)) receiver.musicTransport = null;
     for (final sub in _playerSubs) {
       unawaited(sub.cancel());
     }

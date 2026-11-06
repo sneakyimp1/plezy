@@ -12,11 +12,6 @@ import 'input_mode_tracker.dart';
 import 'owned_focus_node_binding.dart';
 import 'key_event_utils.dart';
 
-String _describeFocusableKey(KeyEvent event) {
-  return 'type=${event.runtimeType} logical=${event.logicalKey.keyLabel}/${event.logicalKey.keyId} '
-      'physical=${event.physicalKey.usbHidUsage} deviceType=${event.deviceType} character=${event.character}';
-}
-
 void _logFocusableWrapper(String message) {
   TextInputDiagnostics.log('FocusableWrapper', message);
 }
@@ -80,7 +75,6 @@ class _RenderPaintScale extends RenderProxyBox {
 /// A wrapper widget that makes its child focusable with D-pad navigation support.
 ///
 class FocusableWrapper extends StatefulWidget {
-  /// The child widget to wrap.
   final Widget child;
 
   /// Called when the item is selected (Enter/Select/GamepadA).
@@ -161,19 +155,20 @@ class FocusableWrapper extends StatefulWidget {
   /// Short press triggers [onSelect].
   final bool enableLongPress;
 
-  /// Whether to use background color instead of border for focus indicator.
-  /// Useful for video controls where outline doesn't look good.
+  /// Whether to use a translucent background fill instead of a border for the
+  /// focus indicator.
   final bool useBackgroundFocus;
 
-  /// Custom color for the focus border. Only used when [useBackgroundFocus] is false.
-  /// Useful for filled buttons where the default primary border blends in.
+  /// Custom focus color: the border color, or the fill when
+  /// [useBackgroundFocus] is set. Useful for filled buttons where the default
+  /// primary border blends in, and for controls over video, which pass
+  /// [FocusTheme.onMediaFocusFill] instead of the theme-derived fill.
   final Color? focusColor;
 
   /// Whether to disable the scale animation on focus.
   /// Useful for elements like sliders where scaling looks odd.
   final bool disableScale;
 
-  /// Scale used for the focus animation.
   final double focusScale;
 
   /// Whether to draw a glow around the focused widget.
@@ -403,6 +398,12 @@ class _FocusableWrapperState extends State<FocusableWrapper> with SingleTickerPr
 
       if (!position.maxScrollExtent.isFinite) return;
       final targetOffset = (currentOffset + scrollDelta).clamp(position.minScrollExtent, position.maxScrollExtent);
+      // A scroll that would not move this position is not a no-op inside a
+      // NestedScrollView: an inner animateTo also drives the outer position to
+      // its extent, collapsing a floating header. A grid that fits only while
+      // that header is hidden then alternates between the inner and outer
+      // scrollable on every move and the header bounces (#2916).
+      if ((targetOffset - currentOffset).abs() < 0.5) return;
 
       position.animateTo(targetOffset, duration: const Duration(milliseconds: 200), curve: Curves.easeInOut);
     });
@@ -419,7 +420,7 @@ class _FocusableWrapperState extends State<FocusableWrapper> with SingleTickerPr
     KeyEventResult finish(KeyEventResult result, String reason) {
       if (diagnosticsEnabled) {
         _logFocusableWrapper(
-          'node=${node.debugLabel} result=$result reason=$reason key=(${_describeFocusableKey(event)}) '
+          'node=${node.debugLabel} result=$result reason=$reason key=(${describeKeyEvent(event)}) '
           'onNav(up=${widget.onNavigateUp != null},down=${widget.onNavigateDown != null},'
           'left=${widget.onNavigateLeft != null},right=${widget.onNavigateRight != null}) '
           'onSelect=${widget.onSelect != null} onBack=${widget.onBack != null}',
@@ -429,7 +430,7 @@ class _FocusableWrapperState extends State<FocusableWrapper> with SingleTickerPr
     }
 
     if (diagnosticsEnabled) {
-      _logFocusableWrapper('node=${node.debugLabel} received key=(${_describeFocusableKey(event)})');
+      _logFocusableWrapper('node=${node.debugLabel} received key=(${describeKeyEvent(event)})');
     }
 
     if (SelectKeyUpSuppressor.consumeIfSuppressed(event)) {

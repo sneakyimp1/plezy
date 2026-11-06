@@ -6,6 +6,7 @@ import 'package:plezy/media/ids.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:plezy/media/library_query.dart';
 import 'package:plezy/media/media_backend.dart';
+import 'package:plezy/media/media_library.dart';
 import 'package:plezy/media/media_item.dart';
 import 'package:plezy/media/media_kind.dart';
 import 'package:plezy/media/media_playlist.dart';
@@ -33,6 +34,7 @@ class _RecordingJellyfinClient implements JellyfinClient {
   final List<MediaItem> playableFolderDescendantsResponse;
   final List<MediaItem> seriesEpisodesResponse;
   final List<MediaItem> playlistItemsResponse;
+  final List<MediaItem> randomLibraryVideosResponse;
   final Completer<void>? playableDescendantsGate;
   final Completer<void>? playableFolderDescendantsGate;
   final Completer<void>? seriesEpisodesGate;
@@ -45,12 +47,14 @@ class _RecordingJellyfinClient implements JellyfinClient {
   final List<String> fetchPlayableFolderDescendantsCalls = [];
   final List<String> fetchSeriesEpisodesCalls = [];
   final List<({String id, int offset, int limit})> fetchPlaylistItemsCalls = [];
+  final List<({String libraryId, int limit})> fetchRandomLibraryVideosCalls = [];
 
   _RecordingJellyfinClient({
     this.playableDescendantsResponse = const [],
     this.playableFolderDescendantsResponse = const [],
     this.seriesEpisodesResponse = const [],
     this.playlistItemsResponse = const [],
+    this.randomLibraryVideosResponse = const [],
     this.playableDescendantsGate,
     this.playableFolderDescendantsGate,
     this.seriesEpisodesGate,
@@ -82,9 +86,13 @@ class _RecordingJellyfinClient implements JellyfinClient {
   }
 
   @override
-  Future<List<MediaItem>> fetchPlaylistItems(String id, {int offset = 0, int limit = 100}) async {
-    final page = await fetchPlaylistPage(id, start: offset, size: limit);
-    return page.items;
+  Future<List<MediaItem>> fetchRandomLibraryVideos(
+    String libraryId, {
+    required int limit,
+    AbortController? abort,
+  }) async {
+    fetchRandomLibraryVideosCalls.add((libraryId: libraryId, limit: limit));
+    return randomLibraryVideosResponse;
   }
 
   @override
@@ -443,9 +451,15 @@ void main() {
 
       expect(result, isA<PlayQueueSuccess>());
       expect(navigated.single.viewOffsetMs, 0);
-      // Queue items keep their server offsets — only the launched copy is
-      // stripped; the in-player override covers later queue items.
-      expect(playback.loadedItems.every((m) => m.viewOffsetMs == 120_000), isTrue);
+      // The launched copy is the queue's own entry: membership is by identity,
+      // and the player drops a queue that does not hold the item it opened.
+      expect(playback.isItemInActiveQueue(navigated.single), isTrue);
+      // The other queue items keep their server offsets; the in-player
+      // override covers them.
+      expect(
+        playback.loadedItems.where((m) => !identical(m, navigated.single)).every((m) => m.viewOffsetMs == 120_000),
+        isTrue,
+      );
     });
 
     testWidgets('shuffled launch keeps the resume offset when the pref is off', (tester) async {
@@ -641,6 +655,43 @@ void main() {
       expect(result, isA<PlayQueueEmpty>());
       expect(playback.isQueueActive, isFalse);
       expect(didNavigate, isFalse);
+    });
+
+    testWidgets('library shuffle queues the server\'s random sample, stamped with the library', (tester) async {
+      final ctx = await pumpContext(tester);
+      final sample = [_movie('m1', serverId: null), _ep('e1'), _clip('v1')];
+      final fakeClient = _RecordingJellyfinClient(randomLibraryVideosResponse: sample);
+      final playback = PlaybackStateProvider();
+      final navigated = <MediaItem>[];
+
+      final launcher = JellyfinSequentialLauncher(
+        context: ctx,
+        clientForTesting: fakeClient,
+        playbackStateForTesting: playback,
+        navigateForTesting: (m) async => navigated.add(m),
+      );
+
+      const library = MediaLibrary(
+        id: 'lib-movies',
+        backend: MediaBackend.jellyfin,
+        title: 'Movies',
+        kind: MediaKind.movie,
+        serverId: 'srv-jf',
+        serverName: 'Home Jellyfin',
+      );
+
+      final result = await launcher.launchShuffledLibrary(library: library, showLoadingIndicator: false);
+
+      expect(result, isA<PlayQueueSuccess>());
+      expect(fakeClient.fetchRandomLibraryVideosCalls, [
+        (libraryId: 'lib-movies', limit: JellyfinSequentialLauncher.libraryShuffleQueueSize),
+      ]);
+      expect(playback.loadedItems.map((m) => m.id).toSet(), {'m1', 'e1', 'v1'});
+      // The player's per-library preferences and server routing read these.
+      expect(playback.loadedItems.every((m) => m.serverId == 'srv-jf'), isTrue);
+      expect(playback.loadedItems.every((m) => m.libraryId == 'lib-movies' && m.libraryTitle == 'Movies'), isTrue);
+      expect(playback.isShuffleActive, isTrue);
+      expect(navigated.single, same(playback.currentQueueItem));
     });
 
     testWidgets('launchShuffledShow rejects non-show/season kinds', (tester) async {

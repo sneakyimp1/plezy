@@ -44,6 +44,7 @@ class PlexHomeService {
   final Map<String, int> _refreshGenerations = {};
   final Map<String, Future<bool>> _activeRefreshes = {};
   final Map<String, Future<void>> _commitBarriers = {};
+  final Set<Future<void>> _registryCalls = {};
   final Map<String, String> _durablyCommittedCacheJson = {};
   final Set<String> _knownConnectionIds = {};
   int _lifecycleEpoch = 0;
@@ -81,16 +82,7 @@ class PlexHomeService {
   /// connection changes, install the refresh timer, or issue a refresh.
   Future<void> hydrate() {
     if (_disposed) return Future.value();
-    final pending = _hydrateFuture;
-    if (pending != null) return pending;
-
-    final epoch = _lifecycleEpoch;
-    final future = _hydrate(epoch).catchError((Object error, StackTrace stackTrace) {
-      _hydrateFuture = null;
-      Error.throwWithStackTrace(error, stackTrace);
-    });
-    _hydrateFuture = future;
-    return future;
+    return _runOnce(_hydrateFuture, (future) => _hydrateFuture = future, _hydrate);
   }
 
   /// Start observing connections and refreshing Plex Home users.
@@ -99,15 +91,20 @@ class PlexHomeService {
   /// half-initialized cache or storage handle.
   Future<void> start() {
     if (_disposed || _started) return Future.value();
-    final pending = _startFuture;
-    if (pending != null) return pending;
+    return _runOnce(_startFuture, (future) => _startFuture = future, _start);
+  }
 
-    final epoch = _lifecycleEpoch;
-    final future = _start(epoch).catchError((Object error, StackTrace stackTrace) {
-      _startFuture = null;
+  /// Memoize [body] in a lifecycle slot: a [pending] run is shared, a failed
+  /// run clears the slot so the next call retries, and [body] receives the
+  /// epoch captured at scheduling time so it can bail once [clearAll] or
+  /// [dispose] has moved the service on.
+  Future<void> _runOnce(Future<void>? pending, void Function(Future<void>?) slot, Future<void> Function(int) body) {
+    if (pending != null) return pending;
+    final future = body(_lifecycleEpoch).catchError((Object error, StackTrace stackTrace) {
+      slot(null);
       Error.throwWithStackTrace(error, stackTrace);
     });
-    _startFuture = future;
+    slot(future);
     return future;
   }
 
@@ -124,7 +121,7 @@ class PlexHomeService {
     await _reloadStorageCacheIfNeeded(_storage!);
     if (!_isLifecycleCurrent(epoch)) return;
 
-    final current = await _connections.list();
+    final current = await _registryCall(_connections.list());
     if (!_isLifecycleCurrent(epoch)) return;
     final plexIds = current.whereType<PlexAccountConnection>().map((c) => c.id).toSet();
     var changed = false;
@@ -139,19 +136,7 @@ class PlexHomeService {
 
     for (final conn in current.whereType<PlexAccountConnection>()) {
       if (!_isLifecycleCurrent(epoch)) return;
-      final raw = _storage!.getPlexHomeUsersCacheJson(conn.id);
-      final cached = _decodeCache(conn.id, raw);
-      if (cached == null || raw == null) {
-        _durablyCommittedCacheJson.remove(conn.id);
-        continue;
-      }
-      _durablyCommittedCacheJson[conn.id] = raw;
-      final previous = _byConnection[conn.id];
-      if (previous != null && encodePlexHomeUsersCacheJson(previous) == encodePlexHomeUsersCacheJson(cached)) {
-        continue;
-      }
-      _byConnection[conn.id] = cached;
-      changed = true;
+      if (_loadCachedUsers(conn.id)) changed = true;
     }
 
     if (changed && _isLifecycleCurrent(epoch)) _emit();
@@ -163,19 +148,14 @@ class PlexHomeService {
     await _reloadStorageCacheIfNeeded(_storage!);
     if (!_isLifecycleCurrent(epoch)) return;
 
-    final initial = await _connections.list();
+    final initial = await _registryCall(_connections.list());
     if (!_isLifecycleCurrent(epoch)) return;
     final plexConnections = initial.whereType<PlexAccountConnection>().toList();
     _knownConnectionIds
       ..clear()
       ..addAll(plexConnections.map((connection) => connection.id));
     for (final conn in plexConnections) {
-      final raw = _storage!.getPlexHomeUsersCacheJson(conn.id);
-      final cached = _decodeCache(conn.id, raw);
-      if (cached != null && raw != null) {
-        _byConnection[conn.id] = cached;
-        _durablyCommittedCacheJson[conn.id] = raw;
-      }
+      _loadCachedUsers(conn.id);
     }
     _emit();
   }
@@ -220,7 +200,7 @@ class PlexHomeService {
       // deleting cache state; the replacement event may have observed the
       // still-populated in-memory slot and therefore have skipped its own
       // refresh.
-      final replacement = await _connections.get(id);
+      final replacement = await _registryCall(_connections.get(id));
       if (!_isLifecycleCurrent(epoch)) return;
       if (replacement is PlexAccountConnection) {
         unawaited(_scheduleBackgroundRefresh(replacement));
@@ -234,7 +214,7 @@ class PlexHomeService {
       // their cached `/switch` user-tokens become invalid the moment
       // the parent account goes away, and the rows would otherwise
       // linger as orphans.
-      await _profileConnections.removeAllForConnection(id);
+      await _registryCall(_profileConnections.removeAllForConnection(id));
       if (!_isLifecycleCurrent(epoch)) return;
       changed = true;
     }
@@ -250,7 +230,7 @@ class PlexHomeService {
   Future<void> _refreshAll() async {
     final epoch = _lifecycleEpoch;
     if (!_isLifecycleCurrent(epoch)) return;
-    final list = await _connections.list();
+    final list = await _registryCall(_connections.list());
     if (!_isLifecycleCurrent(epoch)) return;
     for (final conn in list.whereType<PlexAccountConnection>()) {
       unawaited(_scheduleBackgroundRefresh(conn));
@@ -320,7 +300,7 @@ class PlexHomeService {
       // The account may have been removed while the fetch was in flight —
       // caching now would resurrect its home users (and virtual profiles)
       // as ghosts until the next removal event.
-      if (await _connections.get(conn.id) == null) {
+      if (await _registryCall(_connections.get(conn.id)) == null) {
         appLogger.d('PlexHomeService: dropping fetch result for removed account ${conn.accountLabel}');
         return false;
       }
@@ -356,7 +336,7 @@ class PlexHomeService {
         if (!isCurrent()) return false;
         await _saveCache(storage, conn.id, users);
         _durablyCommittedCacheJson[conn.id] = encodedJson;
-        final latestConnection = await _connections.get(conn.id);
+        final latestConnection = await _registryCall(_connections.get(conn.id));
         final connectionUnchanged =
             latestConnection is PlexAccountConnection && latestConnection.accountToken == conn.accountToken;
         if (!isCurrent() || !connectionUnchanged) {
@@ -405,6 +385,20 @@ class PlexHomeService {
     if (pending != null) await pending;
   }
 
+  /// Tracks a registry (database) call for [dispose] to settle. Background
+  /// call sites re-check the lifecycle before issuing one, so none starts once
+  /// [dispose] has begun.
+  Future<T> _registryCall<T>(Future<T> call) {
+    final settled = call.then<void>((_) {}, onError: (Object _) {});
+    _registryCalls.add(settled);
+    unawaited(
+      settled.whenComplete(() {
+        _registryCalls.remove(settled);
+      }),
+    );
+    return call;
+  }
+
   Future<void> _saveCache(StorageService storage, String connectionId, List<PlexHomeUser> users) async {
     try {
       await storage.savePlexHomeUsersCache(connectionId, encodePlexHomeUsersCache(users));
@@ -423,6 +417,26 @@ class PlexHomeService {
     if (!_storageCacheNeedsReload) return;
     await storage.prefs.reloadCache();
     _storageCacheNeedsReload = false;
+  }
+
+  /// Load [connectionId]'s users from the storage cache into the snapshot and
+  /// record the raw JSON as durably committed. Returns whether the in-memory
+  /// list changed. A missing or undecodable cache leaves the snapshot alone
+  /// and forgets the durable record so the next refresh writes through.
+  bool _loadCachedUsers(String connectionId) {
+    final raw = _storage!.getPlexHomeUsersCacheJson(connectionId);
+    final cached = _decodeCache(connectionId, raw);
+    if (cached == null || raw == null) {
+      _durablyCommittedCacheJson.remove(connectionId);
+      return false;
+    }
+    _durablyCommittedCacheJson[connectionId] = raw;
+    final previous = _byConnection[connectionId];
+    if (previous != null && encodePlexHomeUsersCacheJson(previous) == encodePlexHomeUsersCacheJson(cached)) {
+      return false;
+    }
+    _byConnection[connectionId] = cached;
+    return true;
   }
 
   List<PlexHomeUser>? _readCache(String connectionId) =>
@@ -464,7 +478,7 @@ class PlexHomeService {
   /// in [ConnectionRegistry] (the only one most users have).
   Future<PlexHome?> materializeFirstPlexHome() async {
     await hydrate();
-    final all = await _connections.list();
+    final all = await _registryCall(_connections.list());
     final first = all.whereType<PlexAccountConnection>().firstOrNull;
     if (first == null) return null;
     return materializePlexHome(first.id);
@@ -501,6 +515,9 @@ class PlexHomeService {
     }
   }
 
+  /// Stops all background work. Once the returned future completes, no
+  /// database call is in flight and background work issues none, so the owner
+  /// may close the database (#2651).
   Future<void> dispose() async {
     if (_disposed) return;
     _disposed = true;
@@ -513,6 +530,7 @@ class PlexHomeService {
     _connSub = null;
     final pendingCommits = _commitBarriers.values.toList();
     if (pendingCommits.isNotEmpty) await Future.wait(pendingCommits);
+    if (_registryCalls.isNotEmpty) await Future.wait(_registryCalls.toList());
     _hydrateFuture = null;
     _startFuture = null;
     if (!_controller.isClosed) await _controller.close();

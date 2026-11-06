@@ -22,7 +22,11 @@ class PlayerPerformanceOverlay extends StatefulWidget {
   /// tick behind a fully transparent widget.
   final bool active;
 
-  const PlayerPerformanceOverlay({super.key, required this.player, required this.active});
+  /// Whether the server is transcoding this stream, or null when the stream
+  /// has no server play method (live TV, offline playback).
+  final bool? isTranscoding;
+
+  const PlayerPerformanceOverlay({super.key, required this.player, required this.active, this.isTranscoding});
 
   @override
   State<PlayerPerformanceOverlay> createState() => _PlayerPerformanceOverlayState();
@@ -82,7 +86,7 @@ class _PlayerPerformanceOverlayState extends State<PlayerPerformanceOverlay> {
           _metric(t.performanceOverlay.aspect, _stats.aspectName!),
         if (_stats.rotate != null && _stats.rotate != 0) _metric(t.performanceOverlay.rotation, _stats.rotateFormatted),
         if (_stats.dvSourceProfile != null) _metric(t.performanceOverlay.dvSource, _stats.dvSourceProfileFormatted),
-        if (_stats.dvPlaybackPath != null) _metric(t.performanceOverlay.dvPath, _stats.dvPlaybackPathFormatted),
+        if (_stats.hasDvPlaybackPath) _metric(t.performanceOverlay.dvPath, _stats.dvPlaybackPathFormatted),
         if (_stats.dvConversionActive) _metric(t.performanceOverlay.p7Conversion, _stats.dvConversionFormatted),
       ]),
       _buildSection(Symbols.volume_up_rounded, t.fileInfo.audio, [
@@ -130,6 +134,8 @@ class _PlayerPerformanceOverlayState extends State<PlayerPerformanceOverlay> {
       ]),
       _buildSection(Symbols.apps_rounded, t.performanceOverlay.app, [
         _metric(t.performanceOverlay.player, _stats.playerTypeFormatted),
+        if (widget.isTranscoding case final transcoding?)
+          _metric(t.performanceOverlay.playMethod, transcoding ? t.fileInfo.transcoding : t.fileInfo.directPlay),
         _metric(t.performanceOverlay.memory, _stats.appMemoryFormatted),
         _metric(t.performanceOverlay.uiFps, _stats.uiFpsFormatted),
       ]),

@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:plezy/i18n/strings.g.dart';
 import 'package:plezy/media/media_backend.dart';
 import 'package:plezy/media/media_item.dart';
+import 'package:plezy/media/media_library.dart';
 
 import 'package:plezy/media/media_kind.dart';
 import 'package:plezy/media/media_playlist.dart';
@@ -22,9 +26,18 @@ import '../test_helpers/prefs.dart';
 // jellyfin_sequential_launcher_test.dart.
 
 class _StubPlexClient implements PlexClient {
-  _StubPlexClient({this.response});
+  _StubPlexClient({this.response, this.gate});
 
   final PlayQueueResponse? response;
+
+  /// Holds [createPlayQueue] open until completed, so a test can act while the
+  /// launch's loading dialog is up.
+  final Completer<void>? gate;
+
+  final List<({String? uri, int shuffle, String? librarySectionID})> createdQueues = [];
+
+  @override
+  Future<String> buildFolderUri(String folderKey) async => 'server://machine-1/com.plexapp.plugins.library$folderKey';
 
   @override
   Future<PlayQueueResponse> createPlayQueue({
@@ -38,6 +51,8 @@ class _StubPlexClient implements PlexClient {
     String? librarySectionID,
     String? librarySectionTitle,
   }) async {
+    createdQueues.add((uri: uri, shuffle: shuffle, librarySectionID: librarySectionID));
+    await gate?.future;
     return response!;
   }
 
@@ -130,6 +145,44 @@ void main() {
     });
   });
 
+  group('launchShuffledLibrary', () {
+    testWidgets('queues the whole section shuffled and plays its head', (tester) async {
+      final context = await _pumpContext(tester);
+      final item = const MediaItem.plex(id: 'ep-9', kind: MediaKind.episode, title: 'Episode', playQueueItemId: 41);
+      final client = _StubPlexClient(response: _queueWith(item, shuffled: true));
+      final playbackState = PlaybackStateProvider();
+      final navigated = <MediaItem>[];
+      final launcher = PlexPlayQueueLauncher(
+        context: context,
+        client: client,
+        playbackStateForTesting: playbackState,
+        navigateForTesting: (selected) async => navigated.add(selected),
+      );
+      const library = MediaLibrary(
+        id: '2',
+        backend: MediaBackend.plex,
+        title: 'TV Shows',
+        kind: MediaKind.show,
+        serverId: 'plex-1',
+      );
+
+      final result = await launcher.launchShuffledLibrary(library: library, showLoadingIndicator: false);
+
+      expect(result, isA<PlayQueueSuccess>());
+      // PMS expands a section's shows to their episodes; one URI covers both
+      // movie and show libraries.
+      expect(client.createdQueues, [
+        (
+          uri: 'server://machine-1/com.plexapp.plugins.library/library/sections/2/all',
+          shuffle: 1,
+          librarySectionID: '2',
+        ),
+      ]);
+      expect(playbackState.playQueueId, 73);
+      expect(navigated.single.id, 'ep-9');
+    });
+  });
+
   group('queue application ownership', () {
     testWidgets('publishes the Plex queue before navigating to its selected item', (tester) async {
       final context = await _pumpContext(tester);
@@ -161,6 +214,37 @@ void main() {
       expect(navigated.single, same(item));
     });
 
+    testWidgets('Back on the loading dialog cancels the launch before it publishes or navigates', (tester) async {
+      final context = await _pumpContext(tester);
+      final item = const MediaItem.plex(id: 'movie-1', kind: MediaKind.movie, playQueueItemId: 41);
+      final gate = Completer<void>();
+      final playbackState = PlaybackStateProvider();
+      var didNavigate = false;
+      final launcher = PlexPlayQueueLauncher(
+        context: context,
+        client: _StubPlexClient(response: _queueWith(item), gate: gate),
+        playbackStateForTesting: playbackState,
+        navigateForTesting: (_) async => didNavigate = true,
+      );
+      const playlist = MediaPlaylist(id: '12', backend: MediaBackend.plex, title: 'Playlist', playlistType: 'video');
+
+      final resultFuture = launcher.launchFromCollectionOrPlaylist(item: playlist, shuffle: false);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.byType(AlertDialog), findsOneWidget);
+
+      await tester.binding.handlePopRoute();
+      await tester.pump();
+      gate.complete();
+
+      expect(await resultFuture, isA<PlayQueueCancelled>());
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(playbackState.isQueueActive, isFalse);
+      expect(didNavigate, isFalse);
+      expect(find.byType(SnackBar), findsNothing);
+    });
+
     testWidgets('navigation failure is returned as PlayQueueError, not success', (tester) async {
       final context = await _pumpContext(tester);
       final item = const MediaItem.plex(id: 'movie-1', kind: MediaKind.movie, playQueueItemId: 41);
@@ -184,6 +268,44 @@ void main() {
       expect((result as PlayQueueError).error, same(failure));
       expect(playbackState.isQueueActive, isTrue);
       expect(playbackState.currentQueueItem, same(item));
+    });
+  });
+
+  group('loading dialog names the chosen action (#2634)', () {
+    Future<String?> launchAndReadDialogTitle(WidgetTester tester, {required bool shuffle}) async {
+      final context = await _pumpContext(tester);
+      final item = const MediaItem.plex(id: 'movie-1', kind: MediaKind.movie, playQueueItemId: 41);
+      final gate = Completer<void>();
+      final playbackState = PlaybackStateProvider();
+      addTearDown(playbackState.dispose);
+      final launcher = PlexPlayQueueLauncher(
+        context: context,
+        client: _StubPlexClient(
+          response: _queueWith(item, shuffled: shuffle),
+          gate: gate,
+        ),
+        playbackStateForTesting: playbackState,
+        navigateForTesting: (_) async {},
+      );
+      const playlist = MediaPlaylist(id: '12', backend: MediaBackend.plex, title: 'Playlist', playlistType: 'video');
+
+      final resultFuture = launcher.launchFromCollectionOrPlaylist(item: playlist, shuffle: shuffle);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      final title = (tester.widget<AlertDialog>(find.byType(AlertDialog)).title as Text?)?.data;
+
+      gate.complete();
+      await tester.pumpAndSettle();
+      expect(await resultFuture, isA<PlayQueueSuccess>());
+      return title;
+    }
+
+    testWidgets('a sequential playlist launch is titled Play', (tester) async {
+      expect(await launchAndReadDialogTitle(tester, shuffle: false), t.common.play);
+    });
+
+    testWidgets('a shuffled playlist launch is titled Shuffle', (tester) async {
+      expect(await launchAndReadDialogTitle(tester, shuffle: true), t.common.shuffle);
     });
   });
   group('shuffle starts from beginning (#2303)', () {

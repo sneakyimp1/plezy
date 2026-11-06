@@ -94,6 +94,7 @@ include(FetchContent)
 FetchContent_Declare(
   simdutf
   URL https://github.com/simdutf/simdutf/releases/download/v6.4.2/singleheader.zip
+  URL_HASH SHA256=9fe4d6f515724a55c8de88fee4463e0890a1abe2267cda13c4b5d245d58039e6
   DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 FetchContent_MakeAvailable(simdutf)
@@ -134,6 +135,20 @@ function(APPLY_STANDARD_SETTINGS TARGET)
   target_compile_options(${TARGET} PRIVATE /EHsc)
   target_compile_definitions(${TARGET} PRIVATE "_HAS_EXCEPTIONS=0")
   target_compile_definitions(${TARGET} PRIVATE "$<$<CONFIG:Debug>:_DEBUG>")
+  # Release and Profile link a full PDB, so the CodeView record in plezy.exe
+  # and the plugin DLLs gives crash reports a debug_id to symbolicate
+  # against. /Z7 keeps compile-time debug info in the objects, so no shared
+  # compiler PDB is involved. /DEBUG turns the linker's REF and ICF off by
+  # default; they are restored so the shipped binaries stay the size they
+  # were. PDBs never reach the bundle: plugin PDBs stay next to their DLL in
+  # the build tree, the runner's goes to link-artifacts (below), and
+  # scripts/release/upload_symbols.dart uploads them from there.
+  target_compile_options(${TARGET} PRIVATE "$<$<CONFIG:Profile,Release>:/Z7>")
+  target_link_options(${TARGET} PRIVATE
+    "$<$<CONFIG:Profile,Release>:/DEBUG:FULL>"
+    "$<$<CONFIG:Profile,Release>:/OPT:REF>"
+    "$<$<CONFIG:Profile,Release>:/OPT:ICF>"
+  )
 endfunction()
 
 set(FLUTTER_MANAGED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/flutter")
@@ -144,12 +159,18 @@ add_subdirectory("runner")
 
 # Keep MSVC link by-products out of the runnable bundle directory. CI uploads
 # the executable output directory directly, so import and static libraries
-# emitted there would otherwise be packaged with the application.
+# and the runner's PDB emitted there would otherwise be packaged with the
+# application.
 set_target_properties(
   ${BINARY_NAME}
   simdutf
   PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/link-artifacts/$<CONFIG>"
+)
+set_target_properties(
+  ${BINARY_NAME}
+  PROPERTIES
+    PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/link-artifacts/$<CONFIG>"
 )
 
 

@@ -1,3 +1,4 @@
+import '../../models/transcode_quality_preset.dart';
 import '../../mpv/models.dart';
 
 /// Highest fallback level the live-TV ladder will climb before giving up.
@@ -5,6 +6,9 @@ const int maxLiveFallbackLevel = 2;
 
 /// What the player screen should do about one playback error.
 enum PlaybackFailureAction {
+  /// Server refused this account or connection with HTTP 403.
+  playbackNotAllowedDialog,
+
   /// Server rejected the session with HTTP 500 — a bandwidth/transcoding limit.
   serverLimitDialog,
 
@@ -36,11 +40,16 @@ enum PlaybackFailureAction {
 /// Live TV deliberately diverges on 404: an HLS segment that has rolled off the
 /// playlist, or a transcode session restarting under us, answers 404 mid-stream,
 /// and the bounded ladder exists to ride that out. Only on-demand playback
-/// treats 404 as terminal, where it does mean the file is unreadable. 500 stays
-/// terminal for both — a limit rejection is not something a retry clears. 503
-/// arrives only as the open-phase watchdog's cause tag (it never latches into
-/// [fatalHttpStatuses]); by then the reconnect loop has had its chances, so
-/// on-demand playback surfaces it while live TV keeps its ladder.
+/// treats 404 as terminal, where it does mean the file is unreadable. 403 takes
+/// the same split: on-demand it is a refusal of this account or connection
+/// (#2510), while live TV has no observed 403 cause worth abandoning the bounded
+/// ladder for. It outranks every other status latched on the same open — until
+/// the server lets this account stream, what it says about the file or session
+/// is moot. 500 stays terminal for both — a limit rejection is not something a
+/// retry clears. 503 arrives only as the open-phase watchdog's cause tag (it
+/// never latches into [fatalHttpStatuses]); by then the reconnect loop has had
+/// its chances, so on-demand playback surfaces it while live TV keeps its
+/// ladder.
 ///
 /// An audio-output failure is checked first: the device stopped taking audio,
 /// so a latched status or the live ladder would only re-open a stream into the
@@ -59,6 +68,8 @@ PlaybackFailureAction resolvePlaybackFailureAction({
   required bool liveRetryFailed,
 }) {
   if (cause == PlayerError.audioOutputFailed) return PlaybackFailureAction.fatal;
+
+  if (!isLive && fatalHttpStatuses.contains(403)) return PlaybackFailureAction.playbackNotAllowedDialog;
 
   if (cause == PlayerError.serverHttp500 || fatalHttpStatuses.contains(500)) {
     return PlaybackFailureAction.serverLimitDialog;
@@ -79,4 +90,26 @@ PlaybackFailureAction resolvePlaybackFailureAction({
   }
 
   return PlaybackFailureAction.fatal;
+}
+
+/// Whether the HTTP 500 dialog may offer to have the server transcode the item
+/// instead.
+///
+/// The 500 itself stays terminal (see [resolvePlaybackFailureAction]): this
+/// never retries the refused request. It only lets the viewer ask for a
+/// different one: a Plex transcode with direct play withheld and no cap of
+/// ours, so the server picks whatever output its limit admits, as Plex Web
+/// does when the server will not serve the file. Only an on-demand Plex open
+/// at Original quality qualifies, on a server that can transcode, and only
+/// once per item ([fallbackAlreadyUsed]): a transcode that is refused too is
+/// the server's final answer.
+bool offersServerLimitTranscode({
+  required bool isLive,
+  required bool isPlexBacked,
+  required bool serverSupportsTranscoding,
+  required TranscodeQualityPreset requestedPreset,
+  required bool fallbackAlreadyUsed,
+}) {
+  if (isLive || !isPlexBacked || !serverSupportsTranscoding) return false;
+  return requestedPreset.isOriginal && !fallbackAlreadyUsed;
 }

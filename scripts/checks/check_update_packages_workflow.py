@@ -41,7 +41,15 @@ require(
 
 resolver = job("resolve-release")
 require("gh release view \"$REQUESTED_TAG\"" in resolver, "resolver must validate the tag")
-require("--json tagName,isDraft,publishedAt" in resolver, "resolver must require a published release")
+require(
+    "--json tagName,isDraft,isPrerelease,publishedAt" in resolver,
+    "resolver must require a published stable release",
+)
+require(
+    "if: github.event_name != 'release' || !github.event.release.prerelease" in resolver,
+    "resolver must skip pre-release events so no package job runs",
+)
+require('if [ "$IS_PRERELEASE" != "false" ]; then' in resolver, "resolver must reject a pre-release tag")
 require(
     "tag: ${{ steps.release.outputs.tag }}" in resolver,
     "resolver must expose one validated tag output",
@@ -56,6 +64,21 @@ for name, block in (
     ("update-appcast-branch", appcast),
 ):
     require("needs: resolve-release" in block, f"{name} must depend on the resolver")
+
+for name, block in (
+    ("resolve-release", resolver),
+    ("update-homebrew", homebrew),
+    ("update-winget", winget),
+    ("update-appcast-branch", appcast),
+):
+    require(
+        re.search(r"(?m)^    permissions:", block) is not None,
+        f"{name} must declare its GITHUB_TOKEN permissions",
+    )
+require(
+    re.search(r"(?m)^    permissions: \{\}$", winget) is not None,
+    "WinGet authenticates with WINGET_TOKEN and must not receive GITHUB_TOKEN scopes",
+)
 
 resolved_output = "${{ needs.resolve-release.outputs.tag }}"
 require(f"RELEASE_TAG: {resolved_output}" in homebrew, "Homebrew must use the resolved tag")

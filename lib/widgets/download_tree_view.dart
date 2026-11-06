@@ -9,11 +9,11 @@ import '../media/media_item_types.dart';
 import '../media/media_kind.dart';
 import '../models/download_models.dart';
 import '../utils/dialogs.dart';
+import '../utils/formatters.dart';
 import '../utils/global_key_utils.dart';
 import '../mixins/unsuppress_focus_mixin.dart';
 import 'download_status_icon.dart';
 
-/// Represents a node in the download tree
 class DownloadTreeNode {
   final String key;
   final String title;
@@ -24,6 +24,10 @@ class DownloadTreeNode {
   final MediaItem? metadata;
   final DownloadProgress? downloadProgress;
 
+  /// Bytes on disk: a completed leaf's measured size, or the sum of its
+  /// measured descendants for a container. Null when nothing is measured.
+  final int? sizeBytes;
+
   const DownloadTreeNode({
     required this.key,
     required this.title,
@@ -33,18 +37,17 @@ class DownloadTreeNode {
     this.children = const [],
     this.metadata,
     this.downloadProgress,
+    this.sizeBytes,
   });
 
   /// Check if this node has children
   bool get hasChildren => children.isNotEmpty;
 
-  /// Get the number of completed children
   int get completedChildrenCount {
     return children.where((child) => child.status == DownloadStatus.completed).length;
   }
 }
 
-/// Type of node in the download tree
 enum DownloadNodeType { show, season, episode, movie, album, track }
 
 /// Hierarchical tree view for downloads
@@ -53,9 +56,13 @@ enum DownloadNodeType { show, season, episode, movie, album, track }
 class DownloadTreeView extends StatefulWidget {
   final Map<String, DownloadProgress> downloads;
   final Map<String, MediaItem> metadata;
+  final Map<String, int> downloadSizes; // globalKey → measured bytes on disk
   final void Function(String globalKey)? onPause;
   final void Function(String globalKey)? onResume;
   final void Function(String globalKey)? onRetry;
+
+  /// Retries the failed leaves of a container row, in tree order.
+  final void Function(List<String> globalKeys)? onRetryAll;
   final void Function(String globalKey)? onCancel;
   final void Function(String globalKey)? onDelete;
   final VoidCallback? onNavigateLeft;
@@ -66,9 +73,11 @@ class DownloadTreeView extends StatefulWidget {
     super.key,
     required this.downloads,
     required this.metadata,
+    this.downloadSizes = const {},
     this.onPause,
     this.onResume,
     this.onRetry,
+    this.onRetryAll,
     this.onCancel,
     this.onDelete,
     this.onNavigateLeft,
@@ -138,6 +147,7 @@ class _DownloadTreeViewState extends State<DownloadTreeView> with UnsuppressFocu
             status: download.status,
             metadata: meta,
             downloadProgress: download,
+            sizeBytes: _leafSize(globalKey, download),
           ),
         );
       }
@@ -200,6 +210,7 @@ class _DownloadTreeViewState extends State<DownloadTreeView> with UnsuppressFocu
               status: download.status,
               metadata: meta,
               downloadProgress: download,
+              sizeBytes: _leafSize(globalKey, download),
             ),
           );
         }
@@ -223,6 +234,7 @@ class _DownloadTreeViewState extends State<DownloadTreeView> with UnsuppressFocu
             progress: seasonProgress,
             status: seasonStatus,
             children: episodeNodes,
+            sizeBytes: sumDownloadNodeSizes(episodeNodes),
           ),
         );
       }
@@ -248,6 +260,7 @@ class _DownloadTreeViewState extends State<DownloadTreeView> with UnsuppressFocu
           progress: showProgress,
           status: showStatus,
           children: seasons,
+          sizeBytes: sumDownloadNodeSizes(seasons),
         ),
       );
     }
@@ -279,6 +292,7 @@ class _DownloadTreeViewState extends State<DownloadTreeView> with UnsuppressFocu
             status: download.status,
             metadata: meta,
             downloadProgress: download,
+            sizeBytes: _leafSize(globalKey, download),
           ),
         );
       }
@@ -301,6 +315,7 @@ class _DownloadTreeViewState extends State<DownloadTreeView> with UnsuppressFocu
           progress: albumProgress,
           status: albumStatus,
           children: trackNodes,
+          sizeBytes: sumDownloadNodeSizes(trackNodes),
         ),
       );
     }
@@ -311,6 +326,10 @@ class _DownloadTreeViewState extends State<DownloadTreeView> with UnsuppressFocu
 
     return [...movies, ...shows, ...albums];
   }
+
+  /// Sizes are only shown once a download has finished.
+  int? _leafSize(String globalKey, DownloadProgress download) =>
+      download.status == DownloadStatus.completed ? widget.downloadSizes[globalKey] : null;
 
   int _compareByStatus(DownloadStatus a, DownloadStatus b) {
     const statusOrder = {
@@ -349,7 +368,6 @@ class _DownloadTreeViewState extends State<DownloadTreeView> with UnsuppressFocu
     return result;
   }
 
-  /// Toggle node expansion
   void _toggleExpansion(String key) {
     setState(() {
       if (_expandedNodes.contains(key)) {
@@ -377,6 +395,7 @@ class _DownloadTreeViewState extends State<DownloadTreeView> with UnsuppressFocu
       autofocus: isFirst && !widget.suppressAutoFocus,
       pauseAllChildren: _pauseAllChildren,
       resumeAllChildren: _resumeAllChildren,
+      retryAllChildren: widget.onRetryAll == null ? null : _retryAllChildren,
       deleteAllChildren: _deleteAllChildren,
     );
   }
@@ -392,12 +411,15 @@ class _DownloadTreeViewState extends State<DownloadTreeView> with UnsuppressFocu
     }
   }
 
-  /// Resume all paused children of a container node
   void _resumeAllChildren(DownloadTreeNode node) {
     final keys = _leafKeys(node, where: (leaf) => leaf.status == DownloadStatus.paused);
     for (final key in keys) {
       widget.onResume?.call(key);
     }
+  }
+
+  void _retryAllChildren(DownloadTreeNode node) {
+    widget.onRetryAll?.call(_leafKeys(node, where: (leaf) => leaf.status == DownloadStatus.failed));
   }
 
   /// Delete all children of a container node via the container's globalKey
@@ -490,6 +512,17 @@ DownloadStatus determineDownloadAggregateStatus(List<DownloadStatus> statuses) {
   return DownloadStatus.partial;
 }
 
+/// Sum of the measured sizes of [nodes], or null when none is measured.
+@visibleForTesting
+int? sumDownloadNodeSizes(List<DownloadTreeNode> nodes) {
+  int? total;
+  for (final node in nodes) {
+    final size = node.sizeBytes;
+    if (size != null) total = (total ?? 0) + size;
+  }
+  return total;
+}
+
 String? _firstLeafKey(DownloadTreeNode node) {
   for (final child in node.children) {
     if (child.hasChildren) {
@@ -502,7 +535,11 @@ String? _firstLeafKey(DownloadTreeNode node) {
   return null;
 }
 
-/// Helper class to store a node with its depth in the flattened tree
+/// Whether any leaf below a container node failed. The container's aggregate
+/// status hides a failure next to an active or paused sibling.
+bool _hasFailedLeaf(DownloadTreeNode node) =>
+    node.children.any((child) => child.hasChildren ? _hasFailedLeaf(child) : child.status == DownloadStatus.failed);
+
 class _FlatNode {
   final DownloadTreeNode node;
   final int depth;
@@ -532,6 +569,7 @@ class _DownloadTreeItem extends StatefulWidget {
   final bool autofocus;
   final void Function(DownloadTreeNode) pauseAllChildren;
   final void Function(DownloadTreeNode) resumeAllChildren;
+  final void Function(DownloadTreeNode)? retryAllChildren;
   final void Function(DownloadTreeNode) deleteAllChildren;
 
   const _DownloadTreeItem({
@@ -550,6 +588,7 @@ class _DownloadTreeItem extends StatefulWidget {
     this.autofocus = false,
     required this.pauseAllChildren,
     required this.resumeAllChildren,
+    this.retryAllChildren,
     required this.deleteAllChildren,
   });
 
@@ -696,7 +735,7 @@ class _DownloadTreeItemState extends State<_DownloadTreeItem> {
                 overflow: .ellipsis,
               ),
 
-              if (canExpand) ...[
+              if (canExpand || widget.node.sizeBytes != null) ...[
                 const SizedBox(height: 4),
                 Text(
                   _getNodeSummary(),
@@ -749,9 +788,13 @@ class _DownloadTreeItemState extends State<_DownloadTreeItem> {
   }
 
   String _getNodeSummary() {
+    final size = widget.node.sizeBytes;
+    final sizeLabel = size == null ? null : ByteFormatter.formatBytes(size, decimals: 1);
+    if (!widget.node.hasChildren) return sizeLabel ?? '';
+
     final total = widget.node.children.length;
     final completed = widget.node.completedChildrenCount;
-    return t.downloads.completedOfTotal(completed: completed, total: total);
+    return [t.downloads.completedOfTotal(completed: completed, total: total), ?sizeLabel].join(' · ');
   }
 
   /// The actions this row offers, in render order. Single source of truth:
@@ -782,6 +825,16 @@ class _DownloadTreeItemState extends State<_DownloadTreeItem> {
           icon: Symbols.play_arrow_rounded,
           tooltip: t.downloads.resumeAll,
           onPressed: () => widget.resumeAllChildren(widget.node),
+        ));
+      }
+
+      // Retry all button; a failed leaf can sit under an active container
+      final retryAllChildren = widget.retryAllChildren;
+      if (retryAllChildren != null && _hasFailedLeaf(widget.node)) {
+        actions.add((
+          icon: Symbols.refresh_rounded,
+          tooltip: t.downloads.retryAll,
+          onPressed: () => retryAllChildren(widget.node),
         ));
       }
 

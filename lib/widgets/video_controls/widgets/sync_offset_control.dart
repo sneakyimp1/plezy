@@ -7,6 +7,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../../../focus/focusable_slider.dart';
 import '../../../focus/focusable_wrapper.dart';
 import '../../../mpv/mpv.dart';
+import '../../../services/player_sync_offsets.dart';
 import '../../../services/scoped_player_prefs.dart';
 import '../../../theme/mono_tokens.dart';
 import '../../../utils/formatters.dart';
@@ -55,9 +56,14 @@ class _SyncOffsetControlState extends State<SyncOffsetControl> {
   static const double _sliderMax = 10_000;
   static const double _absoluteMin = ScopedPlayerPrefs.minimumSyncOffsetMs * 1.0;
   static const double _absoluteMax = ScopedPlayerPrefs.maximumSyncOffsetMs * 1.0;
-  static const double _tapStep = 50; // 50ms per tap
-  static const double _longPressStep = 1000; // 1s per long-press tick
-  static const int _sliderDivisions = 400; // 50ms steps for ±10s range
+  // Audio gets 10ms steps, the lip-sync granularity other players offer
+  // (#2620); subtitle corrections run to seconds, so they keep 50ms. The
+  // slider step is also the D-pad step on TV, where the slider holds focus
+  // and owns left/right; long-press keeps a 1s stride for large corrections.
+  static const double _longPressStep = 1000;
+
+  double get _step => widget.propertyName == PlayerSyncOffsets.audioProperty ? 10 : 50;
+  int get _sliderDivisions => (_sliderMax - _sliderMin) ~/ _step;
 
   late double _currentOffset;
   late double _confirmedOffset;
@@ -109,6 +115,7 @@ class _SyncOffsetControlState extends State<SyncOffsetControl> {
           // native write can never complete after a newer one.
           final offsetSeconds = offsetMs / 1000.0;
           await targetPlayer.setProperty(propertyName, offsetSeconds.toString());
+          PlayerSyncOffsets.of(targetPlayer).recordApplied(propertyName, offsetMs.round());
           await persistOffset(offsetMs.round());
           if (mounted &&
               bindingGeneration == _bindingGeneration &&
@@ -150,7 +157,7 @@ class _SyncOffsetControlState extends State<SyncOffsetControl> {
   }
 
   void _incrementOffset() {
-    final newOffset = (_currentOffset + _tapStep).clamp(_absoluteMin, _absoluteMax);
+    final newOffset = (_currentOffset + _step).clamp(_absoluteMin, _absoluteMax);
     setState(() {
       _currentOffset = newOffset;
     });
@@ -158,7 +165,7 @@ class _SyncOffsetControlState extends State<SyncOffsetControl> {
   }
 
   void _decrementOffset() {
-    final newOffset = (_currentOffset - _tapStep).clamp(_absoluteMin, _absoluteMax);
+    final newOffset = (_currentOffset - _step).clamp(_absoluteMin, _absoluteMax);
     setState(() {
       _currentOffset = newOffset;
     });

@@ -148,6 +148,34 @@ void main() {
       expect(playPauseCalls, 1);
     });
 
+    test('edits still save when the saved map has a duplicate or a retired action', () async {
+      resetSharedPreferencesForTest(
+        initialAsync: {
+          'keyboard_hotkeys': json.encode({
+            // Collides with volume_up's default (a default added after the
+            // custom binding was saved), and an action a later build retired.
+            'play_pause': {'key': '00070052', 'modifiers': <String>[]},
+            'retired_action': {'key': '00070014', 'modifiers': <String>[]},
+          }),
+        },
+      );
+      SettingsService.resetForTesting();
+      final service = await KeyboardShortcutsService.getInstance();
+      addTearDown(service.dispose);
+
+      await service.setHotkey('volume_down', const HotKey(key: PhysicalKeyboardKey.keyT));
+
+      expect(service.getHotkey('volume_down')?.key, PhysicalKeyboardKey.keyT);
+      expect(service.getHotkey('play_pause')?.key, PhysicalKeyboardKey.arrowUp);
+      final stored =
+          json.decode(SettingsService.instance.prefs.getString(SettingsService.keyboardHotkeys.key)!)
+              as Map<String, dynamic>;
+      expect(stored.containsKey('retired_action'), isFalse);
+      // The retired action's key is free to assign.
+      await service.setHotkey('volume_up', const HotKey(key: PhysicalKeyboardKey.keyQ));
+      expect(service.getHotkey('volume_up')?.key, PhysicalKeyboardKey.keyQ);
+    });
+
     test('serialized writes preserve rapid edits and recover after a failure', () async {
       final preferences = _HotkeyPreferences(const {});
       SharedPreferencesAsyncPlatform.instance = preferences;
@@ -267,6 +295,46 @@ void main() {
       ['screenshot', 'subtitles'],
     ]);
     expect(feedbackCount, 1);
+  });
+
+  testWidgets('Ctrl+S reports a screenshot mpv rejected instead of throwing', (tester) async {
+    final service = await KeyboardShortcutsService.getInstance();
+    addTearDown(service.dispose);
+    // mpv answers a screenshot it cannot capture or write with
+    // MPV_ERROR_COMMAND, which the native channel raises as this exception.
+    final player = _FakePlayer()
+      ..commandError = PlatformException(code: 'COMMAND_FAILED', message: 'MPV command failed: screenshot (error -12)');
+    var savedCount = 0;
+    var failedCount = 0;
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    final result = service.handleVideoPlayerKeyEvent(
+      const KeyDownEvent(
+        physicalKey: PhysicalKeyboardKey.keyS,
+        logicalKey: LogicalKeyboardKey.keyS,
+        timeStamp: Duration.zero,
+      ),
+      player,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      canControlPlayback: true,
+      canNavigateMediaItems: true,
+      onScreenshot: () => savedCount++,
+      onScreenshotFailed: () => failedCount++,
+    );
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await tester.pump();
+
+    expect(result, KeyEventResult.handled);
+    expect(player.commands, [
+      ['screenshot', 'subtitles'],
+    ]);
+    expect(savedCount, 0, reason: 'a rejected screenshot must not be announced as saved');
+    expect(failedCount, 1);
   });
 
   testWidgets('Alt+Plus triggers zoom in callback', (tester) async {
@@ -712,9 +780,15 @@ class _FakePlayer implements Player {
   double volume;
   double rate;
 
+  /// Thrown by [command] after recording it, the way the native channel
+  /// reports a command mpv rejected.
+  Object? commandError;
+
   @override
   Future<void> command(List<String> args) async {
     commands.add(args);
+    final error = commandError;
+    if (error != null) throw error;
   }
 
   @override

@@ -5,7 +5,6 @@ import '../../i18n/strings.g.dart';
 import '../../models/hotkey_model.dart';
 import '../../services/keyboard_shortcuts_service.dart';
 import '../../utils/app_logger.dart';
-import '../../services/shortcut_action.dart';
 import '../../utils/dialogs.dart';
 import '../../utils/snackbar_helper.dart';
 import '../../focus/focusable_button.dart';
@@ -26,7 +25,7 @@ class KeyboardShortcutsScreen extends StatelessWidget {
       listenable: keyboardService,
       builder: (context, _) {
         final hotkeys = keyboardService.hotkeys;
-        final actions = hotkeys.keys.where((action) => ShortcutAction.fromId(action)?.isSupported ?? true).toList();
+        final actions = hotkeys.keys.toList();
         return FocusedScrollScaffold(
           title: Text(t.settings.keyboardShortcuts),
           slivers: [
@@ -75,6 +74,14 @@ class KeyboardShortcutsScreen extends StatelessWidget {
   }
 
   Future<void> _resetShortcuts(BuildContext context) async {
+    final confirmed = await showConfirmDialog(
+      context,
+      title: t.settings.resetToDefault,
+      message: t.settings.resetShortcutsConfirm,
+      confirmText: t.common.reset,
+      isDestructive: true,
+    );
+    if (!confirmed || !context.mounted) return;
     await keyboardService.resetToDefaults();
     if (context.mounted) showSuccessSnackBar(context, t.settings.shortcutsReset);
   }
